@@ -33901,3 +33901,6 @@ msgstr "Title A–Z"
 
 msgid "Title Z–A"
 msgstr "Title Z–A"
+
+msgid "Send test email"
+msgstr "Send test email"

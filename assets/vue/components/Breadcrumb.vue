@@ -142,6 +142,138 @@ function isInCourseOrSessionContext() {
 }
 
 /**
+ * Build a hardcoded breadcrumb trail for the access-URL delete confirmation page.
+ * Matches paths of the form `/resources/accessurl/<id>/delete`.
+ *
+ * @returns {boolean} `true` if the path matched and the trail was populated; `false` otherwise.
+ */
+function buildAccessUrlDeleteBreadcrumb() {
+  if (!/^\/resources\/accessurl\/[^/]+\/delete(?:\/|$)/u.test(route.path)) {
+    return false
+  }
+
+  calculatedList.value.push({
+    label: t("Administration"),
+    url: "/main/admin/index.php",
+  })
+  calculatedList.value.push({
+    label: t("Multiple access URL / Branding"),
+    url: "/main/admin/access_urls.php",
+  })
+  calculatedList.value.push({ label: t("Delete access") })
+
+  return true
+}
+
+/**
+ * Populate the breadcrumb trail from server-injected legacy items or from whitelisted path segments.
+ *
+ * Two cases are handled:
+ * 1. `window.breadcrumb` was set by the PHP layer — consume those items directly.
+ * 2. The URL starts with a whitelisted segment (e.g. `/admin`) that has no matching Vue route —
+ *    synthesize crumbs from path segments using the `overrides` map.
+ *
+ * @returns {boolean} `true` if manual crumbs were built and the normal pipeline should be skipped.
+ */
+function buildManualBreadcrumbIfNeeded() {
+  // If server already injected legacy breadcrumbs, use them.
+  // We still inject the root crumb first (consistency).
+  if (legacyItems.value.length > 0) {
+    addCourseContextRootBreadcrumbIfNeeded()
+
+    legacyItems.value.forEach((item) => {
+      const newUrl = normalizeLegacyUrl(item?.url)
+
+      calculatedList.value.push({ label: item.name, url: newUrl || undefined })
+    })
+
+    legacyItems.value = []
+
+    return true
+  }
+
+  const whitelist = ["admin"]
+  const overrides = {
+    admin: "AdminIndex",
+    gdpr: null,
+  }
+  const labelOverrides = {
+    email_tester: "E-mail tester",
+  }
+  const pathSegments = route.path.split("/").filter(Boolean)
+  const baseSegment = pathSegments[0]
+
+  if (!whitelist.includes(baseSegment)) {
+    return false
+  }
+
+  // /admin/settings/<namespace>
+  const isAdminSettings = pathSegments[1] === "settings"
+
+  if (isAdminSettings) {
+    const adminLabel = t("Admin")
+
+    calculatedList.value.push({
+      label: adminLabel,
+      route: { name: overrides.admin, params: route.params, query: route.query },
+    })
+    calculatedList.value.push({
+      label: t("Settings"),
+      route: { path: "/admin/settings" },
+    })
+
+    const section = resolveSettingsSectionLabel()
+
+    calculatedList.value.push({ label: section })
+
+    return true
+  }
+
+  const fullPath = "/" + pathSegments.join("/")
+  const hasMatchedRoute = router.getRoutes().some((r) => r.path === fullPath)
+
+  if (hasMatchedRoute) {
+    return false
+  }
+
+  pathSegments.forEach((segment, index) => {
+    const rawLabel = labelOverrides[segment] ?? (segment.charAt(0).toUpperCase() + segment.slice(1))
+    const label = t(rawLabel)
+    const override = overrides[segment]
+
+    if (override === null) {
+      calculatedList.value.push({ label })
+    } else if (override) {
+      calculatedList.value.push({
+        label,
+        route: { name: override, params: route.params, query: route.query },
+      })
+    } else {
+      const partialPath = "/" + pathSegments.slice(0, index + 1).join("/")
+      calculatedList.value.push({
+        label,
+        route: { path: partialPath },
+      })
+    }
+  })
+
+  return true
+}
+
+/**
+ * Prepend a category crumb ("Pages" or "Messages") when the route name contains that keyword.
+ * Called before course-context and tool crumbs so the category always appears first in the trail.
+ */
+function addStaticCategoryPrefixes() {
+  if (route.name?.includes("Page")) {
+    calculatedList.value.push({ label: t("Pages"), route: { path: "/resources/pages" } })
+  }
+  if (route.name?.includes("Message")) {
+    calculatedList.value.push({ label: t("Messages"), route: { path: "/resources/messages" } })
+  }
+}
+
+/**
  * Add the root crumb consistently.
  *
  * Goal:
