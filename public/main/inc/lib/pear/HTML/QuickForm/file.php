@@ -194,6 +194,28 @@ class HTML_QuickForm_file extends HTML_QuickForm_input
         $elementName = $this->getName();
         if (isset($_FILES[$elementName])) {
             return $_FILES[$elementName];
+        } elseif (false !== ($pos = strpos($elementName, '['))) {
+            $base = substr($elementName, 0, $pos);
+            $keys = preg_split('/[\[\]]+/', substr($elementName, $pos + 1, -1), -1, PREG_SPLIT_NO_EMPTY);
+            if (!isset($_FILES[$base]['name'])) {
+                return null;
+            }
+            $props = ['name', 'type', 'size', 'tmp_name', 'error'];
+            $value = [];
+            foreach ($props as $prop) {
+                $ref = $_FILES[$base][$prop] ?? null;
+                foreach ($keys as $key) {
+                    if (!is_array($ref) || !array_key_exists($key, $ref)) {
+                        $ref = null;
+                        break;
+                    }
+                    $ref = $ref[$key];
+                }
+                $value[$prop] = $ref;
+            }
+            return isset($value['name']) ? $value : null;
+        } else {
+            return null;
         }
 
         if (false !== ($pos = strpos($elementName, '['))) {
