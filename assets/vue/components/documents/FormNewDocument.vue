@@ -598,7 +598,7 @@ export default {
       try {
         window.tinymce?.activeEditor?.windowManager.openUrl({
           url,
-          title: "File Manager",
+          title: t("File manager"),
           onClose: () => {
             window.removeEventListener("message", onMessage)
           },
