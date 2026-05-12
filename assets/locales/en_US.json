@@ -1901,5 +1901,7 @@
     "Login successful. Go to %s": "Login successful. Go to {0}",
     "Message sent successfully.": "Message sent successfully.",
     "Reply to this message": "Reply to this message",
-    "Reply to all": "Reply to all"
+    "Reply to all": "Reply to all",
+    "Hide comments": "Hide comments",
+    "No comments yet.": "No comments yet."
 }
