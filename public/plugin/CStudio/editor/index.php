@@ -80,26 +80,21 @@ if (isset($_GET['id'])) {
     echo "optionsCSCDT = '".$options_studio_cdt."';";
     echo 'renderFromSvg = '.json_encode((string) $fromsvg).';';
 
-    if (!$VDB->w_api_is_anonymous()) {
-        $user = $VDB->w_api_get_user_info();
+    // Authorization gate: deny anonymous outright. The previous code nested the
+    // role check inside `!is_anonymous()`, which let anonymous callers fall
+    // through to the CSRF check (where cotk=-2 used to pass) and reach the
+    // template-lang require sink. Teachers only — checked before anything else.
+    if ($VDB->w_api_is_anonymous() || !$VDB->w_api_is_allowed_to_edit()) {
+        echo 'Context token is not valid or has expired. User rejected !</br>';
+        echo "<a href='javascript:history.back();' >Return</a></br></head></html>";
 
-        if (isset($user['status'])) {
-            if (SESSIONADMIN == $user['status']
-              || COURSEMANAGER == $user['status']
-              || PLATFORM_ADMIN == $user['status']) {
-                echo "userStatusCS = '".(int) $user['status']."';";
-                if (isset($_SESSION['idsessionedition'])) {
-                    echo "listPagesCS = '".(string) $_SESSION['idsessionedition']."';";
-                }
-            } else {
-                echo 'Context token is not valid or has expired. User rejected !</br>';
-                echo "<a href='javascript:history.back();' >Return</a></br></head></html>";
+        exit;
+    }
 
-                exit;
-            }
-        }
-    } else {
-        echo "console.log('api_is_anonymous !');";
+    $user = $VDB->w_api_get_user_info();
+    echo "userStatusCS = '".(int) $user['status']."';";
+    if (isset($_SESSION['idsessionedition'])) {
+        echo "listPagesCS = '".(string) $_SESSION['idsessionedition']."';";
     }
 
     echo "var renderEngRed = '".$VDB->engine."';";
@@ -163,6 +158,18 @@ if (isset($_GET['id'])) {
             $base_html = '<div class="panel"></div>';
             $base_css = '';
         }
+
+        // Cookie cstudio_lang is written by the JS language switcher (setCstudioLangCookie)
+        // on every page load, making it the most reliable source for the user's chosen UI language.
+        // Validate it against an iso-locale allowlist before passing it to apply_cstudio_template_lang(),
+        // which performs a require() on a path built from this value.
+        $cstudioCookieLocale = !empty($_COOKIE['cstudio_lang']) ? (string) $_COOKIE['cstudio_lang'] : '';
+        if (!preg_match('/^[a-z]{2}(_[A-Z]{2})?$/', $cstudioCookieLocale)) {
+            $cstudioCookieLocale = '';
+        }
+        $cstudioInterfaceLocale = ('' !== $cstudioCookieLocale ? $cstudioCookieLocale : null)
+            ?? Container::getSession()?->get('_locale')
+            ?? 'en_US';
 
         if ('' == $base_html) {
             if (isset($_GET['pty'])) {
