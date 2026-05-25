@@ -15,6 +15,9 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\QueryParameter;
+use ApiPlatform\OpenApi\Model\Operation;
+use ApiPlatform\OpenApi\Model\Parameter as OpenApiParameter;
 use Chamilo\CoreBundle\Controller\Api\CreateStudentPublicationFileAction;
 use Chamilo\CoreBundle\Entity\AbstractResource;
 use Chamilo\CoreBundle\Entity\ResourceInterface;
@@ -62,7 +65,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                     ),
                 ],
             ),
-            security: "is_granted('ROLE_CURRENT_COURSE_STUDENT') or is_granted('ROLE_CURRENT_COURSE_SESSION_STUDENT')",
+            security: "is_granted('ROLE_USER')",
             parameters: [
                 'cid' => new QueryParameter(
                     schema: ['type' => 'integer'],

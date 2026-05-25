@@ -30,10 +30,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
-        new Get(security: "is_granted('VIEW', object.resourceNode)"),
-        new Put(
-            security: "is_granted('ROLE_CURRENT_COURSE_TEACHER') or is_granted('ROLE_CURRENT_COURSE_SESSION_TEACHER')",
-        ),
+        new Get(security: "is_granted('VIEW', object)"),
+        new Put(security: "is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('DELETE', object)"),
         new GetCollection(
             openapi: new Operation(
                 parameters: [
@@ -46,7 +45,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                     ),
                 ],
             ),
-            security: "is_granted('ROLE_CURRENT_COURSE_STUDENT') or is_granted('ROLE_CURRENT_COURSE_SESSION_STUDENT')",
+            security: "is_granted('ROLE_USER')",
             parameters: [
                 'cid' => new QueryParameter(
                     schema: ['type' => 'integer'],
@@ -55,7 +54,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                 ),
             ],
         ),
-        new Post(security: "is_granted('ROLE_CURRENT_COURSE_TEACHER') or is_granted('ROLE_CURRENT_COURSE_SESSION_TEACHER')"),
+        new Post(securityPostDenormalize: "is_granted('CREATE', object)"),
     ],
     normalizationContext: [
         'groups' => ['c_tool_intro:read'],
