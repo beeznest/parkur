@@ -4,49 +4,20 @@ declare(strict_types=1);
 
 namespace Chamilo\CoreBundle\Controller;
 
-        private readonly ResourceNodeRepository $resourceNodeRepository,
-        private readonly SettingsManager $settingsManager,
-        private readonly CidReqHelper $cidReqHelper
-    ) {}
-
-    private function humanSize(int $bytes): string
-    {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $i = $bytes > 0 ? (int) floor(log($bytes, 1024)) : 0;
-
-        return \sprintf('%.1f %s', $bytes / (1024 ** $i), $units[$i]);
-    }
-
-    private function ago(DateTimeImmutable $dt): string
-    {
-        $diff = (new DateTimeImmutable())->getTimestamp() - $dt->getTimestamp();
-        if ($diff < 60) {
-            return 'just now';
-        }
-        if ($diff < 3600) {
-            return floor($diff / 60).' min ago';
-        }
-        if ($diff < 86400) {
-            return floor($diff / 3600).' h ago';
-        }
-
-        return floor($diff / 86400).' d ago';
-    }
-
-    /**
-     * Resolves the active course context (cid/sid/gid) from the session.
+     * Pull Chamilo context (cid/sid/gid) from query string.
      *
-     * cid/sid/gid travel in the query on every dropbox request, so CidReqListener has
-     * already resolved the course into the session and enforced CourseVoter::VIEW.
-     * Reading the authorized context from the helper keeps the listener as the single
-     * source of truth instead of trusting the raw query parameters.
+     * cid is mandatory: every dropbox endpoint operates on a course, and CidReqListener
+     * only authorizes (CourseVoter::VIEW) when ?cid is present and non-zero. Rejecting
+     * here keeps the listener as the single source of truth for course access control.
      */
     private function context(): array
     {
-        $course = $this->cidReqHelper->getDoctrineCourseEntity();
-        if (!$course instanceof Course) {
-            throw new BadRequestHttpException('Missing or invalid course context');
+        $cid = (int) $r->query->get('cid', 0);
+        if ($cid <= 0) {
+            throw new BadRequestHttpException('Missing or invalid cid');
         }
+        $sid = $r->query->get('sid') ? (int) $r->query->get('sid') : null;
+        $gid = $r->query->get('gid') ? (int) $r->query->get('gid') : null;
 
         $sid = $this->cidReqHelper->getSessionId() ?: null;
         $gid = $this->cidReqHelper->getGroupId() ?: null;
@@ -57,17 +28,15 @@ namespace Chamilo\CoreBundle\Controller;
     #[Route('/recipients', name: 'dropbox_recipients', methods: ['GET'])]
     public function recipients(): JsonResponse
     {
-        // cid/sid travel in the query, so CidReqListener has already resolved the course
-        // into the session and enforced CourseVoter::VIEW. Read the authorized course and
-        // session straight from the context helper instead of trusting the raw query cid.
-        $course = $this->cidReqHelper->getCourseEntity();
+        // context() rejects requests without a valid cid; CidReqListener has already
+        // enforced CourseVoter::VIEW upstream so we can trust the resolved course.
+        [$cid, $sid] = $this->context($r);
+        $me = (int) $this->getUser()?->getId();
+
+        $course = $this->em->getRepository(Course::class)->find($cid);
         if (!$course instanceof Course) {
             throw $this->createNotFoundException('Course not found');
         }
-
-        $cid = (int) $course->getId();
-        $sid = $this->cidReqHelper->getSessionId();
-        $me = (int) $this->getUser()?->getId();
 
         $allowMailing = 'true' === $this->settingsManager->getSetting('dropbox.dropbox_allow_mailing', true)
             && $this->isGranted(CourseVoter::EDIT, $course);
@@ -400,7 +369,7 @@ namespace Chamilo\CoreBundle\Controller;
         // context() rejects requests without a valid cid; CidReqListener has already
         // enforced CourseVoter::VIEW upstream. The consistency check below then rejects
         // attempts to download a file that does not belong to the authorized course.
-        [$cid] = $this->context();
+        [$cid] = $this->context($r);
 
         $file = $this->fileRepo->find($id);
         if (!$file || (int) $file->getCId() !== $cid) {
