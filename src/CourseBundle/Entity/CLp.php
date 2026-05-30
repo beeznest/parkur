@@ -69,8 +69,9 @@ use Symfony\Component\Validator\Constraints as Assert;
             ),
             name: 'get_lp_collection_with_progress',
             provider: LpCollectionStateProvider::class,
+            security: "is_granted('ROLE_CURRENT_COURSE_STUDENT') or is_granted('ROLE_CURRENT_COURSE_SESSION_STUDENT')",
         ),
-        new Get(security: "is_granted('ROLE_USER')"),
+        new Get(security: "is_granted('VIEW', object.resourceNode)"),
         new Post(
             controller: CreateCLpAction::class,
             openapi: new Operation(
@@ -95,7 +96,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                     ]),
                 ),
             ),
-            security: "is_granted('ROLE_TEACHER') or is_granted('ROLE_ADMIN')",
+            security: "is_granted('ROLE_CURRENT_COURSE_TEACHER') or is_granted('ROLE_CURRENT_COURSE_SESSION_TEACHER')",
             validationContext: ['groups' => ['lp:write']],
             deserialize: false,
         ),
@@ -128,7 +129,7 @@ use Symfony\Component\Validator\Constraints as Assert;
                     ]),
                 ),
             ),
-            security: "is_granted('ROLE_TEACHER') or is_granted('ROLE_ADMIN')",
+            security: "is_granted('ROLE_CURRENT_COURSE_TEACHER') or is_granted('ROLE_CURRENT_COURSE_SESSION_TEACHER')",
             read: false,
             deserialize: false,
             name: 'lp_reorder'
