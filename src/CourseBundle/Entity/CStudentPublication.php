@@ -50,13 +50,33 @@ use Symfony\Component\Validator\Constraints as Assert;
             ],
             security: "is_granted('VIEW', object.resourceNode)",
         ),
-        new GetCollection(security: "is_granted('ROLE_USER')"),
+        new GetCollection(
+            openapi: new Operation(
+                parameters: [
+                    new OpenApiParameter(
+                        name: 'cid',
+                        in: 'query',
+                        description: 'Course identifier',
+                        required: true,
+                        schema: ['type' => 'integer'],
+                    ),
+                ],
+            ),
+            security: "is_granted('ROLE_CURRENT_COURSE_STUDENT') or is_granted('ROLE_CURRENT_COURSE_SESSION_STUDENT')",
+            parameters: [
+                'cid' => new QueryParameter(
+                    schema: ['type' => 'integer'],
+                    description: 'Course identifier',
+                    required: true,
+                ),
+            ],
+        ),
         new Delete(
             security: "is_granted('DELETE', object.resourceNode)",
             processor: CStudentPublicationDeleteProcessor::class
         ),
         new Post(
-            security: "is_granted('ROLE_CURRENT_COURSE_TEACHER') or is_granted('ROLE_CURRENT_COURSE_SESSION_TEACHER') or is_granted('ROLE_TEACHER')",
+            security: "is_granted('ROLE_CURRENT_COURSE_TEACHER') or is_granted('ROLE_CURRENT_COURSE_SESSION_TEACHER')",
             processor: CStudentPublicationPostStateProcessor::class
         ),
         new Post(
