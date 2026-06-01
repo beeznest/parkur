@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace Chamilo\CoreBundle\Controller\Api;
 
 use Chamilo\CoreBundle\Entity\Course;
+use Chamilo\CoreBundle\Entity\ResourceLink;
 use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CourseBundle\Entity\CBlog;
@@ -43,11 +44,15 @@ class CreateCBlogAction extends BaseResourceFileAction
             $resourceLinkList = \is_array($resourceLinkListRaw) ? $resourceLinkListRaw : [];
         }
 
-        // The `cid` (and optional `sid`/`gid`) query parameter establishes the
-        // course context that gated the security expression. Any
-        // resourceLinkList entry that points to a different context would
-        // bypass that gate, so we reject the request outright.
-        $this->assertResourceLinkListMatchesQueryContext($request, $resourceLinkList, $security);
+        // The link context (cid/sid/gid) is taken from the session-resolved
+        // course that gated this operation, not from the request body. This
+        // makes it impossible for the body to target a foreign course (IDOR):
+        // the body is only allowed to carry the link visibility.
+        $resourceLinkList = $this->buildResourceLinkListFromContext(
+            $request,
+            $resourceLinkList,
+            ResourceLink::VISIBILITY_DRAFT
+        );
 
         $blog = (new CBlog())
             ->setTitle($title)

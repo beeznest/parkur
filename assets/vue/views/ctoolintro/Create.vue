@@ -57,35 +57,10 @@ export default {
       id = route.query.id
     }
 
-    const { cid } = useCidReq()
-
-    let courseId = route.query.cid
-    let sessionId = route.query.sid
-    let ctoolId = route.params.courseTool
-
-    async function getIntro() {
-      cToolIntroService
-        .findCourseHomeInro(courseId, {
-          cid: courseId,
-          sid: sessionId,
-        })
-        .then((intro) => {
-          if (intro.introText) {
-            item.value.introText = intro.introText
-          }
-        })
-    }
-
-    item.value["parentResourceNodeId"] = Number(route.query.parentResourceNodeId)
-    item.value["courseTool"] = "/api/c_tools/" + ctoolId
-
-    item.value["resourceLinkList"] = [
-      {
-        sid: route.query.sid,
-        cid: route.query.cid,
-        visibility: RESOURCE_LINK_PUBLISHED, // visible by default
-      },
-    ]
+    item.value.parentResourceNodeId = Number(route.query.parentResourceNodeId)
+    item.value.courseTool = `/api/c_tools/${ctoolId}`
+    // Course context derived server-side from the gated session course.
+    item.value.resourceLinkList = [{ visibility: RESOURCE_LINK_PUBLISHED }]
 
     getIntro()
 

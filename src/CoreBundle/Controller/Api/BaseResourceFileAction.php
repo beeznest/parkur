@@ -153,6 +153,78 @@ class BaseResourceFileAction
     }
 
     /**
+     * Builds the canonical resource link list from the request course context.
+     *
+     * The course/session/group that gate the operation's `security:` expression
+     * are resolved by CidReqListener and stored in the session (the contextual
+     * ROLE_CURRENT_COURSE_* roles are computed from there). That session context
+     * is therefore the single source of truth for the link binding, so we ignore
+     * any cid/sid/gid sent in the request body and only keep the caller-provided
+     * visibility. This closes the IDOR where the body could target a foreign
+     * course regardless of the gated context.
+     *
+     * @param array<int, mixed> $bodyResourceLinkList resource link entries parsed from the request body
+     *
+     * @return array<int, array<string, int>> a single link bound to the current course context
+     */
+    protected function buildResourceLinkListFromContext(
+        Request $request,
+        array $bodyResourceLinkList,
+        int $defaultVisibility = ResourceLink::VISIBILITY_PUBLISHED
+    ): array {
+        $cid = 0;
+        $sid = 0;
+        $gid = 0;
+
+        if ($request->hasSession()) {
+            $session = $request->getSession();
+
+            $course = $session->get('course');
+            if ($course instanceof Course) {
+                $cid = (int) $course->getId();
+            }
+
+            $courseSession = $session->get('session');
+            if ($courseSession instanceof Session) {
+                $sid = (int) $courseSession->getId();
+            }
+
+            $group = $session->get('group');
+            if ($group instanceof CGroup) {
+                $gid = (int) $group->getIid();
+            }
+        }
+
+        // Fallback to the query parameters (kept in sync with the session by
+        // CidReqListener) in the unlikely case the session context is missing.
+        if ($cid <= 0) {
+            $cid = $request->query->getInt('cid');
+            $sid = $request->query->getInt('sid');
+            $gid = $request->query->getInt('gid');
+        }
+
+        // Visibility is the only field still honored from the body.
+        $visibility = $defaultVisibility;
+        $first = $bodyResourceLinkList[0] ?? null;
+        if (\is_array($first) && isset($first['visibility'])) {
+            $visibility = (int) $first['visibility'];
+        }
+
+        $link = ['visibility' => $visibility];
+        if ($cid > 0) {
+            $link['cid'] = $cid;
+        }
+        if ($sid > 0) {
+            $link['sid'] = $sid;
+        }
+        if ($gid > 0) {
+            $link['gid'] = $gid;
+        }
+
+        return [$link];
+    }
+
+    /**
      * @todo use this function inside handleCreateFileRequest
      */
     protected function handleCreateRequest(AbstractResource $resource, ResourceRepository $resourceRepository, Request $request): array
@@ -249,7 +321,8 @@ class BaseResourceFileAction
         string $fileExistsOption = '',
         ?TranslatorInterface $translator = null,
         ?CourseRepository $courseRepository = null,
-        ?CourseHelper $courseHelper = null
+        ?CourseHelper $courseHelper = null,
+        ?array $resourceLinkListOverride = null
     ): array {
         $contentData = $request->getContent();
 
@@ -279,6 +352,12 @@ class BaseResourceFileAction
                     throw new InvalidArgumentException($message);
                 }
             }
+        }
+
+        // The controller may force the link context (cid/sid/gid) from the
+        // session-resolved course, ignoring whatever the body sent.
+        if (null !== $resourceLinkListOverride) {
+            $resourceLinkList = $resourceLinkListOverride;
         }
 
         if (empty($fileType)) {
@@ -457,7 +536,8 @@ class BaseResourceFileAction
         KernelInterface $kernel,
         ?CourseRepository $courseRepository = null,
         ?CDocumentRepository $documentRepository = null,
-        ?CourseHelper $courseHelper = null
+        ?CourseHelper $courseHelper = null,
+        ?array $resourceLinkListOverride = null
     ): array {
         $rawParent = $request->get('parentResourceNodeId');
         $parentResourceNodeId = (int) ($this->normalizeNodeId($rawParent) ?? 0);
@@ -476,6 +556,12 @@ class BaseResourceFileAction
 
                 throw new InvalidArgumentException($message);
             }
+        }
+
+        // The controller may force the link context (cid/sid/gid) from the
+        // session-resolved course, ignoring whatever the body sent.
+        if (null !== $resourceLinkListOverride) {
+            $resourceLinkList = $resourceLinkListOverride;
         }
 
         if (empty($fileType)) {
@@ -677,6 +763,331 @@ class BaseResourceFileAction
         $resourceNode->setUpdatedAt(new DateTime());
 
         return $resource;
+    }
+
+    private function getContentFileUploadInfo(Request $request, string $title): array
+    {
+        $extension = strtolower(trim((string) $request->request->get('contentFileExtension', 'html')));
+        $mimeType = strtolower(trim((string) $request->request->get('contentFileMimeType', 'text/html')));
+
+        $allowed = [
+            'html' => 'text/html',
+            'htm' => 'text/html',
+            'svg' => 'image/svg+xml',
+        ];
+
+        if (!isset($allowed[$extension])) {
+            $extension = 'html';
+        }
+
+        if ($mimeType !== $allowed[$extension]) {
+            $mimeType = $allowed[$extension];
+        }
+
+        $baseName = trim($title);
+        if ('' === $baseName) {
+            $baseName = 'document.'.$extension;
+        }
+
+        $baseName = preg_replace('/\.(html?|svg)$/i', '', $baseName);
+        if (!\is_string($baseName) || '' === trim($baseName)) {
+            $baseName = 'document';
+        }
+
+        return [
+            'extension' => $extension,
+            'mimeType' => $mimeType,
+            'fileName' => $baseName.'.'.$extension,
+        ];
+    }
+
+    private function sanitizeContentFileForUpdate(string $content, Request $request, ResourceNode $resourceNode): string
+    {
+        $extension = strtolower(trim((string) $request->request->get('contentFileExtension', '')));
+
+        if ('' === $extension) {
+            $firstFile = $resourceNode->getFirstResourceFile();
+            if ($firstFile instanceof ResourceFile) {
+                $extension = $this->guessExtensionFromResourceFile($firstFile);
+            }
+        }
+
+        return $this->sanitizeContentFile($content, $extension);
+    }
+
+    private function guessExtensionFromResourceFile(ResourceFile $resourceFile): string
+    {
+        $mimeType = strtolower(trim((string) $resourceFile->getMimeType()));
+        if ('image/svg+xml' === $mimeType) {
+            return 'svg';
+        }
+
+        $fileName = strtolower(trim((string) ($resourceFile->getOriginalName() ?: $resourceFile->getTitle())));
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+
+        return strtolower((string) $extension);
+    }
+
+    private function sanitizeContentFile(string $content, string $extension): string
+    {
+        if ('svg' !== strtolower(trim($extension))) {
+            return $content;
+        }
+
+        return $this->sanitizeSvgContent($content);
+    }
+
+    private function sanitizeSvgContent(string $svg): string
+    {
+        $svg = trim($svg);
+        if ('' === $svg) {
+            throw new BadRequestHttpException('SVG content is empty.');
+        }
+
+        $previous = libxml_use_internal_errors(true);
+        $document = new DOMDocument();
+
+        try {
+            $loaded = $document->loadXML($svg, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
+
+        if (!$loaded || !$document->documentElement || 'svg' !== strtolower($document->documentElement->localName)) {
+            throw new BadRequestHttpException('Invalid SVG content.');
+        }
+
+        $dangerousTags = [
+            'script',
+            'foreignObject',
+            'iframe',
+            'object',
+            'embed',
+            'audio',
+            'video',
+        ];
+
+        foreach ($dangerousTags as $tagName) {
+            $nodes = [];
+            foreach ($document->getElementsByTagName($tagName) as $node) {
+                $nodes[] = $node;
+            }
+
+            foreach ($nodes as $node) {
+                if ($node->parentNode) {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+        }
+
+        foreach ($document->getElementsByTagName('*') as $node) {
+            if (!$node instanceof DOMElement || !$node->hasAttributes()) {
+                continue;
+            }
+
+            $attributesToRemove = [];
+            foreach ($node->attributes as $attribute) {
+                $name = strtolower($attribute->name);
+                $value = strtolower(trim($attribute->value));
+
+                if (str_starts_with($name, 'on')) {
+                    $attributesToRemove[] = $attribute->name;
+
+                    continue;
+                }
+
+                if (\in_array($name, ['href', 'xlink:href', 'src'], true) && str_starts_with($value, 'javascript:')) {
+                    $attributesToRemove[] = $attribute->name;
+                }
+            }
+
+            foreach ($attributesToRemove as $attributeName) {
+                $node->removeAttribute($attributeName);
+            }
+        }
+
+        $cleanSvg = $document->saveXML($document->documentElement);
+        if (!\is_string($cleanSvg) || '' === trim($cleanSvg)) {
+            throw new BadRequestHttpException('Invalid SVG content.');
+        }
+
+        return $cleanSvg;
+    }
+
+    protected function applyResourceLanguageFromRequest(AbstractResource $resource, Request $request, EntityManagerInterface $em): void
+    {
+        if (!$this->hasResourceLanguageInRequest($request)) {
+            return;
+        }
+
+        $language = $this->findResourceLanguageFromRequest($request, $em);
+        $this->applyResourceLanguage($resource, $language, $em);
+    }
+
+    protected function applyResourceLanguage(AbstractResource $resource, ?Language $language, EntityManagerInterface $em): void
+    {
+        $resourceNode = $resource->getResourceNode();
+        if (null === $resourceNode) {
+            return;
+        }
+
+        $resourceNode->setLanguage($language);
+        $em->persist($resourceNode);
+
+        foreach ($resourceNode->getResourceFiles() as $resourceFile) {
+            if ($resourceFile instanceof ResourceFile) {
+                $resourceFile->setLanguage($language);
+                $em->persist($resourceFile);
+            }
+        }
+    }
+
+    private function hasResourceLanguageInRequest(Request $request): bool
+    {
+        if ($request->request->has('language')) {
+            return true;
+        }
+
+        $content = $request->getContent();
+        if ('' === trim($content)) {
+            return false;
+        }
+
+        $data = json_decode($content, true);
+
+        return \is_array($data) && \array_key_exists('language', $data);
+    }
+
+    private function findResourceLanguageFromRequest(Request $request, EntityManagerInterface $em): ?Language
+    {
+        $rawLanguage = null;
+
+        if ($request->request->has('language')) {
+            $rawLanguage = $request->request->get('language');
+        } else {
+            $content = $request->getContent();
+            if ('' !== trim($content)) {
+                $data = json_decode($content, true);
+                if (\is_array($data) && \array_key_exists('language', $data)) {
+                    $rawLanguage = $data['language'];
+                }
+            }
+        }
+
+        $languageCode = trim((string) $rawLanguage);
+        if ('' === $languageCode) {
+            return $this->findDefaultCourseLanguageFromRequest($request, $em);
+        }
+
+        if (preg_match('#/api/languages/(\d+)#', $languageCode, $matches)) {
+            $language = $em->getRepository(Language::class)->find((int) $matches[1]);
+
+            if ($language instanceof Language) {
+                return $language;
+            }
+
+            throw new BadRequestHttpException('Invalid resource language.');
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]{1,8}$/', $languageCode)) {
+            throw new BadRequestHttpException('Invalid resource language.');
+        }
+
+        $language = $em->getRepository(Language::class)->findOneBy([
+            'isocode' => $languageCode,
+            'available' => true,
+        ]);
+
+        if ($language instanceof Language) {
+            return $language;
+        }
+
+        throw new BadRequestHttpException('Invalid resource language.');
+    }
+
+    private function findDefaultCourseLanguageFromRequest(Request $request, EntityManagerInterface $em): ?Language
+    {
+        $courseId = $this->resolveCourseIdFromRequest($request);
+        if ($courseId <= 0) {
+            return null;
+        }
+
+        $course = $em->getRepository(Course::class)->find($courseId);
+        if (!$course instanceof Course) {
+            return null;
+        }
+
+        $courseLanguage = trim((string) $course->getCourseLanguage());
+        if ('' === $courseLanguage) {
+            return null;
+        }
+
+        $language = $em->getRepository(Language::class)->findOneBy([
+            'isocode' => $courseLanguage,
+            'available' => true,
+        ]);
+
+        return $language instanceof Language ? $language : null;
+    }
+
+    private function resolveCourseIdFromRequest(Request $request): int
+    {
+        $courseId = $request->query->getInt('cid', 0);
+        if ($courseId > 0) {
+            return $courseId;
+        }
+
+        $courseId = $request->request->getInt('cid', 0);
+        if ($courseId > 0) {
+            return $courseId;
+        }
+
+        $resourceLinkList = $this->extractResourceLinkListFromRequest($request);
+        foreach ($resourceLinkList as $link) {
+            if (!\is_array($link)) {
+                continue;
+            }
+
+            $cid = (int) ($link['cid'] ?? 0);
+            if ($cid > 0) {
+                return $cid;
+            }
+        }
+
+        return 0;
+    }
+
+    protected function extractResourceLinkListFromRequest(Request $request): array
+    {
+        $raw = $request->request->get('resourceLinkList', null);
+
+        if (null === $raw) {
+            $content = $request->getContent();
+            if ('' !== trim($content)) {
+                $data = json_decode($content, true);
+                if (\is_array($data)) {
+                    $raw = $data['resourceLinkList'] ?? [];
+                }
+            }
+        }
+
+        if (\is_array($raw)) {
+            return $raw;
+        }
+
+        if (!\is_string($raw) || '' === trim($raw)) {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+        if (\is_array($decoded)) {
+            return $decoded;
+        }
+
+        $decoded = json_decode('['.$raw.']', true);
+
+        return \is_array($decoded) ? $decoded : [];
     }
 
     private function normalizeNodeId(mixed $value): ?int

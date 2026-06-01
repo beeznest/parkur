@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUnmount, onMounted, unref } from "vue"
+import { computed, ref, watch, onBeforeUnmount, onMounted } from "vue"
 import "@uppy/core/dist/style.css"
 import "@uppy/dashboard/dist/style.css"
 import "@uppy/image-editor/dist/style.css"
@@ -223,49 +223,87 @@ const quotaInfo = ref({
   fetchedAt: 0,
 })
 
-function toInt(value, fallback = 0) {
-  const n = Number(unref(value))
-  return Number.isFinite(n) ? n : fallback
-}
-
 function normalizeCode(code) {
   return String(code || "")
     .trim()
     .toLowerCase()
 }
 
-// Build meta keys: { "searchFieldValues[t]": "...", "searchFieldValues[d]": "..." }
-function buildSearchFieldMeta(values, fields) {
-  const meta = {}
-  for (const f of fields || []) {
-    const code = normalizeCode(f.code)
-    if (!code) continue
-    meta[`searchFieldValues[${code}]`] = String(values?.[code] ?? "")
-  }
-  return meta
+function buildResourceLinkArray() {
+  return [{ visibility: RESOURCE_LINK_PUBLISHED }]
 }
 
-function buildResourceLinkList() {
-  return JSON.stringify([
-    {
-      gid: toInt(gid, 0),
-      sid: toInt(sid, 0),
-      cid: toInt(cid, 0),
-      visibility: RESOURCE_LINK_PUBLISHED,
-    },
-  ])
+async function saveCloudLink() {
+  cloudLinkError.value = ""
+
+  const title = String(cloudLinkTitle.value || "").trim()
+  const url = String(cloudLinkUrl.value || "").trim()
+  const parentNodeId = Number(parentResourceNodeId.value) || 0
+
+  if (!title) {
+    cloudLinkError.value = t("The title is required.")
+    return
+  }
+
+  if (!url) {
+    cloudLinkError.value = t("The URL is required.")
+    return
+  }
+
+  if (parentNodeId <= 0) {
+    cloudLinkError.value = t("The destination folder is missing.")
+    return
+  }
+
+  isSavingCloudLink.value = true
+
+  try {
+    const document = await documentsService.createCloudLink({
+      title,
+      comment: url,
+      parentResourceNodeId: parentNodeId,
+      resourceLinkList: buildResourceLinkArray(),
+      language: selectedLanguage.value,
+    })
+
+    onCreated(document)
+
+    localStorage.setItem("isUploaded", "true")
+    localStorage.setItem("uploadParentNodeId", parentNodeId)
+
+    cloudLinkTitle.value = ""
+    cloudLinkUrl.value = ""
+    isCloudLinkFormVisible.value = false
+
+    if (route.query.returnTo) {
+      await router.push({
+        name: String(route.query.returnTo),
+        params: { node: parentNodeId },
+        query: buildReturnQuery({ parentResourceNodeId: parentNodeId }),
+      })
+
+      return
+    }
+
+    router.back()
+  } catch (error) {
+    console.error("[Documents] Failed to create cloud link.", error)
+    cloudLinkError.value = error?.message || t("Unable to create cloud link.")
+  } finally {
+    isSavingCloudLink.value = false
+  }
 }
 
 /**
  * Refresh quota info using documentsService cache and update the banner.
  */
 async function refreshQuota(force = false) {
-  const courseId = toInt(cid, 0)
+  const courseId = cid
   if (!courseId) return null
 
   const info = await documentsService.getQuotaUsage(courseId, {
-    sid: toInt(sid, 0),
-    gid: toInt(gid, 0),
+    sid,
+    gid,
     force,
     staleMs: QUOTA_STALE_MS,
   })
@@ -343,7 +381,10 @@ const uppy = new Uppy({ autoProceed: false })
     },
   })
   .use(XHRUpload, {
-    endpoint: ENTRYPOINT + "documents",
+    // Uppy issues a raw XHR that bypasses the axios interceptor, so the course
+    // context must be appended to the URL explicitly. The backend reads it to
+    // gate the upload and to bind the document to the current course.
+    endpoint: `/api/documents?cid=${cid}&sid=${sid}&gid=${gid}`,
     formData: true,
     fieldName: "uploadFile",
     getResponseError: (responseText, xhr) => {
@@ -486,9 +527,9 @@ watch(
 function back() {
   const queryParams = {
     ...buildReturnQuery(),
-    cid: toInt(cid, 0),
-    sid: toInt(sid, 0),
-    gid: toInt(gid, 0),
+    cid,
+    sid,
+    gid,
     tab: route.query.tab,
   }
 

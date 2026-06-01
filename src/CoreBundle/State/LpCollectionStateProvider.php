@@ -11,6 +11,26 @@ use ApiPlatform\State\ProviderInterface;
 use Chamilo\CoreBundle\Entity\Course;
 use Chamilo\CoreBundle\Entity\Session as CoreSession;
 use Chamilo\CoreBundle\Entity\User;
+use Chamilo\CoreBundle\Helpers\CidReqHelper;
+use Chamilo\CoreBundle\Helpers\LpAdvancedAccessHelper;
+use Chamilo\CoreBundle\Settings\SettingsManager;
+use Chamilo\CourseBundle\Entity\CLp;
+use Chamilo\CourseBundle\Repository\CLpRepository;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+
+/**
+ * @template-implements ProviderInterface<CLp>
+ */
+final readonly class LpCollectionStateProvider implements ProviderInterface
+{
+    public function __construct(
+        private EntityManagerInterface $em,
+        private CLpRepository $lpRepo,
         private Security $security,
         private SettingsManager $settingsManager,
         private LpAdvancedAccessHelper $advancedAccessHelper,
