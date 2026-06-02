@@ -4,48 +4,9 @@ declare(strict_types=1);
 
 namespace Chamilo\CoreBundle\Controller;
 
-use Chamilo\CoreBundle\Helpers\ResourceFileHelper;
-use Chamilo\CoreBundle\Repository\ResourceNodeRepository;
-use Chamilo\CourseBundle\Entity\CDropboxCategory;
-use Chamilo\CourseBundle\Entity\CDropboxFeedback;
-use Chamilo\CourseBundle\Repository\CDropboxCategoryRepository;
-use Chamilo\CourseBundle\Repository\CDropboxFeedbackRepository;
-use Chamilo\CourseBundle\Repository\CDropboxFileRepository;
-use DateTime;
-use DateTimeImmutable;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\{BinaryFileResponse,
-    File\UploadedFile,
-    JsonResponse,
-    Request,
-    Response,
-    ResponseHeaderBag,
-    StreamedResponse};
-use Symfony\Component\Mime\MimeTypes;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\String\Slugger\SluggerInterface;
-use Throwable;
-use ZipArchive;
-
-use const DATE_ATOM;
-use const PATHINFO_EXTENSION;
-use const PATHINFO_FILENAME;
-
-#[IsGranted('ROLE_USER')]
-#[Route('/dropbox')]
-class DropboxController extends AbstractController
-{
-    private array $userNameCache = [];
-
-    public function __construct(
-        private readonly EntityManagerInterface $em,
-        private readonly CDropboxCategoryRepository $categoryRepo,
-        private readonly CDropboxFileRepository $fileRepo,
-        private readonly CDropboxFeedbackRepository $feedbackRepo,
-        private readonly SluggerInterface $slugger,
-        private readonly ResourceNodeRepository $resourceNodeRepository
+        private readonly ResourceNodeRepository $resourceNodeRepository,
+        private readonly SettingsManager $settingsManager,
+        private readonly CidReqHelper $cidReqHelper
     ) {}
 
     private function humanSize(int $bytes): string
@@ -73,32 +34,43 @@ class DropboxController extends AbstractController
     }
 
     /**
-     * Pull Chamilo context (cid/sid/gid) from query string.
+     * Resolves the active course context (cid/sid/gid) from the session.
+     *
+     * cid/sid/gid travel in the query on every dropbox request, so CidReqListener has
+     * already resolved the course into the session and enforced CourseVoter::VIEW.
+     * Reading the authorized context from the helper keeps the listener as the single
+     * source of truth instead of trusting the raw query parameters.
      */
-    private function context(Request $r): array
+    private function context(): array
     {
-        $cid = (int) $r->query->get('cid', 0);
-        $sid = $r->query->get('sid') ? (int) $r->query->get('sid') : null;
-        $gid = $r->query->get('gid') ? (int) $r->query->get('gid') : null;
+        $course = $this->cidReqHelper->getDoctrineCourseEntity();
+        if (!$course instanceof Course) {
+            throw new BadRequestHttpException('Missing or invalid course context');
+        }
 
-        return [$cid, $sid, $gid];
+        $sid = $this->cidReqHelper->getSessionId() ?: null;
+        $gid = $this->cidReqHelper->getGroupId() ?: null;
+
+        return [(int) $course->getId(), $sid, $gid];
     }
 
     #[Route('/recipients', name: 'dropbox_recipients', methods: ['GET'])]
-    public function recipients(Request $r): JsonResponse
+    public function recipients(): JsonResponse
     {
-        [$cid, $sid, $gid] = $this->context($r);
+        // cid/sid travel in the query, so CidReqListener has already resolved the course
+        // into the session and enforced CourseVoter::VIEW. Read the authorized course and
+        // session straight from the context helper instead of trusting the raw query cid.
+        $course = $this->cidReqHelper->getCourseEntity();
+        if (!$course instanceof Course) {
+            throw $this->createNotFoundException('Course not found');
+        }
+
+        $cid = (int) $course->getId();
+        $sid = $this->cidReqHelper->getSessionId();
         $me = (int) $this->getUser()?->getId();
 
-        if ($cid <= 0) {
-            $ref = (string) $r->headers->get('referer', '');
-            if ($ref && preg_match('#/resources/dropbox/(\d+)/#', $ref, $m)) {
-                $cid = (int) $m[1];
-            }
-        }
-        if ($cid <= 0) {
-            return $this->json(['message' => 'Missing course id (cid)'], 400);
-        }
+        $allowMailing = 'true' === $this->settingsManager->getSetting('dropbox.dropbox_allow_mailing', true)
+            && $this->isGranted(CourseVoter::EDIT, $course);
 
         $conn = $this->em->getConnection();
         $userRows = [];
@@ -151,7 +123,7 @@ class DropboxController extends AbstractController
     #[Route('/categories', name: 'dropbox_categories_list', methods: ['GET'])]
     public function listCategories(Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $area = (string) $r->query->get('area', 'sent');
 
@@ -170,7 +142,7 @@ class DropboxController extends AbstractController
     #[Route('/categories', name: 'dropbox_categories_create', methods: ['POST'])]
     public function createCategory(Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $payload = json_decode($r->getContent(), true) ?: [];
         $title = trim((string) ($payload['title'] ?? ''));
@@ -188,7 +160,7 @@ class DropboxController extends AbstractController
     #[Route('/files', name: 'dropbox_files_list', methods: ['GET'])]
     public function listFiles(Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $area = (string) $r->query->get('area', 'sent');
         $categoryId = (int) $r->query->get('categoryId', 0);
@@ -239,7 +211,7 @@ class DropboxController extends AbstractController
     #[Route('/files/{id<\d+>}/move', name: 'dropbox_file_move', methods: ['PATCH'])]
     public function moveFile(int $id, Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $payload = json_decode($r->getContent(), true) ?: [];
         $targetCatId = (int) ($payload['targetCatId'] ?? 0);
@@ -257,7 +229,7 @@ class DropboxController extends AbstractController
     #[Route('/files', name: 'dropbox_files_delete', methods: ['DELETE'])]
     public function deleteFiles(Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $payload = json_decode($r->getContent(), true) ?: [];
         $ids = array_map('intval', $payload['ids'] ?? []);
@@ -273,9 +245,9 @@ class DropboxController extends AbstractController
     }
 
     #[Route('/files/{id<\d+>}/feedback', name: 'dropbox_feedback_list', methods: ['GET'])]
-    public function listFeedback(int $id, Request $r): JsonResponse
+    public function listFeedback(int $id): JsonResponse
     {
-        [$cid] = $this->context($r);
+        [$cid] = $this->context();
         $rows = $this->feedbackRepo->listByFile($cid, $id);
 
         return $this->json(array_map(function (CDropboxFeedback $f) {
@@ -292,7 +264,7 @@ class DropboxController extends AbstractController
     #[Route('/files/{id<\d+>}/feedback', name: 'dropbox_feedback_create', methods: ['POST'])]
     public function createFeedback(int $id, Request $r): JsonResponse
     {
-        [$cid] = $this->context($r);
+        [$cid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $payload = json_decode($r->getContent(), true) ?: [];
         $text = trim((string) ($payload['text'] ?? ''));
@@ -309,7 +281,7 @@ class DropboxController extends AbstractController
     #[Route('/categories/{id<\d+>}', name: 'dropbox_categories_rename', methods: ['PATCH'])]
     public function renameCategory(int $id, Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $payload = json_decode($r->getContent(), true) ?: [];
         $title = trim((string) ($payload['title'] ?? ''));
@@ -342,7 +314,7 @@ class DropboxController extends AbstractController
     #[Route('/categories/{id<\d+>}', name: 'dropbox_categories_delete', methods: ['DELETE'])]
     public function deleteCategory(int $id, Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $area = (string) $r->query->get('area', 'sent');
 
@@ -423,9 +395,12 @@ class DropboxController extends AbstractController
     }
 
     #[Route('/files/{id<\d+>}/download', name: 'dropbox_file_download', methods: ['GET'])]
-    public function download(int $id, Request $r, ResourceFileHelper $resourceFileHelper): Response
+    public function download(int $id, ResourceFileHelper $resourceFileHelper): Response
     {
-        [$cid] = $this->context($r);
+        // context() rejects requests without a valid cid; CidReqListener has already
+        // enforced CourseVoter::VIEW upstream. The consistency check below then rejects
+        // attempts to download a file that does not belong to the authorized course.
+        [$cid] = $this->context();
 
         $file = $this->fileRepo->find($id);
         if (!$file || (int) $file->getCId() !== $cid) {
@@ -497,9 +472,9 @@ class DropboxController extends AbstractController
     }
 
     #[Route('/files/{id<\d+>}', name: 'dropbox_file_get', methods: ['GET'])]
-    public function getFile(int $id, Request $r): JsonResponse
+    public function getFile(int $id): JsonResponse
     {
-        [$cid] = $this->context($r);
+        [$cid] = $this->context();
         $row = $this->fileRepo->find($id);
         if (!$row || (int) $row->getCId() !== $cid) {
             return $this->json(['message' => 'File not found'], 404);
@@ -516,7 +491,7 @@ class DropboxController extends AbstractController
     #[Route('/files/{id<\d+>}/update', name: 'dropbox_file_update', methods: ['POST'])]
     public function updateFile(int $id, Request $r): JsonResponse
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
 
         $fileRow = $this->fileRepo->find($id);
@@ -583,7 +558,7 @@ class DropboxController extends AbstractController
     #[Route('/categories/{id<\d+>}/zip', name: 'dropbox_category_zip', methods: ['GET'])]
     public function downloadCategoryZip(int $id, Request $r): Response
     {
-        [$cid, $sid] = $this->context($r);
+        [$cid, $sid] = $this->context();
         $uid = (int) $this->getUser()?->getId();
         $area = (string) $r->query->get('area', 'sent');
         $catId = (int) $id;
