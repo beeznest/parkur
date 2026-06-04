@@ -33970,3 +33970,6 @@ msgstr "Participants"
 
 msgid "CountUsers"
 msgstr "CountUsers"
+
+msgid "No data found"
+msgstr "No data found"
