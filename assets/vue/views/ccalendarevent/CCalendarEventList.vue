@@ -446,8 +446,122 @@ function buildDefaultEventItem() {
   }
 }
 
-// Hoisted function declaration to be safe with immediate watchers.
-function showAddEventDialog() {
+function normalizeRelationValueForSelect(value) {
+  if (!value) {
+    return null
+  }
+
+  if (typeof value === "number") {
+    return value
+  }
+
+  if (typeof value === "string") {
+    const match = value.match(/(\d+)$/)
+
+    return match ? Number(match[1]) : value
+  }
+
+  if (typeof value === "object" && value.id) {
+    return Number(value.id)
+  }
+
+  if (typeof value === "object" && value["@id"]) {
+    const match = String(value["@id"]).match(/(\d+)$/)
+
+    return match ? Number(match[1]) : value["@id"]
+  }
+
+  return null
+}
+
+async function loadCareerAndPromotionOptions() {
+  if (!effectiveAllowCareerPromotionFields.value) {
+    careerOptions.value = []
+    promotionOptions.value = []
+
+    return
+  }
+
+  try {
+    const data = await baseService.get("/calendar/career-promotion-options")
+
+    careerOptions.value = Array.isArray(data.careers) ? data.careers : []
+    promotionOptions.value = Array.isArray(data.promotions)
+      ? data.promotions.map((promotion) => ({
+          id: promotion.id,
+          title: promotion.title,
+          career: promotion.careerId,
+        }))
+      : []
+  } catch (e) {
+    console.error("Failed to load career and promotion options.", e)
+    careerOptions.value = []
+    promotionOptions.value = []
+  }
+}
+
+async function prepareCareerPromotionFieldsForDialog() {
+  if (!effectiveAllowCareerPromotionFields.value) {
+    careerOptions.value = []
+    promotionOptions.value = []
+
+    if (item.value) {
+      item.value.career = null
+      item.value.promotion = null
+    }
+
+    return
+  }
+
+  await loadCareerAndPromotionOptions()
+
+  if (undefined === item.value.career) {
+    item.value.career = null
+  }
+
+  if (undefined === item.value.promotion) {
+    item.value.promotion = null
+  }
+}
+
+function extractResourceLanguage(resource) {
+  return String(resource?.resourceNode?.language?.isocode || resource?.language || "").trim()
+}
+
+async function hydrateEventForEdition() {
+  const eventIri = item.value?.["@id"]
+  if (!eventIri) {
+    return
+  }
+
+  try {
+    const fullEvent = await baseService.get(eventIri)
+
+    const rawReminders = (fullEvent.reminders ?? item.value?.reminders ?? [])
+    const normalizedReminders = rawReminders
+      .map((r) => (r && typeof r === "object" ? { count: r.count ?? 0, period: r.period ?? "i" } : null))
+      .filter(Boolean)
+
+    item.value = {
+      ...item.value,
+      ...fullEvent,
+      title: fullEvent.title ?? item.value.title ?? "",
+      content: fullEvent.content ?? item.value.content ?? "",
+      color: normalizeHex(fullEvent.color ?? item.value.color) || defaultColorByContext(currentContext.value),
+      room: normalizeRelationValueForSelect(fullEvent.room ?? item.value.room),
+      career: normalizeRelationValueForSelect(fullEvent.career ?? item.value.career),
+      promotion: normalizeRelationValueForSelect(fullEvent.promotion ?? item.value.promotion),
+      language: extractResourceLanguage(fullEvent),
+      startDate: fullEvent.startDate ? new Date(fullEvent.startDate) : item.value.startDate,
+      endDate: fullEvent.endDate ? new Date(fullEvent.endDate) : item.value.endDate,
+      reminders: normalizedReminders,
+    }
+  } catch (error) {
+    console.error("Failed to hydrate calendar event before editing.", error)
+  }
+}
+
+async function showAddEventDialog() {
   item.value = buildDefaultEventItem()
   dialog.value = true
 }
