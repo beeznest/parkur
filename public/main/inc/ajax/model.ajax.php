@@ -763,7 +763,7 @@ switch ($action) {
             exit;
         }
 
-        $courseId = $_REQUEST['course_id'] ?? 0;
+        $courseId = (int) ($_REQUEST['course_id'] ?? 0);
         $exerciseId = $_REQUEST['exercise_id'] ?? 0;
         $status = $_REQUEST['status'] ?? 0;
         if (isset($_GET['filter_by_user']) && !empty($_GET['filter_by_user'])) {
@@ -807,7 +807,7 @@ switch ($action) {
     case 'get_exercise_results':
         $exercise_id = $_REQUEST['exerciseId'];
 
-        $courseId = $_REQUEST['course_id'] ?? 0;
+        $courseId = (int) ($_REQUEST['course_id'] ?? 0);
         $exerciseId = $_REQUEST['exercise_id'] ?? 0;
         $status = $_REQUEST['status'] ?? 0;
         if (isset($_GET['filter_by_user']) && !empty($_GET['filter_by_user'])) {
