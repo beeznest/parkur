@@ -10,7 +10,7 @@
             {{ t("Location") }}
           </div>
           <div class="truncate text-body-1 font-semibold text-gray-90">
-            {{ currentFolderTitle || t("Root") }}
+            {{ displayCurrentFolderTitle }}
           </div>
         </div>
 
@@ -445,6 +445,16 @@ const {
 onMountedCallback()
 
 const isTinyPicker = computed(() => String(route.query.picker || "") === "tinymce")
+
+const displayCurrentFolderTitle = computed(() => {
+  const title = String(currentFolderTitle.value || "").trim()
+
+  if (!title || title.toLowerCase() === "root") {
+    return t("Root")
+  }
+
+  return title
+})
 
 const pickerTypeLabel = computed(() => {
   if (filterType.value === "images") return t("Images")
