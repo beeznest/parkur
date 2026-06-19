@@ -134,6 +134,20 @@ const base = (typeof window !== "undefined" ? window.CHAMILO_TINYMCE_BASE_CONFIG
 /* ------------------------------------------------------------------ */
 
 const RESPONSIVE_IMAGE_CLASS = "ch-img-responsive"
+const TINYMCE_CONTENT_SPACING_RULE = [
+  "body.mce-content-body",
+  "{ padding: 8px 12px !important; box-sizing: border-box; }",
+  "body.mce-content-body > :first-child",
+  "{ margin-top: 0; }",
+].join(" ")
+
+const TINYMCE_FIREFOX_FOCUS_RULE = [
+  "html:focus,",
+  "html:focus-visible,",
+  "body.mce-content-body:focus,",
+  "body.mce-content-body:focus-visible",
+  "{ outline: none !important; box-shadow: none !important; }",
+].join(" ")
 const HOOK_GUARD_KEY = "__chamiloBaseTinyEditorHooksAttached"
 
 function normalizeImageClassListItem(item) {
@@ -204,6 +218,12 @@ function ensureTinyContentStyles(contentStyleRaw) {
   }
   if (!out.includes(`img.${RESPONSIVE_IMAGE_CLASS}`)) {
     out += responsiveRule
+  }
+  if (!out.includes("body.mce-content-body") || !out.includes("padding: 8px 12px")) {
+    out += ` ${TINYMCE_CONTENT_SPACING_RULE}`
+  }
+  if (!out.includes("body.mce-content-body:focus")) {
+    out += ` ${TINYMCE_FIREFOX_FOCUS_RULE}`
   }
 
   return out
@@ -558,3 +578,12 @@ onBeforeUnmount(() => {
   removeActiveMessageHandler()
 })
 </script>
+
+<style scoped>
+.html-editor-container :deep(.tox .tox-edit-area__iframe),
+.html-editor-container :deep(.tox .tox-edit-area__iframe:focus),
+.html-editor-container :deep(.tox .tox-edit-area__iframe:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+</style>
