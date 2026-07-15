@@ -25,7 +25,7 @@ try {
     $client = new GuzzleHttp\Client();
     $response = $client->request(
         'POST',
-        $url.'/app/desktop/php/authenticate.php',
+        $url.'/hybrid-app/www/desktop/php/remote/authenticate.php',
         [
             'form_params' => $params,
             'verify' => false,
@@ -37,7 +37,7 @@ try {
         $result = json_decode($response->getBody());
         if ($result && isset($result->status)) {
             if ('OK' === $result->status) {
-                $redirect = $url.'/app/index.html?session='.$result->session;
+                $redirect = $url.'/hybrid-app/www/index.html?session='.$result->session;
             } else {
                 api_not_allowed(true);
             }
