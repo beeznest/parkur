@@ -12,13 +12,17 @@ use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\TrackECourseAccess;
 use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CoreBundle\Exception\NotAllowedException;
+use Chamilo\CoreBundle\Repository\ExtraFieldValuesRepository;
+use Chamilo\CoreBundle\Repository\LegalRepository;
 use Chamilo\CoreBundle\Security\Authorization\Voter\CourseVoter;
 use Chamilo\CoreBundle\Security\Authorization\Voter\GroupVoter;
 use Chamilo\CoreBundle\Security\Authorization\Voter\SessionVoter;
+use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\CourseBundle\Controller\CourseControllerInterface;
 use Chamilo\CourseBundle\Entity\CGroup;
 use ChamiloSession;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -53,7 +57,10 @@ class CidReqListener
         private readonly AuthorizationCheckerInterface $authorizationChecker,
         private readonly TranslatorInterface $translator,
         private readonly EntityManagerInterface $entityManager,
-        private readonly TokenStorageInterface $tokenStorage
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly SettingsManager $settingsManager,
+        private readonly LegalRepository $legalRepository,
+        private readonly ExtraFieldValuesRepository $extraFieldValuesRepository
     ) {}
 
     /**
@@ -157,6 +164,26 @@ class CidReqListener
                     && $ltiCourseId === (int) $course->getId()
                 ) {
                     return;
+                }
+            }
+
+            // The dedicated checkLegal.json endpoint computes this redirect itself
+            // and returns it as JSON (consumed by the Vue router guard on SPA-internal
+            // navigation); skip it here to avoid turning that AJAX call into an HTTP redirect.
+            if ('chamilo_core_course_check_legal_json' !== $request->attributes->get('_route')) {
+                $tokenUser = $this->tokenStorage->getToken()?->getUser();
+                if ($tokenUser instanceof User) {
+                    $termsRedirect = $this->redirectForPendingTermsAndConditions(
+                        $request,
+                        $tokenUser,
+                        $course,
+                        (int) $request->get('sid')
+                    );
+                    if (null !== $termsRedirect) {
+                        $event->setResponse($termsRedirect);
+
+                        return;
+                    }
                 }
             }
 
@@ -348,6 +375,60 @@ class CidReqListener
 
         // Remove context roles also when leaving the course/session/group
         $this->resetContextRolesOnTokenUser();
+    }
+
+    /**
+     * Mirrors CourseController::checkTermsAndConditionJson() so that a direct page
+     * load of a course also redirects a student with pending terms to tc.php,
+     * instead of falling through to the CourseVoter::VIEW access check.
+     */
+    private function redirectForPendingTermsAndConditions(
+        Request $request,
+        User $user,
+        Course $course,
+        int $sessionId
+    ): ?RedirectResponse {
+        if (!$user->isStudent()
+            || 'true' !== $this->settingsManager->getSetting('registration.allow_terms_conditions', true)
+            || 'course' !== $this->settingsManager->getSetting('workflows.load_term_conditions_section', true)
+        ) {
+            return null;
+        }
+
+        $termAndConditionStatus = false;
+        $extraValue = $this->extraFieldValuesRepository->findLegalAcceptByItemId($user->getId());
+        if (!empty($extraValue['value'])) {
+            $userConditions = explode(':', $extraValue['value']);
+            $version = $userConditions[0];
+            $langId = (int) ($userConditions[1] ?? 0);
+            $realVersion = $this->legalRepository->getLastVersion($langId);
+            $termAndConditionStatus = ($version >= $realVersion);
+        }
+
+        if ($termAndConditionStatus) {
+            $request->getSession()->remove('term_and_condition');
+
+            return null;
+        }
+
+        $request->getSession()->set('term_and_condition', ['user_id' => $user->getId()]);
+
+        if ('true' === $this->settingsManager->getSetting('course.allow_public_course_with_no_terms_conditions', true)
+            && Course::OPEN_WORLD === $course->getVisibility()
+        ) {
+            return null;
+        }
+
+        if ($this->authorizationChecker->isGranted('ROLE_ADMIN')) {
+            return null;
+        }
+
+        $request->getSession()->remove('cid');
+        $request->getSession()->remove('course');
+
+        $returnUrl = '/course/'.$course->getId().'/home'.($sessionId > 0 ? '?sid='.$sessionId : '');
+
+        return new RedirectResponse('/main/auth/tc.php?return='.urlencode($returnUrl));
     }
 
     private function resetContextRolesOnTokenUser(): void
