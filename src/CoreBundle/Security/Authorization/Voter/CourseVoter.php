@@ -11,6 +11,7 @@ use Chamilo\CoreBundle\Entity\SequenceResource;
 use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CoreBundle\Exception\NotAllowedException;
+use Chamilo\CoreBundle\Settings\SettingsManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -35,7 +36,8 @@ class CourseVoter extends Voter
         private readonly Security $security,
         private readonly TranslatorInterface $translator,
         RequestStack $requestStack,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        private readonly SettingsManager $settingsManager
     ) {
         $this->requestStack = $requestStack;
         $this->entityManager = $entityManager;
