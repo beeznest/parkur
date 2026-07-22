@@ -1003,28 +1003,7 @@ class CourseController extends ToolBaseController
         }
 
         $ctoolintroRepo = $em->getRepository(CToolIntro::class);
-
-        // Writing a tool introduction is teacher-only. The contextual course
-        // roles are unavailable here (cid travels in the body, not the query, so
-        // CidReqListener cannot resolve them), so resolve them directly from the
-        // course/session objects with CourseAccessResolver — the same source of
-        // truth CourseContextRoleListener uses — keeping this gate consistent with
-        // the CToolIntro API write operations. Admins are allowed separately, as
-        // the resolver does not grant them course roles.
-        $user = $this->getUser();
-        $courseRoles = $user instanceof User
-            ? $courseAccessResolver->resolveCourseRoles($user, $course, $session)
-            : [];
-
-        $canManage = $this->isGranted('ROLE_ADMIN')
-            || \in_array(ResourceNodeVoter::ROLE_CURRENT_COURSE_TEACHER, $courseRoles, true)
-            || \in_array(ResourceNodeVoter::ROLE_CURRENT_COURSE_SESSION_TEACHER, $courseRoles, true);
-
-        if (!$canManage) {
-            throw $this->createAccessDeniedException();
-        }
-
-        $ctoolintroRepo = $em->getRepository(CToolIntro::class);
+        $ctoolRepo = $em->getRepository(CTool::class);
 
         $ctoolSession = $ctoolRepo->findOneBy([
             'title' => 'course_homepage',
