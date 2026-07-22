@@ -2392,9 +2392,6 @@
     "View threads": "View threads",
     "Current": "Current",
     "No auth source": "No auth source",
-<<<<<<< HEAD
-    "Maximum number of subscriptions allowed. Leave at 0 to not limit it.": "Maximum number of subscriptions allowed. Leave at 0 to not limit it."
-=======
     "Maximum number of subscriptions allowed. Leave at 0 to not limit it.": "Maximum number of subscriptions allowed. Leave at 0 to not limit it.",
     "<strong>Welcome<\/strong> to the Chamilo Course authoring tool.<br \/>Create your courses step-by-step. The table of contents will appear to the left.": "<strong>Welcome<\/strong> to the Chamilo Course authoring tool.<br \/>Create your courses step-by-step. The table of contents will appear to the left.",
     "To start, give a title to your course": "To start, give a title to your course",
@@ -3146,5 +3143,4 @@
     "Press enter to remove": "Press enter to remove",
     "No elements found. Consider changing the search query.": "No elements found. Consider changing the search query.",
     "List is empty.": "List is empty."
->>>>>>> b043e2cbf6 (User: add user first name and lastname in friends list and add missing translations - refs BT#23564)
 }
