@@ -56,72 +56,18 @@ async function updateIntroLinks() {
 
   const updatedIntroText = intro.value.introText.replace(/sid=\d+/g, `sid=${currentSessionId}`)
 
-  return {
-    ...data,
-    c_tool: data.c_tool || {
-      iid: data.cToolId || null,
-      title: props.tool,
-    },
-  }
-}
-
-function getCourseToolId() {
-  return intro.value?.c_tool?.iid || intro.value?.cToolId || null
-}
-
-async function loadIntro() {
-  if (!isEnabled.value || !course.value?.id) {
-    intro.value = null
-    return
-  }
-
-  isLoading.value = true
-
-  try {
-    let data = null
-
-    if (props.tool === "course_homepage") {
-      data = await courseService.loadHomeIntro(course.value.id, currentSessionId.value)
-    } else {
-      data = await cToolIntroService.findCourseHomeInro(course.value.id, {
-        sid: currentSessionId.value,
-        tool: props.tool,
-      })
-    }
-
-    intro.value = normalizeIntroResponse(data)
-  } catch (error) {
-    console.error("Error loading tool introduction:", error)
-    intro.value = null
-  } finally {
-    isLoading.value = false
-  }
-}
-
-async function createEmptyIntroIfNeeded() {
-  if (intro.value?.iid && getCourseToolId()) {
-    return
-  }
-
-  const response = await cToolIntroService.addToolIntro(course.value.id, {
-    tool: props.tool,
-    introText: intro.value?.introText || "",
-    sid: currentSessionId.value || 0,
-    // Course context derived server-side from the gated session course.
-    resourceLinkList: [{ visibility: "published" }],
-  })
-
-  intro.value = normalizeIntroResponse(response)
-}
-
-async function openEditor() {
-  await createEmptyIntroIfNeeded()
-
-  const courseToolId = getCourseToolId()
-
-  if (!intro.value?.iid || !courseToolId) {
-    console.error("Cannot open tool introduction editor.", intro.value)
-    return
+  const payload = {
+    introText: updatedIntroText,
+    iid: intro.value.c_tool.iid,
+    resourceLinkList: [
+      {
+        sid: currentSessionId,
+        cid: course.value.id,
+        introText: updatedIntroText,
+        visibility: "published",
+      },
+    ],
+    ...(intro.value.iid && { iid: intro.value.iid }),
   }
 
   try {
