@@ -37445,3 +37445,6 @@ msgstr "No elements found. Consider changing the search query."
 
 msgid "List is empty."
 msgstr "List is empty."
+
+msgid "Your session has expired. Please try again."
+msgstr "Your session has expired. Please try again."
