@@ -39335,3 +39335,6 @@ msgstr "La liste est vide."
 
 msgid "Your session has expired. Please try again."
 msgstr "Votre session a expiré. Veuillez réessayer."
+
+msgid "Back to account"
+msgstr "Retour au compte"
