@@ -3,6 +3,27 @@ import fetch from "../utils/fetch"
 // As stated here https://github.com/chamilo/chamilo-lms/pull/5386#discussion_r1578471409
 // this service should not be used and instead the assets/bue/config/api.js should be used instead
 // take a look at assets/bue/services/socialService.js to have an example
+
+// find()/findAll() forward the current page's cid/sid/gid as query params so
+// reads stay scoped to the course/session context. create()/createWithFormData()
+// need the same treatment: without it, CidReqListener sees a context-less POST
+// and clears the course/session from the PHP session, so the resource ends up
+// persisted with no ResourceLink to the course (it silently becomes a personal
+// resource instead).
+function getCourseContextParams() {
+  const currentParams = new URLSearchParams(window.location.search)
+  const context = {}
+
+  ;["cid", "sid", "gid"].forEach((key) => {
+    const value = currentParams.get(key)
+    if (null !== value) {
+      context[key] = value
+    }
+  })
+
+  return context
+}
+
 export default function makeService(endpoint, extensions = {}) {
   const baseService = {
     find(id, params) {
@@ -39,12 +60,12 @@ export default function makeService(endpoint, extensions = {}) {
         payload = formData
       }
 
-      return fetch(endpoint, { method: "POST", body: payload })
+      return fetch(endpoint, { method: "POST", body: payload, params: getCourseContextParams() })
     },
     async create(payload) {
       console.log("api.js create")
       console.log(payload)
-      return fetch(endpoint, { method: "POST", body: JSON.stringify(payload) })
+      return fetch(endpoint, { method: "POST", body: JSON.stringify(payload), params: getCourseContextParams() })
     },
     del(item) {
       console.log("api.js del")

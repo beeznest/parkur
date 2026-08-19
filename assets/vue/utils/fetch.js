@@ -27,7 +27,7 @@ export default function (id, options = {}) {
     options.headers = { ...options.headers, "Content-Type": MIME_TYPE }
   }
 
-  if (options.params) {
+  if (options.params && Object.keys(options.params).length) {
     const params = normalize(options.params)
     let queryString = Object.keys(params)
       .map((key) => (Array.isArray(params[key]) ? makeParamArray(key, params[key]) : `${key}=${params[key]}`))
