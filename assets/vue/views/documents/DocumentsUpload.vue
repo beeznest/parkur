@@ -451,7 +451,7 @@ uppy
 uppy.setMeta({
   filetype,
   parentResourceNodeId: parentResourceNodeId.value,
-  resourceLinkList: buildResourceLinkList(),
+  resourceLinkList: JSON.stringify(buildResourceLinkArray()),
   isUncompressZipEnabled: isUncompressZipEnabled.value,
   fileExistsOption: fileExistsOption.value,
   indexDocumentContent: indexDocumentContent.value,
