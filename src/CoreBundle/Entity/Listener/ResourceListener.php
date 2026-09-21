@@ -11,6 +11,7 @@ use Chamilo\CoreBundle\Entity\AbstractResource;
 use Chamilo\CoreBundle\Entity\AccessUrl;
 use Chamilo\CoreBundle\Entity\Course;
 use Chamilo\CoreBundle\Entity\EntityAccessUrlInterface;
+use Chamilo\CoreBundle\Entity\Language;
 use Chamilo\CoreBundle\Entity\PersonalFile;
 use Chamilo\CoreBundle\Entity\ResourceFile;
 use Chamilo\CoreBundle\Entity\ResourceFormat;
@@ -27,15 +28,19 @@ use Chamilo\CoreBundle\Traits\AccessUrlListenerTrait;
 use Chamilo\CourseBundle\Entity\CCalendarEvent;
 use Chamilo\CourseBundle\Entity\CDocument;
 use Chamilo\CourseBundle\Entity\CGroup;
+use Chamilo\CourseBundle\Entity\CLpItem;
 use Cocur\Slugify\SlugifyInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\PrePersistEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Persistence\ObjectManager;
 use Exception;
 use InvalidArgumentException;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 
 use const JSON_THROW_ON_ERROR;
@@ -199,7 +204,11 @@ class ResourceListener
         if (null !== $request && null === $parentNode) {
             $currentRequest = $request->getCurrentRequest();
             if (null !== $currentRequest) {
-                $resourceNodeIdFromRequest = $currentRequest->get('parentResourceNodeId');
+                $bodyParentResourceNodeId = $currentRequest->request->get('parentResourceNodeId');
+                $resourceNodeIdFromRequest = $currentRequest->query->get(
+                    'parentResourceNodeId',
+                    null !== $bodyParentResourceNodeId ? (string) $bodyParentResourceNodeId : null
+                );
                 if (empty($resourceNodeIdFromRequest)) {
                     $contentData = $request->getCurrentRequest()->getContent();
                     $contentData = json_decode($contentData, true, 512, JSON_THROW_ON_ERROR);
@@ -324,6 +333,8 @@ class ResourceListener
 
         $resource->setResourceNode($resourceNode);
 
+        $this->applyResourceLanguageFromRequest($resource, $eventArgs);
+
         // All resources should have a parent, except AccessUrl.
         if (!($resource instanceof AccessUrl) && null === $resourceNode->getParent()) {
             $message = \sprintf(
@@ -337,6 +348,28 @@ class ResourceListener
         if ($resource instanceof CCalendarEvent) {
             $this->addCCalendarEventGlobalLink($resource, $eventArgs);
         }
+    }
+
+    public function updateResourceName(AbstractResource $resource): void
+    {
+        $resourceName = $resource->getResourceName();
+
+        // Legacy Chamilo 1.x data may have empty titles/filenames. Use a safe
+        // fallback so migrations do not abort on dirty rows.
+        if (empty($resourceName)) {
+            $resourceName = 'resource-'.$resource->getResourceIdentifier();
+        }
+
+        $resourceNode = $resource->getResourceNode();
+        if (null === $resourceNode) {
+            return;
+        }
+
+        $extension = $this->slugify->slugify(pathinfo($resourceName, PATHINFO_EXTENSION));
+        if (empty($extension)) {
+            // $slug = $this->slugify->slugify($resourceName);
+        }
+        $resourceNode->setTitle($resourceName);
     }
 
     /**
@@ -408,47 +441,100 @@ class ResourceListener
         $resource->setResourceLinkArray([$context]);
     }
 
-    /**
-     * When updating a Resource.
-     */
-    public function preUpdate(AbstractResource $resource, PreUpdateEventArgs $eventArgs): void
+    private function applyResourceLanguageFromRequest(AbstractResource $resource, LifecycleEventArgs $eventArgs): void
     {
+        $currentRequest = $this->request->getCurrentRequest();
+        $hasLanguage = false;
+        $rawLanguage = null;
+
+        if (null !== $currentRequest) {
+            if ($currentRequest->request->has('language')) {
+                $hasLanguage = true;
+                $rawLanguage = $currentRequest->request->get('language');
+            } else {
+                $content = trim($currentRequest->getContent());
+                if ('' !== $content) {
+                    $payload = json_decode($content, true);
+                    if (\is_array($payload) && \array_key_exists('language', $payload)) {
+                        $hasLanguage = true;
+                        $rawLanguage = $payload['language'];
+                    }
+                }
+            }
+        }
+
+        if (!$hasLanguage && null !== $resource->language) {
+            $hasLanguage = true;
+            $rawLanguage = $resource->language;
+        }
+
+        if (!$hasLanguage) {
+            return;
+        }
+
+        $em = $eventArgs->getObjectManager();
+        $language = $this->findLanguage($rawLanguage, $em);
         $resourceNode = $resource->getResourceNode();
 
         if (null === $resourceNode) {
             return;
         }
 
-        $parentResourceNode = $resource->getParent()?->resourceNode;
+        $resourceNode->setLanguage($language);
 
-        if ($parentResourceNode) {
-            $resourceNode->setParent($parentResourceNode);
+        foreach ($resourceNode->getResourceFiles() as $resourceFile) {
+            if ($resourceFile instanceof ResourceFile) {
+                $resourceFile->setLanguage($language);
+            }
         }
-
-        $this->updateResourceName($resource);
-
-        // error_log('Resource listener preUpdate');
-        // $this->setLinks($resource, $eventArgs->getEntityManager());
     }
 
-    public function updateResourceName(AbstractResource $resource): void
+    private function findLanguage(mixed $rawLanguage, ObjectManager $em): ?Language
     {
-        $resourceName = $resource->getResourceName();
-
-        if (empty($resourceName)) {
-            throw new InvalidArgumentException('Resource needs a name');
+        if (null === $rawLanguage) {
+            return null;
         }
 
-        $resourceNode = $resource->getResourceNode();
-        if (null === $resourceNode) {
-            return;
+        if (\is_array($rawLanguage)) {
+            if (isset($rawLanguage['@id'])) {
+                $rawLanguage = $rawLanguage['@id'];
+            } elseif (isset($rawLanguage['isocode'])) {
+                $rawLanguage = $rawLanguage['isocode'];
+            } elseif (isset($rawLanguage['id'])) {
+                $rawLanguage = $rawLanguage['id'];
+            }
         }
 
-        $extension = $this->slugify->slugify(pathinfo($resourceName, PATHINFO_EXTENSION));
-        if (empty($extension)) {
-            // $slug = $this->slugify->slugify($resourceName);
+        $languageCode = trim((string) $rawLanguage);
+        if ('' === $languageCode) {
+            return null;
         }
-        $resourceNode->setTitle($resourceName);
+
+        if (preg_match('#/api/languages/(\d+)$#', $languageCode, $matches) || ctype_digit($languageCode)) {
+            $languageId = isset($matches[1]) ? (int) $matches[1] : (int) $languageCode;
+            $language = $em->getRepository(Language::class)->find($languageId);
+
+            if ($language instanceof Language) {
+                return $language;
+            }
+
+            throw new BadRequestHttpException('Invalid resource language.');
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]{1,8}$/', $languageCode)) {
+            throw new BadRequestHttpException('Invalid resource language.');
+        }
+
+        $language = $em->getRepository(Language::class)->findOneBy([
+            'isocode' => $languageCode,
+            'available' => true,
+        ]);
+
+        if ($language instanceof Language) {
+            return $language;
+        }
+
+        throw new BadRequestHttpException('Invalid resource language.');
     }
 
     private function addCCalendarEventGlobalLink(CCalendarEvent $event, PrePersistEventArgs $eventArgs): void
@@ -482,7 +568,9 @@ class ResourceListener
             $alreadyHasGlobalLink = false;
             foreach ($resourceNode->getResourceLinks() as $existingLink) {
                 if (null === $existingLink->getCourse() && null === $existingLink->getSession()
-                    && null === $existingLink->getGroup() && null === $existingLink->getUser()) {
+                    && null === $existingLink->getGroup()
+                    && null === $existingLink->getUser()
+                ) {
                     $alreadyHasGlobalLink = true;
 
                     break;
@@ -496,6 +584,31 @@ class ResourceListener
         }
     }
 
+    /**
+     * When updating a Resource.
+     */
+    public function preUpdate(AbstractResource $resource, PreUpdateEventArgs $eventArgs): void
+    {
+        $resourceNode = $resource->getResourceNode();
+
+        if (null === $resourceNode) {
+            return;
+        }
+
+        $parentResourceNode = $resource->getParent()?->resourceNode;
+
+        if ($parentResourceNode) {
+            $resourceNode->setParent($parentResourceNode);
+        }
+
+        $this->updateResourceName($resource);
+
+        $this->applyResourceLanguageFromRequest($resource, $eventArgs);
+
+        // error_log('Resource listener preUpdate');
+        // $this->setLinks($resource, $eventArgs->getEntityManager());
+    }
+
     public function preRemove(AbstractResource $resource, LifecycleEventArgs $args): void
     {
         if (!$resource instanceof CDocument) {
@@ -503,10 +616,14 @@ class ResourceListener
         }
 
         $em = $args->getObjectManager();
-        $docID = $resource->getIid();
-        $em->createQuery('DELETE FROM Chamilo\CourseBundle\Entity\CLpItem i WHERE i.path = :path AND i.itemType = :type')
-            ->setParameter('path', $docID)
+        \assert($em instanceof EntityManagerInterface);
+        $em->createQueryBuilder()
+            ->delete(CLpItem::class, 'i')
+            ->where('i.path = :path')
+            ->andWhere('i.itemType = :type')
+            ->setParameter('path', $resource->getIid())
             ->setParameter('type', 'document')
+            ->getQuery()
             ->execute()
         ;
     }

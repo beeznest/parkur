@@ -1,6 +1,17 @@
 export default {
   path: "/resources/attendance/:node/",
-  meta: { requiresAuth: true, showBreadcrumb: true },
+  meta: {
+    requiresAuth: true,
+    showBreadcrumb: true,
+    tool: "attendance",
+    breadcrumb: "Attendance",
+    breadcrumbResource: {
+      trail: "self",
+      listRoute: "AttendanceList",
+      detailRoute: "AttendanceSheetList",
+      detailParam: "id",
+    },
+  },
   name: "attendance",
   component: () => import("../components/layout/SimpleRouterViewLayout.vue"),
   redirect: { name: "AttendanceList" },

@@ -22,6 +22,13 @@
         :for="editorId"
       >
         {{ title }}
+        <span
+          v-if="showRequiredMarker"
+          aria-hidden="true"
+          class="text-red-500"
+        >
+          *
+        </span>
       </label>
     </FloatLabel>
     <small
@@ -32,12 +39,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onBeforeUnmount } from "vue"
+import { computed, onBeforeUnmount, ref } from "vue"
 import TinyEditor from "../../components/Editor"
+import api from "../../config/api"
 import { useRoute, useRouter } from "vue-router"
 import { useCidReqStore } from "../../store/cidReq"
 import { storeToRefs } from "pinia"
 import { useSecurityStore } from "../../store/securityStore"
+import { usePlatformConfig } from "../../store/platformConfig"
 import FloatLabel from "primevue/floatlabel"
 import { useLocale } from "../../composables/locale"
 import { useI18n } from "vue-i18n"
@@ -53,13 +62,16 @@ const isFocused = ref(false)
 const props = defineProps({
   editorId: { type: String, required: true },
   required: { type: Boolean, default: false },
-  title: { type: String, default: "" },
+  showRequiredMarker: { type: Boolean, default: false },
+  title: { type: String, default: "", required: true },
   editorConfig: { type: Object, default: () => ({}) },
   helpText: { type: String, default: "" },
   // If true: use Chamilo file manager; if false: use system file picker.
   useFileManager: { type: Boolean, default: false },
   // When true, includes TinyMCE "fullpage" plugin/button.
   fullPage: { type: Boolean, default: true },
+  // Keep translate_html enabled by default, but allow language-specific editors to opt out.
+  enableTranslateHtml: { type: Boolean, default: true },
 })
 
 /* Derived UI flags */
@@ -71,13 +83,22 @@ const route = useRoute()
 const parentResourceNodeId = ref(0)
 
 const securityStore = useSecurityStore()
+const platformConfigStore = usePlatformConfig()
 const cidReqStore = useCidReqStore()
 const { course } = storeToRefs(cidReqStore)
 
-/**
- * Determine the best resource node to browse.
- * Prefer course node when available (Documents use case), fallback to user node.
- */
+function toBool(value) {
+  if (typeof value === "boolean") {
+    return value
+  }
+
+  return ["1", "true", "yes", "on"].includes(
+    String(value ?? "")
+      .trim()
+      .toLowerCase(),
+  )
+}
+
 function resolveParentNodeId() {
   const courseNodeId = Number(course.value?.resourceNode?.id || 0)
   const userNodeId = Number(securityStore.user?.resourceNode?.id || 0)
@@ -88,6 +109,16 @@ function resolveParentNodeId() {
 
   return routeNode || routeId || courseNodeId || userNodeId || 0
 }
+
+/**
+ * Personal-files image uploads must always target the authenticated user's
+ * personal resource root — never a course or route node. Parenting under a
+ * course triggers ResourceListener's "cannot add a file to another user" check.
+ */
+function resolvePersonalParentNodeId() {
+  return Number(securityStore.user?.resourceNode?.id || 0)
+}
+
 parentResourceNodeId.value = resolveParentNodeId()
 
 /* Language resolution */
@@ -122,16 +153,12 @@ function getLanguageConfig(locale) {
       lang = defaultLang
     }
   }
+
   return { language: lang, language_url: `${url}${file}` }
 }
 const languageConfig = getLanguageConfig(appLocale.value)
 
-/* Pull base from global config file (tiny-settings.js) */
 const base = (typeof window !== "undefined" ? window.CHAMILO_TINYMCE_BASE_CONFIG : {}) || {}
-
-/* ------------------------------------------------------------------ */
-/* Responsive images support (TinyMCE image dialog)                    */
-/* ------------------------------------------------------------------ */
 
 const RESPONSIVE_IMAGE_CLASS = "ch-img-responsive"
 const TINYMCE_CONTENT_SPACING_RULE = [
@@ -149,6 +176,7 @@ const TINYMCE_FIREFOX_FOCUS_RULE = [
   "{ outline: none !important; box-shadow: none !important; }",
 ].join(" ")
 const HOOK_GUARD_KEY = "__chamiloBaseTinyEditorHooksAttached"
+const EDITOR_IMAGE_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "bmp"]
 
 function normalizeImageClassListItem(item) {
   if (!item) return null
@@ -270,6 +298,51 @@ function applyResponsiveInlineStyles(htmlRaw) {
   }
 }
 
+function getFileExtension(name) {
+  const value = String(name || "").toLowerCase()
+  const parts = value.split(".")
+  return parts.length > 1 ? parts.pop() : ""
+}
+
+function isAllowedEditorImage(blobInfo) {
+  const blob = blobInfo?.blob?.()
+  const mime = String(blob?.type || "").toLowerCase()
+  const ext = getFileExtension(blobInfo?.filename?.() || "")
+
+  if (mime.startsWith("image/") && mime !== "image/svg+xml" && mime !== "image/svg") {
+    return true
+  }
+
+  return EDITOR_IMAGE_ALLOWED_EXTENSIONS.includes(ext)
+}
+
+function buildAbsoluteUrl(url) {
+  const raw = String(url || "").trim()
+
+  if (!raw) {
+    return ""
+  }
+
+  try {
+    return new URL(raw, window.location.origin).href
+  } catch {
+    return raw
+  }
+}
+
+function resolveUploadedImageUrl(data) {
+  const candidates = [
+    data?.contentUrl,
+    data?.resourceNode?.contentUrl,
+    data?.resourceNode?.firstResourceFile?.contentUrl,
+    data?.url,
+  ]
+
+  const found = candidates.find((value) => String(value || "").trim() !== "")
+
+  return found ? buildAbsoluteUrl(found) : ""
+}
+
 function attachChamiloHooks(editor) {
   try {
     if (editor && editor[HOOK_GUARD_KEY]) return
@@ -294,6 +367,7 @@ function attachChamiloHooks(editor) {
   editor.on("focus", () => {
     isFocused.value = true
   })
+
   editor.on("blur", () => {
     isFocused.value = false
   })
@@ -314,7 +388,80 @@ function attachChamiloHooks(editor) {
   })
 }
 
-/* Compose default editor config */
+const allowSvgInEditor = computed(() => {
+  return toBool(platformConfigStore.getSetting("editor.enabled_support_svg"))
+})
+
+const editorFeatureFlags = computed(() => ({
+  isLearner: securityStore.isStudent === true,
+  disableCopyPaste: toBool(platformConfigStore.getSetting("platform.disable_copy_paste")),
+  blockCopyPasteForStudents: toBool(platformConfigStore.getSetting("editor.block_copy_paste_for_students")),
+  youtubeForStudents: toBool(platformConfigStore.getSetting("editor.youtube_for_students")),
+  enabledInsertHtml: toBool(platformConfigStore.getSetting("editor.enabled_insertHtml")),
+  enableIframeInclusion: toBool(platformConfigStore.getSetting("editor.enable_iframe_inclusion")),
+  enabledSupportSvg: allowSvgInEditor.value,
+}))
+
+const translateHtmlEnabled = computed(() => {
+  return props.enableTranslateHtml && toBool(platformConfigStore.getSetting("editor.translate_html"))
+})
+
+const mathJaxEnabled = computed(() => {
+  return toBool(platformConfigStore.getSetting("editor.enabled_mathjax"))
+})
+
+const enableUploadImageInEditor = computed(() => {
+  return (
+    securityStore.isAuthenticated === true &&
+    toBool(platformConfigStore.getSetting("editor.enable_uploadimage_editor")) &&
+    resolvePersonalParentNodeId() > 0
+  )
+})
+
+async function uploadEditorImage(blobInfo, progress) {
+  if (!enableUploadImageInEditor.value) {
+    throw new Error("Image upload is disabled in this editor.")
+  }
+
+  if (!isAllowedEditorImage(blobInfo)) {
+    throw new Error("Only JPG, PNG, GIF, WEBP and BMP images are allowed.")
+  }
+
+  const filename = blobInfo?.filename?.() || `editor-image-${Date.now()}.png`
+  // Always upload into the current user's personal space (/api/personal_files).
+  // Do not reuse resolveParentNodeId() here: that prefers course/route nodes and
+  // ResourceListener rejects PersonalFile parents outside the user's tree.
+  const nodeId = resolvePersonalParentNodeId()
+
+  if (nodeId <= 0) {
+    throw new Error("A valid personal resource node is required for image upload.")
+  }
+
+  const formData = new FormData()
+  formData.append("uploadFile", blobInfo.blob(), filename)
+  formData.append("title", filename)
+  formData.append("filetype", "file")
+  formData.append("parentResourceNodeId", String(nodeId))
+  formData.append("parentResourceNode", `/api/resource_nodes/${nodeId}`)
+  formData.append("resourceNode.parent", String(nodeId))
+
+  const response = await api.post("/api/personal_files", formData, {
+    onUploadProgress: (event) => {
+      if (typeof progress === "function" && event?.total) {
+        progress(Math.round((event.loaded * 100) / event.total))
+      }
+    },
+  })
+
+  const uploadedUrl = resolveUploadedImageUrl(response?.data)
+
+  if (!uploadedUrl) {
+    throw new Error("Uploaded image URL is missing in the server response.")
+  }
+
+  return uploadedUrl
+}
+
 const defaultEditorConfig = {
   ...base,
   skin: false,
@@ -349,22 +496,167 @@ const effectiveUseFileManager = computed(() => {
   return Number(parentResourceNodeId.value || 0) > 0
 })
 
+function isSvgUrl(url) {
+  const value = String(url || "")
+    .trim()
+    .toLowerCase()
+
+  if (!value) {
+    return false
+  }
+
+  return value.includes("data:image/svg+xml") || /\.svg(?:\?|#|$)/i.test(value)
+}
+
+function notifySvgBlocked() {
+  try {
+    window.tinymce?.activeEditor?.notificationManager.open({
+      text: "SVG files are disabled in this editor.",
+      type: "warning",
+      timeout: 2500,
+    })
+  } catch {
+    // Ignore
+  }
+}
+
+function resolvePickedUrl(url) {
+  const pickedUrl = String(url || "").trim()
+
+  if (!pickedUrl) {
+    return ""
+  }
+
+  if (!allowSvgInEditor.value && isSvgUrl(pickedUrl)) {
+    notifySvgBlocked()
+
+    return ""
+  }
+
+  return pickedUrl
+}
+
+function removeToolbarItems(toolbar, removedItems) {
+  const blocked = new Set(
+    removedItems
+      .map((item) =>
+        String(item || "")
+          .trim()
+          .toLowerCase(),
+      )
+      .filter(Boolean),
+  )
+
+  const cleanupToolbar = (toolbarValue) =>
+    String(toolbarValue || "")
+      .split("|")
+      .map((group) =>
+        group
+          .split(/\s+/)
+          .map((item) => item.trim())
+          .filter((item) => item && !blocked.has(item.toLowerCase()))
+          .join(" "),
+      )
+      .filter(Boolean)
+      .join(" | ")
+
+  if (Array.isArray(toolbar)) {
+    return toolbar.map((toolbarValue) => cleanupToolbar(toolbarValue)).filter(Boolean)
+  }
+
+  return cleanupToolbar(toolbar)
+}
+
+function normalizeTinyPluginList(rawPlugins) {
+  const values = Array.isArray(rawPlugins) ? rawPlugins : [rawPlugins]
+
+  return values
+    .flatMap((value) => String(value || "").split(/\s+/))
+    .map((value) => value.trim())
+    .filter(Boolean)
+}
+
+function mergeTinyPlugins(rawPlugins, additionalPlugins) {
+  return Array.from(new Set([...normalizeTinyPluginList(rawPlugins), ...additionalPlugins])).join(" ")
+}
+
+function toolbarContainsItem(toolbar, item) {
+  const rows = Array.isArray(toolbar) ? toolbar : [toolbar]
+  const expected = String(item || "")
+    .trim()
+    .toLowerCase()
+
+  return rows.some((row) =>
+    String(row || "")
+      .split(/[|\s]+/)
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+      .includes(expected),
+  )
+}
+
+function appendToolbarItem(toolbar, item) {
+  if (toolbarContainsItem(toolbar, item)) {
+    return toolbar
+  }
+
+  if (Array.isArray(toolbar)) {
+    const rows = [...toolbar]
+
+    if (rows.length === 0) {
+      return [item]
+    }
+
+    const lastIndex = rows.length - 1
+    const currentRow = String(rows[lastIndex] || "").trim()
+    rows[lastIndex] = currentRow ? `${currentRow} | ${item}` : item
+
+    return rows
+  }
+
+  const currentToolbar = String(toolbar || "").trim()
+
+  return currentToolbar ? `${currentToolbar} | ${item}` : item
+}
+
+function positiveContextId(value) {
+  const parsed = Number.parseInt(String(value ?? "0"), 10)
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0
+}
+
 const editorConfig = computed(() => {
   const builder = typeof window !== "undefined" ? window.buildTinyMceConfig : null
 
   const callerConfig = props.editorConfig || {}
   const callerHasPicker = callerConfig?.file_picker_callback && typeof callerConfig.file_picker_callback === "function"
+  const callerHasImagesUploadHandler =
+    callerConfig?.images_upload_handler && typeof callerConfig.images_upload_handler === "function"
 
   const callerSetup = typeof callerConfig.setup === "function" ? callerConfig.setup : null
   const appendToolbar = String(callerConfig.appendToolbar || "").trim()
+  const removeToolbarButtons = String(callerConfig.removeToolbarButtons || "")
+    .split(/\s+/)
+    .filter(Boolean)
 
   const safeCallerConfig = { ...callerConfig }
   delete safeCallerConfig.setup
   delete safeCallerConfig.appendToolbar
+  delete safeCallerConfig.removeToolbarButtons
 
   const local = {
     ...defaultEditorConfig,
+    ...(enableUploadImageInEditor.value && !callerHasImagesUploadHandler
+      ? {
+          automatic_uploads: true,
+          paste_data_images: true,
+          block_unsupported_drop: true,
+          images_file_types: EDITOR_IMAGE_ALLOWED_EXTENSIONS.join(","),
+          images_upload_handler: uploadEditorImage,
+        }
+      : {}),
     ...safeCallerConfig,
+    chamiloEditorFeatures: editorFeatureFlags.value,
     file_picker_types: safeCallerConfig.file_picker_types || "file image media",
     ...(callerHasPicker
       ? {}
@@ -373,7 +665,32 @@ const editorConfig = computed(() => {
         }),
   }
 
+  // Declared before the builder runs, not after: buildTinyMceConfig is what adds
+  // the toolbar button (TOOLBAR_POLICY = "base" discards any toolbar sent from
+  // here) and the extended_valid_elements entry that keeps data-latex alive.
+  if (mathJaxEnabled.value) {
+    local.plugins = mergeTinyPlugins(local.plugins, ["mathjax"])
+  }
+
   const built = builder ? builder(local) : local
+
+  if (translateHtmlEnabled.value) {
+    built.plugins = mergeTinyPlugins(built.plugins, ["translatehtml"])
+    built.toolbar = appendToolbarItem(built.toolbar, "translatehtml")
+    built.translatehtml_ai_endpoint = built.translatehtml_ai_endpoint || "/api/wysiwyg_translation"
+    built.translatehtml_context = {
+      ...(built.translatehtml_context && typeof built.translatehtml_context === "object"
+        ? built.translatehtml_context
+        : {}),
+      courseId: positiveContextId(course.value?.id || route.query?.cid),
+      sessionId: positiveContextId(route.query?.sid),
+      groupId: positiveContextId(route.query?.gid),
+    }
+  }
+
+  if (removeToolbarButtons.length > 0) {
+    built.toolbar = removeToolbarItems(built.toolbar, removeToolbarButtons)
+  }
 
   if (appendToolbar) {
     const currentToolbar = String(built.toolbar || "").trim()
@@ -416,9 +733,13 @@ function openNativePicker(callback, meta) {
   const input = document.createElement("input")
   input.type = "file"
 
-  if (meta?.filetype === "image") input.accept = "image/*"
-  else if (meta?.filetype === "media") input.accept = "video/*,audio/*"
-  else input.accept = "*/*"
+  if (meta?.filetype === "image") {
+    input.accept = ".jpg,.jpeg,.png,.gif,.webp,.bmp"
+  } else if (meta?.filetype === "media") {
+    input.accept = "video/*,audio/*"
+  } else {
+    input.accept = "*/*"
+  }
 
   input.onchange = () => {
     const file = input.files?.[0]
@@ -452,9 +773,12 @@ function unregisterTinyPickerCallback(cbId) {
 }
 
 function appendParams(rawUrl, params) {
-  const u = new URL(rawUrl, window.location.origin)
-  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, String(v)))
-  return u.toString()
+  const [path, existingQuery] = rawUrl.split("?")
+  const sp = new URLSearchParams(existingQuery || "")
+  Object.entries(params).forEach(([k, v]) => sp.set(k, String(v)))
+  const qs = sp.toString()
+
+  return qs ? `${path}?${qs}` : path
 }
 
 function buildManagerUrl(meta) {
@@ -484,11 +808,15 @@ function buildManagerUrl(meta) {
 
   try {
     const hasCourse = Boolean(course.value?.id)
+    // FileManagerList has My files + Documents tabs. Do not pass the course
+    // resource node as :node — that polluted personal_files listing (parent=course).
+    // Each tab resolves its own root (user vs course) inside useFileManager.
+    const personalNodeId = resolvePersonalParentNodeId()
     const resolved = router.resolve({
       name: "FileManagerList",
-      params: { node: Number(parentResourceNodeId.value || 0) },
+      params: personalNodeId > 0 ? { node: personalNodeId } : {},
       query: hasCourse
-        ? { cid: course.value.id, sid: 0, gid: 0, type, picker: "tinymce" }
+        ? { cid: course.value.id, sid: 0, gid: 0, type, picker: "tinymce", loadNode: 1 }
         : { loadNode: 1, type, picker: "tinymce" },
     })
     return resolved.href
@@ -516,7 +844,13 @@ async function filePickerCallback(callback, _value, meta) {
   const cbId = createCbId()
   registerTinyPickerCallback(cbId, (pickedUrl) => {
     try {
-      callback(pickedUrl)
+      const resolvedUrl = resolvePickedUrl(pickedUrl)
+
+      if (!resolvedUrl) {
+        return
+      }
+
+      callback(resolvedUrl)
     } finally {
       unregisterTinyPickerCallback(cbId)
     }
@@ -531,14 +865,25 @@ async function filePickerCallback(callback, _value, meta) {
       const data = event.data
 
       if (data?.mceAction === "fileSelected" && data?.content?.url) {
-        callback(data.content.url)
+        const resolvedUrl = resolvePickedUrl(data.content.url)
+
+        if (resolvedUrl) {
+          callback(resolvedUrl)
+        }
+
         unregisterTinyPickerCallback(cbId)
         removeActiveMessageHandler()
+
         return
       }
 
       if (data?.url) {
-        callback(data.url)
+        const resolvedUrl = resolvePickedUrl(data.url)
+
+        if (resolvedUrl) {
+          callback(resolvedUrl)
+        }
+
         unregisterTinyPickerCallback(cbId)
         removeActiveMessageHandler()
       }
@@ -556,10 +901,15 @@ async function filePickerCallback(callback, _value, meta) {
         const picked = message?.content?.url || message?.url || message?.data?.url
 
         if (picked) {
-          callback(picked)
+          const resolvedUrl = resolvePickedUrl(picked)
+
+          if (resolvedUrl) {
+            callback(resolvedUrl)
+            api.close()
+          }
+
           unregisterTinyPickerCallback(cbId)
           removeActiveMessageHandler()
-          api.close()
         }
       },
       onClose: () => {

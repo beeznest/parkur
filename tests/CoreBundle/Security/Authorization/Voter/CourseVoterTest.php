@@ -9,13 +9,14 @@ namespace Chamilo\Tests\CoreBundle\Security\Authorization\Voter;
 use Chamilo\CoreBundle\Entity\Course;
 use Chamilo\CoreBundle\Entity\CourseRelUser;
 use Chamilo\CoreBundle\Security\Authorization\Voter\CourseVoter;
+use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\Tests\ChamiloTestTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Exception\ORMException;
 use Doctrine\ORM\OptimisticLockException;
 use Generator;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 class CourseVoterTest extends WebTestCase
@@ -37,8 +38,9 @@ class CourseVoterTest extends WebTestCase
         $request_stack = $this->getMockedRequestStack([
             'query' => ['sid' => 1],
         ]);
-        $security = $this->getContainer()->get(Security::class);
-        $voter = new CourseVoter($security, $translator, $request_stack, $entity_manager);
+        $accessDecisionManager = $this->getContainer()->get(AccessDecisionManagerInterface::class);
+        $settingsManager = $this->getContainer()->get(SettingsManager::class);
+        $voter = new CourseVoter($accessDecisionManager, $translator, $settingsManager, $request_stack, $entity_manager);
         foreach ($tests as $message => $test) {
             [$expected, $user, $course] = $test;
             $client->loginUser($user);

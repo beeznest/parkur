@@ -470,6 +470,12 @@ function plugin_remove_toggle_fields_from_form_html(string $html): string
 
 $pluginRepo = Container::getPluginRepository();
 $pluginName = isset($_GET['plugin']) ? (string) $_GET['plugin'] : '';
+
+// The plugin name must be validated before it is used to build any file path.
+if (!AppPlugin::isValidPluginName($pluginName)) {
+    api_not_allowed(true);
+}
+
 $plugin = $pluginRepo->getInstalledByName($pluginName);
 
 if (!$plugin || !$plugin->isInstalled()) {
@@ -477,7 +483,7 @@ if (!$plugin || !$plugin->isInstalled()) {
 }
 
 $accessUrl = Container::getAccessUrlUtil()->getCurrent();
-$pluginConfiguration = $plugin->getConfigurationsByAccessUrl($accessUrl);
+$pluginConfiguration = $plugin->getOrCreatePluginConfiguration($accessUrl);
 
 $appPlugin = new AppPlugin();
 $pluginInfo = $appPlugin->getPluginInfo($plugin->getTitle(), true) ?? [];
@@ -523,19 +529,6 @@ if (isset($pluginInfo['settings_form']) && $hasEditableFields) {
             'method' => 'POST',
         ]);
 
-        if (isset($pluginInfo['settings']) && is_array($pluginInfo['settings'])) {
-            foreach ($toggleFields as $toggleField) {
-                unset($pluginInfo['settings'][$toggleField]);
-            }
-
-            $storedDefaults = array_filter(
-                $pluginInfo['settings'],
-                static fn ($value): bool => null !== $value
-            );
-
-            $form->setDefaults($storedDefaults);
-        }
-
         if ($form->validate()) {
             $values = $form->getSubmitValues();
 
@@ -562,14 +555,6 @@ if (isset($pluginInfo['settings_form']) && $hasEditableFields) {
                 $toPersist = array_intersect_key($values, array_flip($whitelist));
             } else {
                 $toPersist = $values;
-            }
-
-            foreach ($toggleFields as $toggleField) {
-                unset($toPersist[$toggleField]);
-            }
-
-            if (!$pluginConfiguration) {
-                $pluginConfiguration = $plugin->getOrCreatePluginConfiguration($accessUrl);
             }
 
             $currentConfiguration = $pluginConfiguration->getConfiguration();
@@ -611,7 +596,7 @@ if (isset($pluginInfo['settings_form']) && $hasEditableFields) {
 
                 $objPlugin->performActionsAfterConfigure();
 
-                if (isset($values['show_main_menu_tab']) && $objPlugin instanceof Plugin) {
+                if (isset($values['show_main_menu_tab'])) {
                     $showMainMenuTab = filter_var(
                         $values['show_main_menu_tab'],
                         FILTER_VALIDATE_BOOLEAN,

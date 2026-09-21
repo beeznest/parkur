@@ -14,6 +14,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TimezoneType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Validator\Constraints\Json;
 
 class PlatformSettingsSchema extends AbstractSettingsSchema
 {
@@ -48,10 +49,15 @@ class PlatformSettingsSchema extends AbstractSettingsSchema
                     'allow_my_files' => 'true',
                     'registered' => 'false',
                     'server_type' => 'prod',
+                    // Deprecated: the value is not maintained (migrations never
+                    // raise it) and must not be compared against the code version.
+                    // The row is kept only as a fresh-install presence marker for
+                    // InstallDbGuardSubscriber. Hidden from the UI (getHiddenSettings).
                     'chamilo_database_version' => '2.0.0',
                     'unoconv_binaries' => '/usr/bin/unoconv',
                     'pdf_img_dpi' => '96',
                     'hosting_limit_users_per_course' => '0',
+                    'max_courses_per_user' => '0',
                     'generate_random_login' => 'false',
                     'timepicker_increment' => '15',
                     'user_status_show_options_enabled' => 'false',
@@ -107,10 +113,20 @@ class PlatformSettingsSchema extends AbstractSettingsSchema
             ->add('unoconv_binaries', TextType::class)
             ->add('pdf_img_dpi', TextType::class)
             ->add('hosting_limit_users_per_course', TextType::class)
+            ->add(
+                'max_courses_per_user',
+                TextType::class,
+                [
+                    'label' => 'Maximum courses per user',
+                    'help' => 'Maximum number of courses a teacher or trainer can create. Set to 0 to disable the limit.',
+                ]
+            )
             ->add('generate_random_login', YesNoType::class)
             ->add('timepicker_increment', TextType::class)
             ->add('user_status_show_options_enabled', YesNoType::class)
-            ->add('user_status_show_option', TextareaType::class)
+            ->add('user_status_show_option', TextareaType::class, [
+                'constraints' => [new Json()],
+            ])
             ->add('platform_logo_url', TextType::class)
             ->add('use_career_external_id_as_identifier_in_diagrams', YesNoType::class)
             ->add('portfolio_advanced_sharing', YesNoType::class)

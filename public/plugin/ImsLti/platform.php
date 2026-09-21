@@ -26,7 +26,14 @@ if (!$isPluginEnabled) {
 }
 
 /** @var Platform|null $platform */
-$platform = $plugin->ensurePlatformKeys();
+$platform = null;
+$platformError = null;
+
+try {
+    $platform = $plugin->ensurePlatformKeys();
+} catch (Throwable $e) {
+    $platformError = $e->getMessage();
+}
 
 $kid = $platform ? htmlspecialchars((string) $platform->getKid(), ENT_QUOTES) : '';
 $publicKey = $platform ? htmlspecialchars((string) $platform->publicKey, ENT_QUOTES) : '';
@@ -55,7 +62,7 @@ $content = '
             class="mb-6 inline-flex items-center gap-2 rounded-xl border border-gray-25 bg-white px-4 py-2 text-body-2 font-semibold text-gray-90 shadow-sm transition hover:border-primary hover:text-primary"
         >
             <i class="mdi mdi-arrow-left" aria-hidden="true"></i>
-            <span>Back to tools</span>
+            <span>'.$plugin->get_lang('BackToTools').'</span>
         </a>
 
         <div class="overflow-hidden rounded-2xl border border-gray-25 bg-white shadow-xl">
@@ -70,7 +77,12 @@ $content = '
                     <div class="text-body-2 font-semibold text-gray-90">'.($kid ?: '—').'</div>
                 </div>';
 
-if (empty($publicKey) && empty($privateKey)) {
+if (null !== $platformError) {
+    $content .= '
+                <div class="rounded-2xl border border-danger bg-danger/10 p-5 text-body-2 text-danger">
+                    '.htmlspecialchars($platformError, ENT_QUOTES).'
+                </div>';
+} elseif (empty($publicKey) && empty($privateKey)) {
     $content .= '
                 <div class="rounded-2xl border border-warning bg-support-6 p-5 text-body-2 text-gray-90">
                     No platform keys are available.

@@ -7,13 +7,11 @@ declare(strict_types=1);
 namespace Chamilo\CoreBundle\DataTransformer;
 
 use Chamilo\CoreBundle\ApiResource\CalendarEvent;
-use Chamilo\CoreBundle\Entity\AgendaReminder;
 use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\SessionRelCourse;
 use Chamilo\CoreBundle\Repository\Node\UsergroupRepository;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\CourseBundle\Entity\CCalendarEvent;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 readonly class CalendarEventTransformer
@@ -80,7 +78,9 @@ readonly class CalendarEventTransformer
             ];
         }
 
-        $object->getReminders()->forAll(fn (int $i, AgendaReminder $reminder) => $reminder->encodeDateInterval());
+        foreach ($object->getReminders() as $reminder) {
+            $reminder->encodeDateInterval();
+        }
 
         $calendarEvent->reminders = $object->getReminders();
 
@@ -99,9 +99,7 @@ readonly class CalendarEventTransformer
         $sessionUrl = null;
 
         if ($course) {
-            $baseUrl = $this->router->generate('index', [], UrlGeneratorInterface::ABSOLUTE_URL);
-
-            $sessionUrl = "{$baseUrl}course/{$course->getId()}/home?".http_build_query(['sid' => $object->getId()]);
+            $sessionUrl = "/course/{$course->getId()}/home?".http_build_query(['sid' => $object->getId()]);
         }
 
         return new CalendarEvent(

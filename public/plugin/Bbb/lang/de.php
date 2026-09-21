@@ -83,11 +83,11 @@ $strings['Pre-upload Documents'] = 'Dokumente vorab hochladen';
 $strings['No documents found'] = 'Keine Dokumente gefunden';
 $strings['Failed to load documents'] = 'Dokumente konnten nicht geladen werden';
 $strings['No meetings or recordings are available yet.'] = 'Es sind noch keine Meetings oder Aufzeichnungen verfügbar.';
+
 $strings['Share the conference link with allowed participants.'] = 'Link mit zugelassenen Teilnehmenden teilen';
 $strings['NoRecording'] = 'Keine Aufnahme';
 $strings['presentation'] = 'Präsentation';
 $strings['video'] = 'Video';
-$strings['No recording'] = 'Keine Videoaufzeichnung';
 $strings['WebhooksDashboard'] = 'Webhooks-Dashboard (Global)';
 $strings['MeetingTitleContains'] = 'Meeting-Titel enthält';
 $strings['FromUTC'] = 'Von (UTC)';

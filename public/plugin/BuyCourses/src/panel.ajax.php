@@ -34,7 +34,7 @@ switch ($action) {
             $productImage = $productInfo['course_image_large'];
         } else {
             $productImage = ($productInfo['image'])
-                ?: Template::get_icon_path('session_default.png');
+                ?: Display::get_icon_path('session_default.png');
         }
 
         $userInfo = api_get_user_info($sale['user_id']);
@@ -170,7 +170,7 @@ switch ($action) {
         }
 
         $paypalParams = $plugin->getPaypalParams();
-        $pruebas = 1 == $paypalParams['sandbox'];
+        $test = 1 == $paypalParams['sandbox'];
         $paypalUsername = $paypalParams['username'];
         $paypalPassword = $paypalParams['password'];
         $paypalSignature = $paypalParams['signature'];

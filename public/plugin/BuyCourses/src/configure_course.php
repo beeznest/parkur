@@ -607,8 +607,8 @@ if ($editingCourse) {
     $beneficiariesSelect->addOptGroup($teachersOptions, get_lang('Teachers'));
 } elseif ($editingSession) {
     $courseCoachesOptions = api_unique_multidim_array($courseCoachesOptions, 'value');
-    $beneficiariesSelect->addOptGroup($generalCoachesOptions, get_lang('Session general coaches'));
-    $beneficiariesSelect->addOptGroup($courseCoachesOptions, get_lang('SessionCourseCoach'));
+    $beneficiariesSelect->addOptGroup($generalCoachesOptions, get_lang('General tutor'));
+    $beneficiariesSelect->addOptGroup($courseCoachesOptions, get_lang('Course tutor'));
 }
 
 if ('true' === $commissionsEnable) {
@@ -742,7 +742,7 @@ $pageDescription = $editingCourse
     : 'Configure how this session appears in the catalog, set the selling price and choose the beneficiaries.';
 
 $content = '
-<div class="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+<div class="mx-auto w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
     <section class="rounded-3xl border border-gray-25 bg-white p-6 shadow-sm">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div class="space-y-3">
@@ -781,10 +781,10 @@ $content = '
 
         <div class="mt-6 grid gap-4 md:grid-cols-3">
             <div class="rounded-2xl border border-gray-25 bg-support-2 p-4">
-                <div class="text-xs font-semibold uppercase tracking-wide text-gray-50">
+                <div class="text-xs font-semibold uppercase tracking-wide text-gray-50 mb-4">
                     '.htmlspecialchars($plugin->get_lang('ProductType'), ENT_QUOTES, 'UTF-8').'
                 </div>
-                <div class="mt-2 text-base font-semibold text-gray-90">
+                <div class="mt-4 text-base font-semibold text-gray-90">
                     '.$productLabel.'
                 </div>
             </div>

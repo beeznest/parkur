@@ -16,8 +16,14 @@ require_once __DIR__.'/../../../main/inc/global.inc.php';
 $plugin = BuyCoursesPlugin::create();
 $httpRequest = Container::getRequest();
 
+$copyServiceTokenKey = 'buycourses_copy_service_token';
+if (empty($_SESSION[$copyServiceTokenKey])) {
+    $_SESSION[$copyServiceTokenKey] = bin2hex(random_bytes(32));
+}
+
 $includeSession = 'true' === $plugin->get('include_sessions');
 $includeServices = 'true' === $plugin->get('include_services');
+
 if (!$includeServices) {
     api_not_allowed(true);
 }
@@ -26,20 +32,47 @@ $taxEnable = 'true' === $plugin->get('tax_enable');
 
 api_protect_admin_script(true);
 
-Display::addFlash(
-    Display::return_message(
-        get_lang('Info').' - '.$plugin->get_lang('CoursesInSessionsDoesntDisplayHere'),
-        'info'
-    )
-);
+if ('POST' === $httpRequest->getMethod() && 'copy_service' === $httpRequest->request->get('action')) {
+    $serviceId = $httpRequest->request->getInt('id');
+    $postedToken = (string) $httpRequest->request->get('copy_service_token', '');
+    $sessionToken = (string) ($_SESSION[$copyServiceTokenKey] ?? '');
+
+    if ('' === $sessionToken || !hash_equals($sessionToken, $postedToken)) {
+        Display::addFlash(
+            Display::return_message($plugin->get_lang('ServiceCopyInvalidSecurityToken'), 'warning')
+        );
+
+        header('Location: list_service.php');
+        exit;
+    }
+
+    $_SESSION[$copyServiceTokenKey] = bin2hex(random_bytes(32));
+
+    $copiedServiceId = $plugin->copyService($serviceId);
+    if (false === $copiedServiceId) {
+        Display::addFlash(
+            Display::return_message($plugin->get_lang('ServiceCopyFailed'), 'error')
+        );
+
+        header('Location: list_service.php');
+        exit;
+    }
+
+    Display::addFlash(
+        Display::return_message($plugin->get_lang('ServiceCopied'), 'success')
+    );
+
+    header('Location: services_edit.php?id='.(int) $copiedServiceId);
+    exit;
+}
 
 $pageSize = BuyCoursesPlugin::PAGINATION_PAGE_SIZE;
-$currentPage = $httpRequest->query->getInt('page', 1);
+$currentPage = max(1, $httpRequest->query->getInt('page', 1));
 $first = $pageSize * ($currentPage - 1);
 
 $services = $plugin->getServices($first, $pageSize);
-$totalItems = $plugin->getServices(0, 1000000000, 'count');
-$pagesCount = (int) ceil($totalItems / $pageSize);
+$totalItems = (int) $plugin->getServices(0, 1000000000, 'count');
+$pagesCount = $totalItems > 0 ? (int) ceil($totalItems / $pageSize) : 1;
 
 $pagination = BuyCoursesPlugin::returnPagination(api_get_self(), $currentPage, $pagesCount, $totalItems);
 
@@ -62,16 +95,24 @@ $tpl->assign('back_url', $backUrl);
 
 $tpl->assign('product_type_course', BuyCoursesPlugin::PRODUCT_TYPE_COURSE);
 $tpl->assign('product_type_session', BuyCoursesPlugin::PRODUCT_TYPE_SESSION);
+
 $tpl->assign('showing_courses', false);
 $tpl->assign('showing_sessions', false);
 $tpl->assign('showing_services', true);
 
+$tpl->assign('show_courses_tab', false);
+$tpl->assign('show_sessions_tab', false);
+$tpl->assign('show_services_tab', true);
+
 $tpl->assign('sessions_are_included', $includeSession);
 $tpl->assign('services_are_included', $includeServices);
 $tpl->assign('tax_enable', $taxEnable);
+
 $tpl->assign('courses', []);
 $tpl->assign('sessions', []);
 $tpl->assign('services', $services);
+$tpl->assign('copy_service_token', (string) ($_SESSION[$copyServiceTokenKey] ?? ''));
+
 $tpl->assign('course_pagination', '');
 $tpl->assign('session_pagination', '');
 $tpl->assign('service_pagination', $pagination);
@@ -86,13 +127,13 @@ $tpl->assign('session_total_items', 0);
 
 $tpl->assign('service_current_page', $currentPage);
 $tpl->assign('service_pages_count', $pagesCount);
-$tpl->assign('service_total_items', (int) $totalItems);
+$tpl->assign('service_total_items', $totalItems);
 
 if ($taxEnable) {
     $globalParameters = $plugin->getGlobalParameters();
-    $tpl->assign('global_tax_perc', $globalParameters['global_tax_perc']);
-    $tpl->assign('tax_applies_to', $globalParameters['tax_applies_to']);
-    $tpl->assign('tax_name', $globalParameters['tax_name']);
+    $tpl->assign('global_tax_perc', $globalParameters['global_tax_perc'] ?? 0);
+    $tpl->assign('tax_applies_to', $globalParameters['tax_applies_to'] ?? 0);
+    $tpl->assign('tax_name', $globalParameters['tax_name'] ?? '');
 }
 
 $content = $tpl->fetch('BuyCourses/view/list.tpl');

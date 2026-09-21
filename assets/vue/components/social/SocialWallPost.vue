@@ -143,8 +143,7 @@ import LinkPreviewCard from "./LinkPreviewCard.vue"
 import { computed, inject, onMounted, reactive, ref, watch } from "vue"
 import WallComment from "./SocialWallComment.vue"
 import WallActions from "./Actions"
-import axios from "axios"
-import { ENTRYPOINT } from "../../config/entrypoint"
+import socialService from "../../services/socialService"
 import BaseCard from "../basecomponents/BaseCard.vue"
 import { SOCIAL_TYPE_PROMOTED_MESSAGE } from "./constants"
 import { useFormatDate } from "../../composables/formatDate"
@@ -236,8 +235,7 @@ async function loadAttachments() {
     const postIri = props.post?.["@id"]
     if (!postIri) return
 
-    const response = await axios.get(`${postIri}/attachments`)
-    attachments.value = response.data
+    attachments.value = await socialService.getPostAttachments(postIri)
   } catch (error) {
     console.error("There was an error loading the attachments!", error)
   }
@@ -248,14 +246,12 @@ async function loadCommentsCount() {
     const postIri = props.post?.["@id"]
     if (!postIri) return
 
-    const { data } = await axios.get(ENTRYPOINT + "social_posts", {
-      params: {
-        parent: postIri,
-        itemsPerPage: 1,
-      },
+    const { totalItems } = await socialService.getPosts({
+      parent: postIri,
+      itemsPerPage: 1,
     })
 
-    commentsCount.value = Number(data?.["hydra:totalItems"] || 0)
+    commentsCount.value = Number(totalItems || 0)
   } catch (error) {
     console.error("There was an error loading the comments count!", error)
   }
@@ -272,16 +268,14 @@ async function loadComments() {
     const postIri = props.post?.["@id"]
     if (!postIri) return
 
-    const { data } = await axios.get(ENTRYPOINT + "social_posts", {
-      params: {
-        parent: postIri,
-        "order[sendDate]": "desc",
-        itemsPerPage: 3,
-      },
+    const { items, totalItems } = await socialService.getPosts({
+      parent: postIri,
+      "order[sendDate]": "desc",
+      itemsPerPage: 3,
     })
 
-    comments.splice(0, comments.length, ...(data?.["hydra:member"] || []))
-    commentsCount.value = Number(data?.["hydra:totalItems"] || comments.length)
+    comments.splice(0, comments.length, ...(items || []))
+    commentsCount.value = Number(totalItems || comments.length)
     commentsLoaded.value = true
   } catch (error) {
     console.error("There was an error loading the comments!", error)

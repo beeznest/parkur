@@ -2,7 +2,7 @@
 
 /* For licensing terms, see /license.txt */
 
-use JeroenDesloovere\VCard\VCard;
+use Sabre\VObject\Component\VCard;
 
 /**
  * VCard Generator.
@@ -11,49 +11,67 @@ use JeroenDesloovere\VCard\VCard;
  */
 require_once __DIR__.'/../inc/global.inc.php';
 
-api_block_anonymous_users();
+if (api_is_anonymous()) {
+    http_response_code(401);
+    echo get_lang('You must be logged in to access this page.');
+    exit;
+}
 
-if (isset($_REQUEST['userId'])) {
-    $userId = intval($_REQUEST['userId']);
-} else {
-    api_not_allowed(true);
+api_block_inactive_user();
+
+$userId = isset($_REQUEST['userId']) ? (int) $_REQUEST['userId'] : 0;
+if ($userId <= 0) {
+    http_response_code(400);
+    echo get_lang('Invalid user');
+    exit;
 }
 
 // Return User Info to vCard Export
 $userInfo = api_get_user_info($userId, true, false, true);
+if (empty($userInfo)) {
+    http_response_code(404);
+    echo get_lang('User not found');
+    exit;
+}
 
 /* Get the relationship between current user and vCard user */
 $currentUserId = api_get_user_id();
-$hasRelation = SocialManager::get_relation_between_contacts(
+$hasRelation = 0 !== SocialManager::get_relation_between_contacts(
     $currentUserId,
-    $userId,
-    true
+    $userId
 );
-if (0 == $hasRelation) {
-    /* if has not relation, check if are admin */
-    api_protect_admin_script();
+
+if ($currentUserId !== $userId && !api_is_platform_admin() && !$hasRelation) {
+    http_response_code(403);
+    echo get_lang('You are not allowed to see this page.');
+    exit;
 }
 
-if (empty($userInfo)) {
-    api_not_allowed(true);
-}
-if (api_get_user_id() != $userId && !SocialManager::get_relation_between_contacts(api_get_user_id(), $userId)) {
-    api_not_allowed(true);
-}
 // Pre-Loaded User Info
 $language = get_lang('Language').': '.$userInfo['language'];
 
 // Instance the vCard Class
-$vcard = new VCard();
-// Adding the User Info to the vCard
-$vcard->addName($userInfo['firstname'], $userInfo['lastname']);
+$vcard = new VCard([
+    'VERSION' => '3.0',
+    'N' => [$userInfo['lastname'], $userInfo['firstname'], '', '', ''],
+    'FN' => trim($userInfo['firstname'].' '.$userInfo['lastname']),
+]);
 
-if ('true' == api_get_setting('show_email_addresses')) {
-    $vcard->addEmail($userInfo['email']);
+if ('true' == api_get_setting('show_email_addresses') && !empty($userInfo['email'])) {
+    $vcard->add('EMAIL', $userInfo['email']);
 }
 
-$vcard->addPhoneNumber($userInfo['phone'], 'CELL');
-$vcard->addNote($language);
+if (!empty($userInfo['phone'])) {
+    $vcard->add('TEL', $userInfo['phone'], ['TYPE' => 'CELL']);
+}
+
+$vcard->add('NOTE', $language);
 
 // Generate the vCard
-return $vcard->download();
+$filename = api_replace_dangerous_char(trim($userInfo['firstname'].'-'.$userInfo['lastname']));
+$filename = ('' === $filename ? 'vcard' : $filename).'.vcf';
+
+header('Content-Type: text/vcard; charset=utf-8');
+header('Content-Disposition: attachment; filename="'.$filename.'"');
+echo $vcard->serialize();
+exit;

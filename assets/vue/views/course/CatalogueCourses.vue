@@ -36,9 +36,13 @@
       class="p-4 border border-gray-300 rounded bg-white mb-6"
     >
       <AdvancedCourseFilters
+        :key="advancedFiltersKey"
         :allowTitle="courseCatalogueSettings.filters?.by_title ?? true"
         :fields="extraFields"
+        :initial-title="filterState.title"
+        :initial-categories="filterState.categories"
         @apply="onAdvancedApply"
+        @clear="onAdvancedClear"
       />
     </div>
 
@@ -90,25 +94,37 @@ import { useNotification } from "../../composables/notification"
 import { useSecurityStore } from "../../store/securityStore"
 import CatalogueCourseCard from "../../components/course/CatalogueCourseCard.vue"
 import * as userRelCourseVoteService from "../../services/userRelCourseVoteService"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { usePlatformConfig } from "../../store/platformConfig"
 import { useI18n } from "vue-i18n"
 import courseService from "../../services/courseService"
+import baseService from "../../services/baseService"
 import AdvancedCourseFilters from "../../components/course/AdvancedCourseFilters.vue"
 
 const { t } = useI18n()
 const sortField = ref("title")
 
 const natural = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" })
+const route = useRoute()
 const router = useRouter()
 const securityStore = useSecurityStore()
 const platformConfigStore = usePlatformConfig()
 const courseCatalogueSettings = computed(() => {
   let raw = platformConfigStore.getSetting("catalog.course_catalog_settings")
-  if (!raw || raw === false || raw === "false") return {}
+
+  if (!raw || raw === false || raw === "false") {
+    return {}
+  }
+
   try {
-    if (typeof raw === "string") raw = JSON.parse(raw)
-    if (typeof raw.courses === "object") return raw.courses
+    if (typeof raw === "string") {
+      raw = JSON.parse(raw)
+    }
+
+    if (typeof raw.courses === "object") {
+      return raw.courses
+    }
+
     return raw
   } catch (e) {
     console.error("Invalid catalogue settings format", e)
@@ -117,8 +133,8 @@ const courseCatalogueSettings = computed(() => {
 })
 
 const isAnonymous = !securityStore.isAuthenticated
-const isPrivilegedUser =
-  securityStore.isAdmin || securityStore.isTeacher || securityStore.isHRM || securityStore.isSessionAdmin
+// ROLE_TEACHER covers admin and HR through the hierarchy; ROLE_SESSION_MANAGER covers session admins.
+const isPrivilegedUser = securityStore.isGranted("ROLE_TEACHER") || securityStore.isGranted("ROLE_SESSION_MANAGER")
 
 const allowCatalogueAccess = computed(() => {
   if (isAnonymous) {
@@ -158,10 +174,21 @@ const currentUserId = securityStore.user?.id ?? null
 const status = ref(false)
 const totalCourses = ref(0)
 const courses = ref([])
-
 const loadingMore = ref(false)
-
 const extraFields = ref([])
+
+const filterState = ref({
+  title: "",
+  categories: [],
+})
+
+const advancedFiltersKey = computed(() =>
+  JSON.stringify({
+    title: filterState.value.title,
+    categories: filterState.value.categories,
+  }),
+)
+
 const { showErrorNotification } = useNotification()
 
 const loadExtraFields = async () => {
@@ -192,9 +219,91 @@ const loadCourseSubscriptionStatuses = async (courseIds) => {
   }
 }
 
-let loadParams = {
-  itemsPerPage: "12",
-  order: { [sortField.value]: "asc" },
+function buildBaseLoadParams() {
+  return {
+    itemsPerPage: "12",
+    order: { [sortField.value]: "asc" },
+  }
+}
+
+let loadParams = buildBaseLoadParams()
+// Bumped whenever the result set is reset (new filters / clear). In-flight
+// load() calls compare against this so a slower unfiltered page-1/page-2
+// response cannot overwrite a later filtered result.
+let loadGeneration = 0
+
+function normalizeCategoriesQueryValue(value) {
+  const normalizeOne = (item) => {
+    const normalized = String(item).trim()
+
+    if ("" === normalized) {
+      return null
+    }
+
+    if (normalized.startsWith("/api/course_categories/")) {
+      return normalized
+    }
+
+    if (/^\d+$/.test(normalized)) {
+      return `/api/course_categories/${normalized}`
+    }
+
+    return normalized
+  }
+
+  if (!value) {
+    return []
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(normalizeOne).filter((item) => null !== item)
+  }
+
+  return String(value)
+    .split(",")
+    .map(normalizeOne)
+    .filter((item) => null !== item)
+}
+
+function resetCatalogueState() {
+  loadGeneration += 1
+  courses.value = []
+  totalCourses.value = 0
+  status.value = false
+}
+
+function getRouteFilterPayload() {
+  return {
+    title: "",
+    categories: normalizeCategoriesQueryValue(route.query.categories),
+    extraFields: [],
+    extraFieldValues: [],
+  }
+}
+
+async function applyCatalogueFilters(payload) {
+  filterState.value = {
+    title: payload.title || "",
+    categories: Array.isArray(payload.categories) ? [...payload.categories] : [],
+  }
+
+  loadParams = buildBaseLoadParams()
+
+  if (payload.title) {
+    loadParams.title = payload.title
+  }
+
+  if (payload.categories.length > 0) {
+    loadParams.categories = payload.categories
+  }
+
+  if (payload.extraFields.length > 0 && payload.extraFieldValues) {
+    loadParams.extrafield = payload.extraFields
+    loadParams.extrafieldvalue = payload.extraFieldValues
+  }
+
+  resetCatalogueState()
+  await load()
 }
 
 const load = async () => {
@@ -202,71 +311,113 @@ const load = async () => {
     return
   }
 
+  const generation = loadGeneration
+  const requestParams = { ...loadParams }
+
   status.value = true
 
   try {
-    const courseCatalogue = await courseService.loadCourseCatalogue(loadParams)
+    const courseCatalogue = await courseService.loadCourseCatalogue(requestParams)
 
-    loadParams = {}
-
-    if (courseCatalogue.nextPageParams) {
-      loadParams = courseCatalogue.nextPageParams
+    if (generation !== loadGeneration) {
+      return
     }
+
+    loadParams = courseCatalogue.nextPageParams ? { ...courseCatalogue.nextPageParams } : {}
 
     if (!totalCourses.value) {
       totalCourses.value = courseCatalogue.totalItems
     }
 
+    // Paint titles as soon as the catalogue page returns. Extra-field values
+    // and votes are enrichment; waiting on them kept "Loading courses" stuck
+    // (and Matching at 0) whenever those secondary requests stalled.
+    courses.value.push(
+      ...courseCatalogue.items.map((c) => ({
+        ...c,
+        extra_fields: c.extra_fields || {},
+        subscriptionLimitEnabled: false,
+        subscriptionLimit: 0,
+        subscriptionCount: 0,
+        subscriptionLimitReached: false,
+        subscriptionLimitTooltip: "",
+      })),
+    )
+    status.value = false
+
     const courseIds = courseCatalogue.items.map((c) => c.id)
     const ids = courseIds.join(",")
 
     if (ids) {
-      const [extraFieldsResponse, subscriptionStatuses] = await Promise.all([
-        fetch(`/catalogue/course-extra-field-values?ids=${ids}`).then((res) => res.json()),
-        loadCourseSubscriptionStatuses(courseIds),
-      ])
+      try {
+        const [extraFieldsResponse, subscriptionStatuses] = await Promise.all([
+          baseService.get("/catalogue/course-extra-field-values", { ids }),
+          loadCourseSubscriptionStatuses(courseIds),
+        ])
 
-      courses.value.push(
-        ...courseCatalogue.items.map((c) => {
-          const limitInfo = subscriptionStatuses[c.id] || {}
+        if (generation !== loadGeneration) {
+          return
+        }
+
+        courses.value = courses.value.map((course) => {
+          if (!courseIds.includes(course.id)) {
+            return course
+          }
+
+          const limitInfo = subscriptionStatuses[course.id] || {}
 
           return {
-            ...c,
-            extra_fields: extraFieldsResponse[c.id] || {},
+            ...course,
+            extra_fields: extraFieldsResponse[course.id] || course.extra_fields || {},
             subscriptionLimitEnabled: Boolean(limitInfo.subscriptionLimitEnabled),
             subscriptionLimit: Number(limitInfo.subscriptionLimit || 0),
             subscriptionCount: Number(limitInfo.subscriptionCount || 0),
             subscriptionLimitReached: Boolean(limitInfo.subscriptionLimitReached),
             subscriptionLimitTooltip: limitInfo.subscriptionLimitTooltip || "",
           }
-        }),
-      )
+        })
+      } catch (error) {
+        console.error("Error loading catalogue course extras", error)
+      }
     }
 
     if (currentUserId) {
-      const votes = await userRelCourseVoteService.getUserVotes({
-        userId: currentUserId,
-        urlId: window.access_url_id,
-      })
-      for (const vote of votes) {
-        let courseId
+      try {
+        const votes = await userRelCourseVoteService.getUserVotes({
+          userId: currentUserId,
+          urlId: window.access_url_id,
+        })
 
-        if (typeof vote.course === "object" && vote.course !== null) {
-          courseId = vote.course.id
-        } else if (typeof vote.course === "string") {
-          courseId = parseInt(vote.course.split("/").pop())
+        if (generation !== loadGeneration) {
+          return
         }
 
-        const course = courses.value.find((c) => c.id === courseId)
-        if (course) {
-          course.userVote = vote
+        for (const vote of votes) {
+          let courseId
+
+          if (typeof vote.course === "object" && vote.course !== null) {
+            courseId = vote.course.id
+          } else if (typeof vote.course === "string") {
+            courseId = parseInt(vote.course.split("/").pop())
+          }
+
+          const course = courses.value.find((c) => c.id === courseId)
+          if (course) {
+            course.userVote = vote
+          }
         }
+      } catch (error) {
+        console.error("Error loading catalogue votes", error)
       }
     }
   } catch (error) {
-    showErrorNotification(error)
+    if (generation === loadGeneration) {
+      showErrorNotification(error)
+    }
   } finally {
-    status.value = false
+    if (generation === loadGeneration) {
+      status.value = false
+    }
   }
 }
 
@@ -303,29 +454,29 @@ const showCourseTitle = computed(() => courseCatalogueSettings.value.hide_course
 
 const showAdvancedSearch = ref(false)
 
-function onAdvancedApply(payload) {
-  loadParams = {
-    itemsPerPage: "12",
-    order: { [sortField.value]: "asc" },
+async function onAdvancedApply(payload) {
+  await applyCatalogueFilters(payload)
+}
+
+async function onAdvancedClear() {
+  filterState.value = {
+    title: "",
+    categories: [],
   }
 
-  if (payload.title) {
-    loadParams.title = payload.title
-  }
+  showAdvancedSearch.value = false
 
-  if (payload.categories.length > 0) {
-    loadParams.categories = payload.categories
-  }
+  await router.replace({
+    name: "CatalogueCourses",
+    query: {},
+  })
 
-  if (payload.extraFields.length > 0 && payload.extraFieldValues) {
-    loadParams.extrafield = payload.extraFields
-    loadParams.extrafieldvalue = payload.extraFieldValues
-  }
-
-  courses.value = []
-  totalCourses.value = 0
-
-  load()
+  await applyCatalogueFilters({
+    title: "",
+    categories: [],
+    extraFields: [],
+    extraFieldValues: [],
+  })
 }
 
 const visibleCoursesBase = computed(() => {
@@ -346,7 +497,7 @@ const visibleCoursesBase = computed(() => {
           const key = field.split("/")[1]
           valA = a.point_info?.[key] ?? 0
           valB = b.point_info?.[key] ?? 0
-        } else if (field === "count_users") {
+        } else if ("count_users" === field) {
           valA = a.users?.length ?? 0
           valB = b.users?.length ?? 0
         } else {
@@ -384,7 +535,15 @@ const sentinel = ref(null)
 
 onMounted(async () => {
   await loadExtraFields()
-  await load()
+
+  const routePayload = getRouteFilterPayload()
+
+  if (routePayload.categories.length > 0) {
+    showAdvancedSearch.value = true
+    await applyCatalogueFilters(routePayload)
+  } else {
+    await load()
+  }
 
   observer = new IntersectionObserver(
     async ([entry]) => {
@@ -400,8 +559,35 @@ onMounted(async () => {
     },
   )
 
-  observer.observe(sentinel.value)
+  if (sentinel.value) {
+    observer.observe(sentinel.value)
+  }
 })
+
+watch(
+  () => route.query.categories,
+  async (newValue, oldValue) => {
+    if (newValue === oldValue) {
+      return
+    }
+
+    const routePayload = getRouteFilterPayload()
+
+    if (routePayload.categories.length > 0) {
+      showAdvancedSearch.value = true
+      await applyCatalogueFilters(routePayload)
+
+      return
+    }
+
+    await applyCatalogueFilters({
+      title: "",
+      categories: [],
+      extraFields: [],
+      extraFieldValues: [],
+    })
+  },
+)
 
 onUnmounted(() => {
   observer?.disconnect()
@@ -452,7 +638,8 @@ function onRatingChange({ value, course }) {
 
 function onUserSubscribed({ courseId, newUser }) {
   const index = courses.value.findIndex((c) => c.id === courseId)
-  if (index !== -1) {
+
+  if (-1 !== index) {
     const oldCourse = courses.value[index]
     const nextCount = Number(oldCourse.subscriptionCount || 0) + 1
     const subscriptionLimit = Number(oldCourse.subscriptionLimit || 0)
@@ -470,13 +657,13 @@ function onUserSubscribed({ courseId, newUser }) {
 
     const filteredIndex = courses.value.findIndex((c) => c.id === courseId)
 
-    if (filteredIndex !== -1) {
+    if (-1 !== filteredIndex) {
       courses.value[filteredIndex] = updatedCourse
     }
 
     const redirectAfterSubscription = courseCatalogueSettings.value.redirect_after_subscription ?? "course_catalog"
 
-    if (redirectAfterSubscription === "course_home") {
+    if ("course_home" === redirectAfterSubscription) {
       router.push({ name: "CourseHome", params: { id: courseId } })
     }
   }

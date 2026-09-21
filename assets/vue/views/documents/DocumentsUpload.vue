@@ -15,7 +15,24 @@
       class="mb-4 rounded border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-900"
       role="alert"
     >
-      {{ quotaWarningMessage }}
+      <p>{{ quotaWarningMessage }}</p>
+      <p
+        v-if="quotaInfo.showUpgradeCta"
+        class="mt-1"
+      >
+        {{ t("Space is limited through your course properties. To increase your limit, get a") }}
+        <a
+          class="font-semibold text-primary underline"
+          href="/resources/courses/new"
+        >
+          {{ t("pro plan") }}
+        </a>
+        {{
+          t(
+            "and import this course's backup through Course Maintenance to your new paid course, or open a ticket to get your course converted into a pro course once you've acquired this plan.",
+          )
+        }}
+      </p>
     </div>
 
     <div class="mb-4">
@@ -29,16 +46,123 @@
         :uppy="uppy"
       />
     </div>
+    <div class="mb-4 rounded-lg border border-gray-25 bg-white p-4">
+      <div class="mb-3 flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-semibold text-gray-90">
+            {{ t("Cloud link") }}
+          </h2>
+          <p class="text-sm text-gray-50">
+            {{ t("Add a link to a cloud document, such as Google Drive or Google Docs.") }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-md border border-primary px-3 py-2 text-sm font-semibold text-primary hover:bg-primary hover:text-white"
+          @click="isCloudLinkFormVisible = !isCloudLinkFormVisible"
+        >
+          <span
+            class="mdi mdi-link-variant"
+            aria-hidden="true"
+          />
+          {{ isCloudLinkFormVisible ? t("Cancel") : t("Add cloud link") }}
+        </button>
+      </div>
+
+      <form
+        v-if="isCloudLinkFormVisible"
+        class="grid gap-4 md:grid-cols-[1fr_2fr_auto]"
+        @submit.prevent="saveCloudLink"
+      >
+        <div class="flex flex-col gap-1">
+          <label
+            for="cloud_link_title"
+            class="text-sm font-semibold text-gray-70"
+          >
+            {{ t("Title") }}
+          </label>
+          <input
+            id="cloud_link_title"
+            v-model.trim="cloudLinkTitle"
+            name="cloud_link_title"
+            type="text"
+            class="rounded-md border border-gray-25 px-3 py-2 text-sm"
+            :placeholder="t('Document title')"
+            required
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label
+            for="cloud_link_url"
+            class="text-sm font-semibold text-gray-70"
+          >
+            {{ t("URL") }}
+          </label>
+          <input
+            id="cloud_link_url"
+            v-model.trim="cloudLinkUrl"
+            name="cloud_link_url"
+            type="url"
+            class="rounded-md border border-gray-25 px-3 py-2 text-sm"
+            placeholder="https://docs.google.com/..."
+            required
+          />
+        </div>
+
+        <div class="flex items-end">
+          <button
+            type="submit"
+            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="isSavingCloudLink"
+          >
+            <span
+              class="mdi mdi-content-save"
+              aria-hidden="true"
+            />
+            {{ isSavingCloudLink ? t("Saving...") : t("Save") }}
+          </button>
+        </div>
+
+        <div
+          v-if="cloudLinkError"
+          class="md:col-span-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
+          {{ cloudLinkError }}
+        </div>
+      </form>
+    </div>
 
     <BaseAdvancedSettingsButton v-model="showAdvancedSettings">
-      <div class="flex flex-row mb-2">
-        <label class="font-semibold w-28">{{ t("Options") }}:</label>
-        <BaseCheckbox
-          id="uncompress"
-          v-model="isUncompressZipEnabled"
-          :label="t('Uncompress zip')"
-          name="uncompress"
-        />
+      <ResourceLanguageSelector v-model="selectedLanguage" />
+      <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="flex w-28 shrink-0 items-center gap-1 font-semibold">
+          <span>{{ t("Options") }}:</span>
+          <span
+            class="mdi mdi-information-outline cursor-help text-primary"
+            aria-hidden="true"
+            :title="t('Document options change how uploaded files are processed after saving.')"
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <BaseCheckbox
+            id="uncompress"
+            v-model="isUncompressZipEnabled"
+            :label="t('Uncompress zip')"
+            name="uncompress"
+          />
+
+          <span
+            class="mdi mdi-information-outline cursor-help text-primary"
+            role="img"
+            tabindex="0"
+            :aria-label="t('Information about uncompressing zip files')"
+            :title="t('When enabled, ZIP files are extracted into the current document folder after upload.')"
+          />
+        </div>
       </div>
 
       <div class="flex flex-row mb-2">
@@ -59,15 +183,26 @@
       <!-- Search / Xapian options -->
       <div
         v-if="isSearchEnabled"
-        class="flex flex-row mb-2"
+        class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center"
       >
-        <label class="font-semibold w-28">{{ t("Search") }}:</label>
-        <BaseCheckbox
-          id="indexDocumentContent"
-          v-model="indexDocumentContent"
-          :label="t('Index document content?')"
-          name="indexDocumentContent"
-        />
+        <label class="w-28 shrink-0 font-semibold">{{ t("Search") }}:</label>
+
+        <div class="flex items-center gap-2">
+          <BaseCheckbox
+            id="indexDocumentContent"
+            v-model="indexDocumentContent"
+            :label="t('Index document content?')"
+            name="indexDocumentContent"
+          />
+
+          <span
+            class="mdi mdi-information-outline cursor-help text-primary"
+            role="img"
+            tabindex="0"
+            :aria-label="t('Information about indexing document content')"
+            :title="t('When enabled, the document text is indexed by the search engine so users can find it from platform search.')"
+          />
+        </div>
       </div>
 
       <!-- Specific search fields -->
@@ -115,8 +250,7 @@ import XHRUpload from "@uppy/xhr-upload"
 import ImageEditor from "@uppy/image-editor"
 import { useRoute, useRouter } from "vue-router"
 import { RESOURCE_LINK_PUBLISHED } from "../../constants/entity/resourcelink"
-import { ENTRYPOINT } from "../../config/entrypoint"
-import { useCidReq } from "../../composables/cidReq"
+import { getCourseContext } from "../../utils/courseContext"
 import { useUpload } from "../../composables/upload"
 import { useI18n } from "vue-i18n"
 import BaseCheckbox from "../../components/basecomponents/BaseCheckbox.vue"
@@ -124,17 +258,21 @@ import BaseRadioButtons from "../../components/basecomponents/BaseRadioButtons.v
 import BaseAdvancedSettingsButton from "../../components/basecomponents/BaseAdvancedSettingsButton.vue"
 import BaseButton from "../../components/basecomponents/BaseButton.vue"
 import BaseToolbar from "../../components/basecomponents/BaseToolbar.vue"
+import ResourceLanguageSelector from "../../components/resources/ResourceLanguageSelector.vue"
 import { usePlatformConfig } from "../../store/platformConfig"
 import documentsService from "../../services/documents"
+import searchEngineFieldService from "../../services/searchEngineFieldService"
+import { useUppyLocale } from "../../composables/uppyLocale"
 
 const route = useRoute()
 const router = useRouter()
-const { gid, sid, cid } = useCidReq()
+const { gid, sid, cid } = getCourseContext()
 const { onCreated } = useUpload()
 const { t } = useI18n()
+const { uppyLocale } = useUppyLocale()
 const platformConfigStore = usePlatformConfig()
 
-const LOW_QUOTA_THRESHOLD_PERCENT = 2
+const LOW_QUOTA_THRESHOLD_PERCENT = 5
 const QUOTA_STALE_MS = 30_000
 
 function normalizePickerType(raw) {
@@ -212,6 +350,12 @@ const searchFields = ref([])
 const searchFieldValues = ref({})
 
 const parentResourceNodeId = ref(Number(route.query.parentResourceNodeId || route.params.node))
+const isCloudLinkFormVisible = ref(false)
+const cloudLinkTitle = ref("")
+const cloudLinkUrl = ref("")
+const cloudLinkError = ref("")
+const isSavingCloudLink = ref(false)
+const selectedLanguage = ref("")
 
 // Banner warning
 const quotaWarningMessage = ref("")
@@ -220,6 +364,7 @@ const quotaWarningMessage = ref("")
 const quotaInfo = ref({
   availableBytes: null,
   availablePercent: null,
+  showUpgradeCta: false,
   fetchedAt: 0,
 })
 
@@ -227,6 +372,98 @@ function normalizeCode(code) {
   return String(code || "")
     .trim()
     .toLowerCase()
+}
+
+function normalizeLanguageIso(value) {
+  const raw = String(value || "").trim()
+  if (!raw) {
+    return ""
+  }
+
+  const languages = Array.isArray(window.languages) ? window.languages : []
+  const iriMatch = raw.match(/\/api\/languages\/(\d+)/)
+  if (iriMatch) {
+    const byId = languages.find((language) => String(language?.id || "") === iriMatch[1])
+    return String(byId?.isocode || byId?.isoCode || "")
+  }
+
+  const normalizedRaw = raw.replace("-", "_").toLowerCase()
+  const exact = languages.find((language) => {
+    const code = String(language?.isocode || language?.isoCode || "")
+      .replace("-", "_")
+      .toLowerCase()
+
+    return code === normalizedRaw
+  })
+
+  if (exact) {
+    return String(exact.isocode || exact.isoCode || "")
+  }
+
+  const shortCode = normalizedRaw.split("_")[0]
+  const byShortCode = languages.find((language) => {
+    const code = String(language?.isocode || language?.isoCode || "")
+      .replace("-", "_")
+      .toLowerCase()
+
+    return code === shortCode || code.startsWith(`${shortCode}_`)
+  })
+
+  return String(byShortCode?.isocode || byShortCode?.isoCode || raw)
+}
+
+async function applyDefaultLanguageFromCourse() {
+  if (selectedLanguage.value) {
+    return
+  }
+
+  const queryLanguage = normalizeLanguageIso(route.query.course_language)
+  if (queryLanguage) {
+    selectedLanguage.value = queryLanguage
+    return
+  }
+
+  const courseId = cid
+  if (!courseId) {
+    return
+  }
+
+  try {
+    const response = await fetch(`/api/courses/${courseId}`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    })
+
+    if (!response.ok) {
+      return
+    }
+
+    const data = await response.json()
+    const courseLanguage = normalizeLanguageIso(data?.courseLanguage || data?.course_language || data?.language)
+
+    if (courseLanguage && !selectedLanguage.value) {
+      selectedLanguage.value = courseLanguage
+    }
+  } catch (error) {
+    console.warn("[DocumentsUpload] Failed to load course language.", error)
+  }
+}
+
+// Build meta keys: { "searchFieldValues[t]": "...", "searchFieldValues[d]": "..." }
+function buildSearchFieldMeta(values, fields) {
+  const meta = {}
+  for (const f of fields || []) {
+    const code = normalizeCode(f.code)
+    if (!code) continue
+    meta[`searchFieldValues[${code}]`] = String(values?.[code] ?? "")
+  }
+  return meta
+}
+
+// The course context (cid/sid/gid) is derived server-side from the gated
+// session course, so the link list only needs to carry the visibility.
+function buildResourceLinkList() {
+  return JSON.stringify([{ visibility: RESOURCE_LINK_PUBLISHED }])
 }
 
 function buildResourceLinkArray() {
@@ -308,7 +545,7 @@ async function refreshQuota(force = false) {
     staleMs: QUOTA_STALE_MS,
   })
 
-  quotaInfo.value = info || { availableBytes: null, availablePercent: null, fetchedAt: 0 }
+  quotaInfo.value = info || { availableBytes: null, availablePercent: null, showUpgradeCta: false, fetchedAt: 0 }
 
   const msg = documentsService.getQuotaWarningMessage(t, info, {
     thresholdPercent: LOW_QUOTA_THRESHOLD_PERCENT,
@@ -359,7 +596,10 @@ async function enforceQuotaForFile(file) {
   return true
 }
 
-const uppy = new Uppy({ autoProceed: false })
+const uppy = new Uppy({
+  autoProceed: false,
+  locale: uppyLocale.value,
+})
   .use(Webcam)
   .use(ImageEditor, {
     cropperOptions: {
@@ -455,6 +695,7 @@ uppy.setMeta({
   isUncompressZipEnabled: isUncompressZipEnabled.value,
   fileExistsOption: fileExistsOption.value,
   indexDocumentContent: indexDocumentContent.value,
+  language: selectedLanguage.value,
 })
 
 uppy.setOptions({
@@ -464,21 +705,16 @@ uppy.setOptions({
 })
 
 onMounted(async () => {
+  await applyDefaultLanguageFromCourse()
   await refreshQuota(true)
 
   if (!isSearchEnabled.value) return
 
   try {
-    const response = await fetch(ENTRYPOINT + "search_engine_fields", { credentials: "same-origin" })
-    if (!response.ok) {
-      console.error("[Search] Failed to load search engine fields:", response.status)
-      return
-    }
-
-    const json = await response.json()
-    const fields = Array.isArray(json) ? json : json["hydra:member"] || []
+    const { items } = await searchEngineFieldService.listFields()
+    const fields = items || []
     if (!Array.isArray(fields)) {
-      console.error("[Search] Unexpected search engine fields payload:", json)
+      console.error("[Search] Unexpected search engine fields payload:", items)
       return
     }
 
@@ -514,6 +750,10 @@ watch(fileExistsOption, (value) => {
 
 watch(indexDocumentContent, (value) => {
   uppy.setMeta({ indexDocumentContent: value })
+})
+
+watch(selectedLanguage, (value) => {
+  uppy.setMeta({ language: value })
 })
 
 watch(

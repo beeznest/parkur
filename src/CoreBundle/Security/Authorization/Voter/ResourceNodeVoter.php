@@ -11,22 +11,33 @@ use Chamilo\CoreBundle\Entity\ResourceLink;
 use Chamilo\CoreBundle\Entity\ResourceNode;
 use Chamilo\CoreBundle\Entity\ResourceRight;
 use Chamilo\CoreBundle\Entity\Session;
+use Chamilo\CoreBundle\Entity\User;
+use Chamilo\CoreBundle\Helpers\CourseFromRequestHelper;
 use Chamilo\CoreBundle\Helpers\PageHelper;
 use Chamilo\CoreBundle\Helpers\ResourceAclHelper;
+use Chamilo\CoreBundle\Repository\ResourceRepository;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\CourseBundle\Entity\CDocument;
+use Chamilo\CourseBundle\Entity\CForum;
+use Chamilo\CourseBundle\Entity\CForumThread;
 use Chamilo\CourseBundle\Entity\CGroup;
+use Chamilo\CourseBundle\Entity\CLink;
+use Chamilo\CourseBundle\Entity\CQuiz;
 use Chamilo\CourseBundle\Entity\CQuizQuestion;
 use Chamilo\CourseBundle\Entity\CQuizRelQuestion;
 use Chamilo\CourseBundle\Entity\CStudentPublication;
 use Chamilo\CourseBundle\Entity\CStudentPublicationComment;
 use Chamilo\CourseBundle\Entity\CStudentPublicationRelDocument;
+use Chamilo\CourseBundle\Entity\CSurvey;
+use Chamilo\CourseBundle\Repository\CLpItemRepository;
 use ChamiloSession;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -35,25 +46,28 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class ResourceNodeVoter extends Voter
 {
-    public const VIEW = 'VIEW';
-    public const CREATE = 'CREATE';
-    public const EDIT = 'EDIT';
-    public const DELETE = 'DELETE';
-    public const EXPORT = 'EXPORT';
-    public const ROLE_CURRENT_COURSE_TEACHER = 'ROLE_CURRENT_COURSE_TEACHER';
-    public const ROLE_CURRENT_COURSE_STUDENT = 'ROLE_CURRENT_COURSE_STUDENT';
-    public const ROLE_CURRENT_COURSE_GROUP_TEACHER = 'ROLE_CURRENT_COURSE_GROUP_TEACHER';
-    public const ROLE_CURRENT_COURSE_GROUP_STUDENT = 'ROLE_CURRENT_COURSE_GROUP_STUDENT';
-    public const ROLE_CURRENT_COURSE_SESSION_TEACHER = 'ROLE_CURRENT_COURSE_SESSION_TEACHER';
-    public const ROLE_CURRENT_COURSE_SESSION_STUDENT = 'ROLE_CURRENT_COURSE_SESSION_STUDENT';
+    public const string VIEW = 'VIEW';
+    public const string CREATE = 'CREATE';
+    public const string EDIT = 'EDIT';
+    public const string DELETE = 'DELETE';
+    public const string EXPORT = 'EXPORT';
+    public const string ROLE_CURRENT_COURSE_TEACHER = 'ROLE_CURRENT_COURSE_TEACHER';
+    public const string ROLE_CURRENT_COURSE_STUDENT = 'ROLE_CURRENT_COURSE_STUDENT';
+    public const string ROLE_CURRENT_COURSE_GROUP_TEACHER = 'ROLE_CURRENT_COURSE_GROUP_TEACHER';
+    public const string ROLE_CURRENT_COURSE_GROUP_STUDENT = 'ROLE_CURRENT_COURSE_GROUP_STUDENT';
+    public const string ROLE_CURRENT_COURSE_SESSION_TEACHER = 'ROLE_CURRENT_COURSE_SESSION_TEACHER';
+    public const string ROLE_CURRENT_COURSE_SESSION_STUDENT = 'ROLE_CURRENT_COURSE_SESSION_STUDENT';
 
     public function __construct(
         private Security $security,
+        private readonly AccessDecisionManagerInterface $accessDecisionManager,
         private RequestStack $requestStack,
         private SettingsManager $settingsManager,
         private EntityManagerInterface $entityManager,
         private PageHelper $pageHelper,
         private readonly ResourceAclHelper $resourceAclHelper,
+        private readonly CourseFromRequestHelper $courseFromRequest,
+        private readonly CLpItemRepository $lpItemRepository,
     ) {}
 
     public static function getReaderMask(): int
@@ -85,7 +99,15 @@ class ResourceNodeVoter extends Voter
         return $subject instanceof ResourceNode;
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
+    // Context roles (ROLE_CURRENT_COURSE_*) live in User::$temporaryRoles and appear in
+    // $user->getRoles(), but Symfony's AbstractToken::getRoleNames() only returns roles
+    // fixed at token-creation time. isGranted() therefore misses them.
+    private function hasContextRole(string $role): bool
+    {
+        return \in_array($role, $this->security->getUser()?->getRoles() ?? [], true);
+    }
+
+    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         /** @var ResourceNode $resourceNode */
         $resourceNode = $subject;
@@ -102,7 +124,7 @@ class ResourceNodeVoter extends Voter
         }
 
         // Checking admin role.
-        if ($this->security->isGranted('ROLE_ADMIN')) {
+        if ($this->accessDecisionManager->decide($token, ['ROLE_ADMIN'])) {
             return true;
         }
 
@@ -149,7 +171,7 @@ class ResourceNodeVoter extends Voter
                         if ($rel && $rel->getQuiz()) {
                             $quiz = $rel->getQuiz();
                             // Allow if the user has VIEW rights on the quiz
-                            if ($this->security->isGranted('VIEW', $quiz)) {
+                            if ($this->accessDecisionManager->decide($token, ['VIEW'], $quiz)) {
                                 return true;
                             }
                         }
@@ -187,13 +209,21 @@ class ResourceNodeVoter extends Voter
                 return true;
             }
 
-            if ($this->security->isGranted('ROLE_CURRENT_COURSE_STUDENT')
-                || $this->security->isGranted('ROLE_CURRENT_COURSE_TEACHER')
-                || $this->security->isGranted('ROLE_CURRENT_COURSE_SESSION_STUDENT')
-                || $this->security->isGranted('ROLE_CURRENT_COURSE_SESSION_TEACHER')
-            ) {
-                return true;
+            if (!$user instanceof User) {
+                return false;
             }
+
+            // The context roles are handed out on open courses to any authenticated
+            // visitor, and they describe the course of the request rather than the one
+            // the submission belongs to. Neither is good enough to hand over somebody
+            // else's work, so membership of the submission's own course is required.
+            if (self::VIEW === $attribute) {
+                return $this->belongsToResourceCourse($resourceNode, $user);
+            }
+
+            // Everything else changes the submission, which its author (cleared above) and
+            // the teachers of its course may do — never a fellow student of that course.
+            return $this->teachesResourceCourse($resourceNode, $user);
         }
 
         if ('files' === $resourceNode->getResourceType()->getTitle()) {
@@ -220,19 +250,24 @@ class ResourceNodeVoter extends Voter
         $courseId = 0;
         $sessionId = 0;
         $groupId = 0;
-        $isFromLearningPath = false;
+        $lpId = 0;
+        $lpItemId = 0;
 
         if (null !== $request) {
-            $courseId = (int) $request->get('cid');
-            $sessionId = (int) $request->get('sid');
-            $groupId = (int) $request->get('gid');
+            // Context from the request URL (cid/sid/gid or their 1.11.x forms).
+            // A course referenced by code returns null here and flows through the
+            // session fallback below, already resolved by CidReqListener.
+            $courseId = $this->courseFromRequest->getCourseId($request) ?? 0;
+            $sessionId = $this->courseFromRequest->getSessionId($request) ?? 0;
+            $groupId = $this->courseFromRequest->getGroupId($request) ?? 0;
 
-            // Detect learning path context from request parameters.
+            // Learning path context from request parameters. The identifiers are
+            // attacker-controlled, so the referenced item has to actually point at this
+            // resource: presence alone must never unlock a hidden one. That check is
+            // deferred to the only branch reading it, so it costs nothing otherwise.
             $lpId = $request->query->getInt('lp_id', 0);
-            $lpItemId = $request->query->getInt('lp_item_id', 0);
-            $origin = (string) $request->query->get('origin', '');
-
-            $isFromLearningPath = $lpId > 0 || $lpItemId > 0 || 'learnpath' === $origin;
+            $lpItemId = $request->query->getInt('lp_item_id', 0)
+                ?: $request->query->getInt('item_id', 0);
 
             // Try Session values.
             if (empty($courseId) && $request->hasSession()) {
@@ -366,7 +401,7 @@ class ResourceNodeVoter extends Voter
 
         if ($courseId && $link->hasCourse() && $link->getCourse()->getId() === $courseId) {
             // If teacher.
-            if ($this->security->isGranted(self::ROLE_CURRENT_COURSE_TEACHER)) {
+            if ($this->hasContextRole(self::ROLE_CURRENT_COURSE_TEACHER)) {
                 $resourceRight = (new ResourceRight())
                     ->setMask($editorMask)
                     ->setRole(self::ROLE_CURRENT_COURSE_TEACHER)
@@ -378,8 +413,9 @@ class ResourceNodeVoter extends Voter
             // Normal case: resource must be published.
             // Exception: when the resource is being opened from a learning path item,
             // allow VIEW even if the underlying ResourceLink visibility is hidden in the tool.
-            if ($this->security->isGranted(self::ROLE_CURRENT_COURSE_STUDENT)
-                && (ResourceLink::VISIBILITY_PUBLISHED === $link->getVisibility() || $isFromLearningPath)
+            if ($this->hasContextRole(self::ROLE_CURRENT_COURSE_STUDENT)
+                && (ResourceLink::VISIBILITY_PUBLISHED === $link->getVisibility()
+                    || $this->isLearningPathItemForResource($resourceNode, $lpId, $lpItemId))
             ) {
                 $resourceRight = (new ResourceRight())
                     ->setMask($readerMask)
@@ -401,7 +437,7 @@ class ResourceNodeVoter extends Voter
         }
 
         if (!empty($groupId)) {
-            if ($this->security->isGranted(self::ROLE_CURRENT_COURSE_GROUP_TEACHER)) {
+            if ($this->hasContextRole(self::ROLE_CURRENT_COURSE_GROUP_TEACHER)) {
                 $resourceRight = (new ResourceRight())
                     ->setMask($editorMask)
                     ->setRole(self::ROLE_CURRENT_COURSE_GROUP_TEACHER)
@@ -409,7 +445,7 @@ class ResourceNodeVoter extends Voter
                 $rights[] = $resourceRight;
             }
 
-            if ($this->security->isGranted(self::ROLE_CURRENT_COURSE_GROUP_STUDENT)) {
+            if ($this->hasContextRole(self::ROLE_CURRENT_COURSE_GROUP_STUDENT)) {
                 $resourceRight = (new ResourceRight())
                     ->setMask($readerMask)
                     ->setRole(self::ROLE_CURRENT_COURSE_GROUP_STUDENT)
@@ -419,7 +455,7 @@ class ResourceNodeVoter extends Voter
         }
 
         if (!empty($sessionId)) {
-            if ($this->security->isGranted(self::ROLE_CURRENT_COURSE_SESSION_TEACHER)) {
+            if ($this->hasContextRole(self::ROLE_CURRENT_COURSE_SESSION_TEACHER)) {
                 $resourceRight = (new ResourceRight())
                     ->setMask($editorMask)
                     ->setRole(self::ROLE_CURRENT_COURSE_SESSION_TEACHER)
@@ -427,7 +463,7 @@ class ResourceNodeVoter extends Voter
                 $rights[] = $resourceRight;
             }
 
-            if ($this->security->isGranted(self::ROLE_CURRENT_COURSE_SESSION_STUDENT)) {
+            if ($this->hasContextRole(self::ROLE_CURRENT_COURSE_SESSION_STUDENT)) {
                 $resourceRight = (new ResourceRight())
                     ->setMask($readerMask)
                     ->setRole(self::ROLE_CURRENT_COURSE_SESSION_STUDENT)
@@ -436,7 +472,10 @@ class ResourceNodeVoter extends Voter
             }
         }
 
-        if (empty($rights) && ResourceLink::VISIBILITY_PUBLISHED === $link->getVisibility()) {
+        if (empty($rights)
+            && ResourceLink::VISIBILITY_PUBLISHED === $link->getVisibility()
+            && $this->mayUseDefaultReadFallback($link, $resourceNode, $user)
+        ) {
             // Give just read access.
             $resourceRight = (new ResourceRight())
                 ->setMask($readerMask)
@@ -680,6 +719,109 @@ class ResourceNodeVoter extends Voter
         return false;
     }
 
+    /**
+     * VISIBILITY_PUBLISHED means published inside its own course, never portal-wide: the course's
+     * own visibility answers that. The course id reaching this point falls back to the resource's
+     * first link, so the link-matching loop also matches a request carrying no context, and the
+     * context roles describe the course of the request rather than the one the link belongs to.
+     * A course link therefore needs an open course or a real subscription to it.
+     */
+    private function mayUseDefaultReadFallback(
+        ResourceLink $link,
+        ResourceNode $resourceNode,
+        ?UserInterface $user
+    ): bool {
+        $linkCourse = $link->getCourse();
+        if (!$linkCourse instanceof Course) {
+            return true;
+        }
+
+        if ($linkCourse->isPublic()) {
+            return true;
+        }
+
+        // An OPEN_PLATFORM course opens its contents to every registered user, unless the
+        // administrator requires a subscription first. CourseVoter reads the same pair.
+        if (Course::OPEN_PLATFORM === $linkCourse->getVisibility()
+            && !$this->isTruthySettingValue(
+                $this->settingsManager->getSetting('course.block_registered_users_access_to_open_course_contents', true)
+            )
+        ) {
+            return true;
+        }
+
+        return $user instanceof User && $this->belongsToResourceCourse($resourceNode, $user);
+    }
+
+    /**
+     * Whether the user takes part in one of the courses the resource is linked to,
+     * as a real subscription rather than as a visitor of an open course.
+     */
+    private function belongsToResourceCourse(ResourceNode $resourceNode, User $user): bool
+    {
+        foreach ($resourceNode->getResourceLinks() as $link) {
+            // Corrections and feedback are linked to the student they were sent to.
+            $linkUser = $link->getUser();
+            if ($linkUser instanceof User && $linkUser->getId() === $user->getId()) {
+                return true;
+            }
+
+            $linkCourse = $link->getCourse();
+            if (!$linkCourse instanceof Course) {
+                continue;
+            }
+
+            $linkSession = $link->getSession();
+            if ($linkSession instanceof Session) {
+                if ($linkSession->hasUserAsGeneralCoach($user)
+                    || $linkSession->hasCourseCoachInCourse($user, $linkCourse)
+                    || $linkSession->hasUserInCourse($user, $linkCourse, Session::STUDENT)
+                ) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if ($linkCourse->hasUserAsTeacher($user) || $linkCourse->hasSubscriptionByUser($user)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The teaching half of belongsToResourceCourse(): the course the resource belongs to, not the
+     * one the request carries, and without the student terms that method also accepts.
+     */
+    private function teachesResourceCourse(ResourceNode $resourceNode, User $user): bool
+    {
+        foreach ($resourceNode->getResourceLinks() as $link) {
+            $linkCourse = $link->getCourse();
+            if (!$linkCourse instanceof Course) {
+                continue;
+            }
+
+            $linkSession = $link->getSession();
+            if ($linkSession instanceof Session) {
+                if ($linkSession->hasUserAsGeneralCoach($user)
+                    || $linkSession->hasCourseCoachInCourse($user, $linkCourse)
+                ) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if ($linkCourse->hasUserAsTeacher($user)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function canViewOwnStudentPublicationRelatedResource(ResourceNode $resourceNode, TokenInterface $token): bool
     {
         $user = $token->getUser();
@@ -734,5 +876,60 @@ class ResourceNodeVoter extends Voter
         }
 
         return false;
+    }
+
+    /**
+     * Tells whether the learning path item named in the request really is the one holding
+     * this resource, which is what allows a student to open it while it stays hidden in its
+     * own tool. The item type to entity mapping mirrors LearningPathRuntimeProvider.
+     */
+    private function isLearningPathItemForResource(ResourceNode $resourceNode, int $lpId, int $lpItemId): bool
+    {
+        if ($lpItemId <= 0) {
+            return false;
+        }
+
+        $resourceNodeId = $resourceNode->getId();
+
+        if (null === $resourceNodeId) {
+            return false;
+        }
+
+        $item = $this->lpItemRepository->findResourceTargetData($lpItemId);
+
+        if (null === $item) {
+            return false;
+        }
+
+        if ($lpId > 0 && $item['lpId'] !== $lpId) {
+            return false;
+        }
+
+        $path = $item['path'];
+
+        if (!ctype_digit($path)) {
+            return false;
+        }
+
+        $resourceClass = match (strtolower(trim($item['itemType']))) {
+            'document', 'video', 'readout_text', 'final_item' => CDocument::class,
+            'quiz' => CQuiz::class,
+            'link' => CLink::class,
+            'student_publication', 'assignments' => CStudentPublication::class,
+            'forum' => CForum::class,
+            'thread' => CForumThread::class,
+            'survey' => CSurvey::class,
+            default => null,
+        };
+
+        if (null === $resourceClass) {
+            return false;
+        }
+
+        $repository = $this->entityManager->getRepository($resourceClass);
+
+        // Existence check only, no hydration: the node id is all this needs.
+        return $repository instanceof ResourceRepository
+            && $repository->isAttachedToResourceNode((int) $path, $resourceNodeId);
     }
 }

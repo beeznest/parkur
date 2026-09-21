@@ -2,7 +2,8 @@
   <div>
     <BaseTable
       :is-loading="loading"
-      v-model:multi-sort-meta="sortFields"
+      :sort-field="sortField"
+      :sort-order="sortOrder"
       v-model:rows="loadParams.itemsPerPage"
       :total-items="totalRecords"
       :values="submissions"
@@ -14,6 +15,7 @@
       <Column
         field="user.fullName"
         :header="t('Full name')"
+        sortable
       >
         <template #body="{ data }">
           <span class="text-gray-900">
@@ -25,6 +27,7 @@
       <Column
         field="title"
         :header="t('Title')"
+        sortable
       />
 
       <Column :header="t('Feedback')">
@@ -100,6 +103,7 @@
       <Column
         field="sentDate"
         :header="t('Date')"
+        sortable
       >
         <template #body="{ data }">
           {{ abbreviatedDatetime(data.sentDate) }}
@@ -132,6 +136,16 @@
       <Column :header="t('Actions')">
         <template #body="{ data }">
           <div class="flex justify-center gap-2">
+            <BaseButton
+              v-if="getSubmissionPreviewUrl(data)"
+              icon="link-external"
+              size="small"
+              only-icon
+              :label="t('Preview')"
+              :class="actionBtnClass"
+              @click="openSubmissionPreview(data)"
+              type="primary-text"
+            />
             <BaseButton
               icon="download"
               size="small"
@@ -271,7 +285,8 @@ const notification = useNotification()
 const loading = ref(false)
 const submissions = ref([])
 const totalRecords = ref(0)
-const sortFields = ref([{ field: "sentDate", order: -1 }])
+const sortField = ref("sentDate")
+const sortOrder = ref(-1)
 const loadParams = reactive({
   page: 1,
   itemsPerPage: null,
@@ -292,29 +307,6 @@ const platform = usePlatformConfig()
 const courseSettingsStore = useCourseSettings()
 const securityStore = useSecurityStore()
 
-async function loadCourseSettingsIfPossible() {
-  const courseId = course.value?.id
-  const sessionId = session.value?.id
-
-  if (!courseId) return
-
-  try {
-    await courseSettingsStore.loadCourseSettings(courseId, sessionId)
-  } catch (err) {
-    console.error("[Assignments] loadCourseSettings FAILED:", err)
-  }
-}
-
-onMounted(async () => {
-  await loadCourseSettingsIfPossible()
-})
-
-watch(
-  () => [course.value?.id, session.value?.id],
-  async () => {
-    await loadCourseSettingsIfPossible()
-  },
-)
 
 const aiHelpersEnabled = computed(() => {
   const v = String(platform.getSetting("ai_helpers.enable_ai_helpers"))
@@ -328,10 +320,11 @@ const taskGraderEnabled = computed(() => {
 
 const canUseAiTaskGrader = computed(() => {
   // Only teachers/admins and not in student view
-  const canEdit = !!(securityStore.isTeacher || securityStore.isCourseAdmin || securityStore.isAdmin)
+  const canEdit = !!(securityStore.isTeacher || securityStore.isCourseAdmin)
   const notStudentView = !platform.isStudentViewActive
   return !!(canEdit && notStudentView && aiHelpersEnabled.value && taskGraderEnabled.value)
 })
+
 
 watch(
   loadParams,
@@ -343,17 +336,8 @@ watch(
 )
 
 function buildOrderFromSort() {
-  // PrimeVue multi sort meta => API expects { field: "asc|desc" }
-  const order = {}
-  const meta = Array.isArray(sortFields.value) ? sortFields.value : []
-  meta.forEach((s) => {
-    if (!s?.field) return
-    order[s.field] = s.order === 1 ? "asc" : "desc"
-  })
-  if (!Object.keys(order).length) {
-    order.sentDate = "desc"
-  }
-  return order
+  if (!sortField.value) return { sentDate: "desc" }
+  return { [sortField.value]: sortOrder.value === 1 ? "asc" : "desc" }
 }
 
 async function loadData() {
@@ -381,8 +365,11 @@ function onPage(event) {
 }
 
 function onSort(event) {
-  if (event?.multiSortMeta) {
-    sortFields.value = event.multiSortMeta
+  sortField.value = event.sortField ?? sortField.value
+  sortOrder.value = event.sortOrder ?? sortOrder.value
+  loadParams.page = 1
+  if (loadParams.itemsPerPage) {
+    loadData()
   }
 }
 
@@ -489,17 +476,45 @@ async function viewSubmission(item) {
   }
 }
 
-function saveCorrection(item) {
-  if (item?.downloadUrl) {
-    const link = document.createElement("a")
-    link.href = item.downloadUrl
-    link.download = ""
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  } else {
-    notification.showErrorNotification(t("No download available"))
+function getSubmissionPreviewUrl(item) {
+  const contentUrl = String(item?.contentUrl || "").trim()
+  if (contentUrl) {
+    return contentUrl
   }
+
+  const downloadUrl = String(item?.downloadUrl || "").trim()
+  if (!downloadUrl) {
+    return ""
+  }
+
+  return downloadUrl.replace(/\/download(\?.*)?$/, "/view$1")
+}
+
+function openSubmissionPreview(item) {
+  const previewUrl = getSubmissionPreviewUrl(item)
+
+  if (!previewUrl) {
+    notification.showErrorNotification(t("No download available"))
+    return
+  }
+
+  window.open(previewUrl, "_blank", "noopener,noreferrer")
+}
+
+function saveCorrection(item) {
+  if (!item?.iid) {
+    notification.showErrorNotification(t("No download available"))
+    return
+  }
+  const params = new URLSearchParams({
+    cid: course.value?.id ?? 0,
+    sid: session.value?.id ?? 0,
+  })
+  const link = document.createElement("a")
+  link.href = `/assignments/submissions/${item.iid}/download?${params}`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 function editSubmission(item) {

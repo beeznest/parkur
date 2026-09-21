@@ -30,18 +30,20 @@ use UserManager;
 
 use const ENT_HTML5;
 use const ENT_QUOTES;
+use const FILTER_VALIDATE_URL;
 use const PATHINFO_EXTENSION;
 use const PHP_ROUND_HALF_UP;
 use const PHP_SAPI;
 use const PHP_URL_PATH;
+use const PHP_URL_SCHEME;
 
 class ChamiloHelper
 {
-    public const COURSE_MANAGER = 1;
-    public const SESSION_ADMIN = 3;
-    public const DRH = 4;
-    public const STUDENT = 5;
-    public const ANONYMOUS = 6;
+    public const int COURSE_MANAGER = 1;
+    public const int SESSION_ADMIN = 3;
+    public const int DRH = 4;
+    public const int STUDENT = 5;
+    public const int ANONYMOUS = 6;
 
     private static array $configuration;
 
@@ -166,10 +168,16 @@ class ChamiloHelper
         bool $getSysPath = false,
         bool $forcedGetter = false
     ): string {
-        $logoPath = Container::getThemeHelper()->getThemeAssetUrl('images/header-logo.svg');
+        $configuredLogoUrl = self::getConfiguredPlatformLogoUrl();
 
-        if (empty($logoPath)) {
-            $logoPath = Container::getThemeHelper()->getThemeAssetUrl('images/header-logo.png');
+        if (null !== $configuredLogoUrl) {
+            $logoPath = $configuredLogoUrl;
+        } else {
+            $logoPath = Container::getThemeHelper()->getThemeAssetUrl('images/header-logo.svg');
+
+            if (empty($logoPath)) {
+                $logoPath = Container::getThemeHelper()->getThemeAssetUrl('images/header-logo.png');
+            }
         }
 
         $institution = api_get_setting('Institution');
@@ -1070,7 +1078,8 @@ class ChamiloHelper
         string $html,
         string $courseDir,
         array $urlMapByRel,
-        array $urlMapByBase
+        array $urlMapByBase,
+        array $urlMapByUuid = []
     ): array {
         $replaced = 0;
         $misses = 0;
@@ -1122,7 +1131,92 @@ class ChamiloHelper
             $misses++;
 
             return $m[0];
-        }, $html);
+        }, $html) ?? $html;
+
+        // Modern resource viewer URLs: /r/document/files/{uuid}/view|download|link
+        // (optionally with host and query string). These are the common form produced
+        // by TinyMCE embeds in Chamilo 2.
+        if (!empty($urlMapByUuid)) {
+            $modern = self::rewriteModernResourceUrlsWithMap($html, $urlMapByUuid);
+            $html = (string) ($modern['html'] ?? $html);
+            $replaced += (int) ($modern['replaced'] ?? 0);
+            $misses += (int) ($modern['misses'] ?? 0);
+        }
+
+        return ['html' => $html, 'replaced' => $replaced, 'misses' => $misses];
+    }
+
+    /**
+     * Rewrite modern /r/document/files/{uuid}/… embeds using an old-uuid → new-url map.
+     *
+     * @param array<string,string> $urlMapByUuid lowercase uuid => destination resource URL
+     *
+     * @return array{html:string,replaced:int,misses:int}
+     */
+    public static function rewriteModernResourceUrlsWithMap(string $html, array $urlMapByUuid): array
+    {
+        $replaced = 0;
+        $misses = 0;
+
+        if ('' === $html || empty($urlMapByUuid)) {
+            return ['html' => $html, 'replaced' => 0, 'misses' => 0];
+        }
+
+        // Normalize map keys to lowercase for case-insensitive UUID matching.
+        $map = [];
+        foreach ($urlMapByUuid as $k => $v) {
+            $kk = strtolower(trim((string) $k));
+            $vv = trim((string) $v);
+            if ('' !== $kk && '' !== $vv) {
+                $map[$kk] = $vv;
+            }
+        }
+        if (empty($map)) {
+            return ['html' => $html, 'replaced' => 0, 'misses' => 0];
+        }
+
+        $pattern = '/(?P<attr>src|href)\s*=\s*["\'](?P<full>(?:(?:https?:)?\/\/[^"\']+)?\/r\/document\/files\/(?P<uuid>[0-9a-fA-F-]{16,64})\/(?P<mode>view|download|link)(?:\?[^"\']*)?)["\']/i';
+
+        $html = preg_replace_callback(
+            $pattern,
+            static function (array $m) use ($map, &$replaced, &$misses): string {
+                $uuid = strtolower((string) ($m['uuid'] ?? ''));
+                if ('' === $uuid || !isset($map[$uuid])) {
+                    $misses++;
+
+                    return $m[0];
+                }
+
+                $newUrl = $map[$uuid];
+                // Preserve requested mode when the mapped URL is a view URL and caller used download/link.
+                $mode = strtolower((string) ($m['mode'] ?? 'view'));
+                if ('view' !== $mode && str_ends_with($newUrl, '/view')) {
+                    $newUrl = substr($newUrl, 0, -\strlen('/view')).'/'.$mode;
+                }
+
+                $replaced++;
+
+                return $m['attr'].'="'.htmlspecialchars($newUrl, ENT_QUOTES | ENT_HTML5).'"';
+            },
+            $html
+        ) ?? $html;
+
+        // Also rewrite bare URLs in CSS url(...) if present.
+        $html = preg_replace_callback(
+            '/url\(\s*([\'"]?)(?P<full>(?:(?:https?:)?\/\/[^)\'"]+)?\/r\/document\/files\/(?P<uuid>[0-9a-fA-F-]{16,64})\/(?:view|download|link)(?:\?[^)\'"]*)?)\1\s*\)/i',
+            static function (array $m) use ($map, &$replaced, &$misses): string {
+                $uuid = strtolower((string) ($m['uuid'] ?? ''));
+                if ('' === $uuid || !isset($map[$uuid])) {
+                    $misses++;
+
+                    return $m[0];
+                }
+                $replaced++;
+
+                return 'url('.$m[1].$map[$uuid].$m[1].')';
+            },
+            $html
+        ) ?? $html;
 
         return ['html' => $html, 'replaced' => $replaced, 'misses' => $misses];
     }
@@ -1287,5 +1381,40 @@ class ChamiloHelper
         ];
 
         return $map[$type] ?? '';
+    }
+
+    private static function getConfiguredPlatformLogoUrl(): ?string
+    {
+        $url = trim((string) api_get_setting('platform.platform_logo_url'));
+
+        if ('' === $url || !self::isSafeImageLogoUrl($url)) {
+            return null;
+        }
+
+        return $url;
+    }
+
+    private static function isSafeImageLogoUrl(string $url): bool
+    {
+        if (str_starts_with($url, '/')) {
+            return self::hasAllowedLogoExtension($url);
+        }
+
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+
+        if (!\in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
+        return false !== filter_var($url, FILTER_VALIDATE_URL)
+            && self::hasAllowedLogoExtension($url);
+    }
+
+    private static function hasAllowedLogoExtension(string $url): bool
+    {
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return \in_array($extension, ['svg', 'png', 'jpg', 'jpeg', 'gif', 'webp'], true);
     }
 }

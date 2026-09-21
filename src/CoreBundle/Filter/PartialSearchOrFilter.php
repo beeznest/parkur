@@ -11,10 +11,12 @@ use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
 use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CoreBundle\Helpers\AccessUrlHelper;
+use Chamilo\CoreBundle\Helpers\AccessUrlScopeHelper;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 
 final class PartialSearchOrFilter extends AbstractFilter
 {
@@ -29,6 +31,8 @@ final class PartialSearchOrFilter extends AbstractFilter
     public function __construct(
         ManagerRegistry $managerRegistry,
         private readonly AccessUrlHelper $accessUrlHelper,
+        private readonly AccessUrlScopeHelper $accessUrlScope,
+        private readonly Security $security,
         ?LoggerInterface $logger = null,
         ?array $properties = null
     ) {
@@ -101,7 +105,6 @@ final class PartialSearchOrFilter extends AbstractFilter
     {
         return [
             'search' => [
-                'property' => null,
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Search OR/LIKE across configured fields and scopes results to the current portal when multi-URL is enabled.',
@@ -172,15 +175,43 @@ final class PartialSearchOrFilter extends AbstractFilter
             return;
         }
 
+        // ROLE_SUPER_ADMIN no longer exists in the role hierarchy (config/packages/security.yaml);
+        // kept as a defensive check in case something still grants it directly.
+        if ($this->security->isGranted('ROLE_SUPER_ADMIN')) {
+            return;
+        }
+
+        $currentUser = $this->security->getUser();
+
+        $urlIds = null;
+        if ($this->security->isGranted('ROLE_GLOBAL_ADMIN') && $currentUser instanceof User) {
+            // A global admin registered in the topmost URL of a tree ("unrestricted") manages
+            // every URL and must see every user regardless of portal, unchanged. One registered
+            // only in a non-root URL is scoped to that URL's subtree specifically -- not to
+            // whichever URL the current request happens to be on, since (unlike a plain user,
+            // whose own portal IS the URL they're browsing) an admin's authority is a property of
+            // their own registration, not of the request. See AccessUrlScopeHelper.
+            $managedUrlIds = $this->accessUrlScope->getManagedUrlIds($currentUser);
+            if (null === $managedUrlIds) {
+                return;
+            }
+
+            $urlIds = $managedUrlIds;
+        }
+
         $qbId = spl_object_id($queryBuilder);
         if (isset(self::$scopeApplied[$qbId])) {
             return;
         }
         self::$scopeApplied[$qbId] = true;
 
-        $currentUrl = $this->accessUrlHelper->getCurrent();
-        if (null === $currentUrl || null === $currentUrl->getId()) {
-            return;
+        if (null === $urlIds) {
+            $currentUrl = $this->accessUrlHelper->getCurrent();
+            if (null === $currentUrl || null === $currentUrl->getId()) {
+                return;
+            }
+
+            $urlIds = [$currentUrl->getId()];
         }
 
         $alias = $queryBuilder->getRootAliases()[0];
@@ -193,11 +224,11 @@ final class PartialSearchOrFilter extends AbstractFilter
         $queryBuilder->innerJoin("$portalsAlias.url", $urlAlias);
 
         // Compare by ID to avoid edge cases with entity object comparison.
-        $paramName = $queryNameGenerator->generateParameterName('currentAccessUrlId');
+        $paramName = $queryNameGenerator->generateParameterName('currentAccessUrlIds');
 
         $queryBuilder
-            ->andWhere("$urlAlias.id = :$paramName")
-            ->setParameter($paramName, $currentUrl->getId())
+            ->andWhere("$urlAlias.id IN (:$paramName)")
+            ->setParameter($paramName, $urlIds)
             ->distinct()
         ;
     }

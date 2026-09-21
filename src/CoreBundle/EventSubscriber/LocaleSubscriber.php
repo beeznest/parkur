@@ -7,10 +7,11 @@ declare(strict_types=1);
 namespace Chamilo\CoreBundle\EventSubscriber;
 
 use Chamilo\CoreBundle\Entity\Course;
-use Chamilo\CoreBundle\Repository\LanguageRepository;
+use Chamilo\CoreBundle\Helpers\CourseFromRequestHelper;
+use Chamilo\CoreBundle\Helpers\LanguageHelper;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\CourseBundle\Settings\SettingsCourseManager;
-use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,23 +21,31 @@ use Symfony\Component\HttpKernel\KernelEvents;
 /**
  * Handles locale selection based on platform, user, and course settings.
  */
-class LocaleSubscriber implements EventSubscriberInterface
+readonly class LocaleSubscriber implements EventSubscriberInterface
 {
     public function __construct(
+        #[Autowire(param: 'locale')]
         private string $defaultLocale,
         private SettingsManager $settingsManager,
         private ParameterBagInterface $parameterBag,
         private SettingsCourseManager $courseSettingsManager,
-        private EntityManagerInterface $em,
-        private LanguageRepository $languageRepository,
+        private CourseFromRequestHelper $courseFromRequest,
+        private LanguageHelper $languageHelper,
     ) {}
 
     public function onKernelRequest(RequestEvent $event): void
     {
+        // Error pages run as a sub-request and inherit the locale already
+        // resolved for the main one. Resolving it again would query the database
+        // right when it may be what failed, and the error page would never render.
+        if (!$event->isMainRequest()) {
+            return;
+        }
+
         $request = $event->getRequest();
 
         // Skip if not installed or no session is available
-        $installed = $this->parameterBag->has('installed') && 1 === (int) $this->parameterBag->get('installed');
+        $installed = $this->parameterBag->has('installed') && 1 === (int) (string) $this->parameterBag->get('installed');
         if (!$installed || !$request->hasSession()) {
             return;
         }
@@ -69,28 +78,10 @@ class LocaleSubscriber implements EventSubscriberInterface
             $localeList['user_profil_lang'] = $userLocale;
         }
 
-        // 3) Course language, or user language if course allows it
-        // First try: course already in session
-        $course = $session->get('course');
-
-        // Fallback: resolve course from request if not in session yet
-        if (!$course instanceof Course) {
-            // Accept both numeric id (?cid=123) and code (?cid=ABC) as well as legacy ?cidReq=CODE
-            $cid = $request->query->get('cid');
-            $cidReq = $request->query->get('cidReq');
-
-            if ($cid) {
-                if (ctype_digit((string) $cid)) {
-                    $course = $this->em->getRepository(Course::class)->find((int) $cid);
-                } else {
-                    $course = $this->em->getRepository(Course::class)->findOneBy(['code' => (string) $cid]);
-                }
-            }
-
-            if (!$course && $cidReq) {
-                $course = $this->em->getRepository(Course::class)->findOneBy(['code' => (string) $cidReq]);
-            }
-        }
+        // 3) Course language only when the current request is in the course context.
+        // Resolved from the request itself (never from the course stored in the
+        // user session, which may belong to a previous request on global pages).
+        $course = $this->courseFromRequest->resolveCourse($request);
 
         if ($course instanceof Course) {
             $userLocale = $localeList['user_profil_lang'] ?? null;
@@ -121,9 +112,6 @@ class LocaleSubscriber implements EventSubscriberInterface
         }
 
         // 6) Honor configured priorities language_priority_1..4
-        // Collect only the priorities that have a resolved value, preserving order.
-        // browser_lang may substitute platform_lang, but only when platform_lang is the
-        // last matching priority — i.e. no more-specific configured priority follows it.
         $matchingPriorities = [];
         foreach (['language_priority_1', 'language_priority_2', 'language_priority_3', 'language_priority_4'] as $settingKey) {
             $priority = $this->settingsManager->getSetting("language.$settingKey");
@@ -146,7 +134,7 @@ class LocaleSubscriber implements EventSubscriberInterface
             return $localeList[$priority];
         }
 
-        // 7) Fallback order when priorities are absent — last non-empty wins (lowest → highest priority)
+        // 7) Fallback order when priorities are absent — last non-empty wins
         $result = $this->defaultLocale;
         foreach (['platform_lang', 'browser_lang', 'user_profil_lang', 'course_lang', 'user_selected_lang'] as $key) {
             if (!empty($localeList[$key])) {
@@ -157,15 +145,6 @@ class LocaleSubscriber implements EventSubscriberInterface
         return $result;
     }
 
-    /**
-     * Parses the browser's Accept-Language header and returns the best matching
-     * available Chamilo language isocode, or null if none matches.
-     *
-     * Matching order for each browser preference (highest quality first):
-     *   1. Exact isocode match      (e.g. "fr-FR" → "fr_FR")
-     *   2. Bare root exact match    (e.g. "fr-BE" → root "fr" → isocode "fr")
-     *   3. Root prefix match        (e.g. "fr-BE" → root "fr" → first available "fr_XX")
-     */
     private function detectBrowserLanguage(Request $request): ?string
     {
         $acceptLanguage = $request->headers->get('Accept-Language', '');
@@ -173,7 +152,6 @@ class LocaleSubscriber implements EventSubscriberInterface
             return null;
         }
 
-        // Build [langTag => quality] map, sorted by quality descending
         $preferences = [];
         foreach (explode(',', $acceptLanguage) as $part) {
             $part = trim($part);
@@ -186,36 +164,11 @@ class LocaleSubscriber implements EventSubscriberInterface
         }
         arsort($preferences);
 
-        // Fetch all available isocodes once
-        $availableIsocodes = array_keys($this->languageRepository->getAllAvailableToArray());
-
         foreach (array_keys($preferences) as $browserTag) {
-            // Normalize "fr-BE" → "fr_BE", "fr" → "fr"
-            $normalized = str_replace('-', '_', $browserTag);
-            if (preg_match('/^([a-z]{2})_([a-z]{2})$/i', $normalized, $m)) {
-                $normalized = strtolower($m[1]).'_'.strtoupper($m[2]);
-            } else {
-                $normalized = strtolower($normalized);
-            }
+            $match = $this->languageHelper->findBestAvailableMatch($browserTag);
 
-            // 1. Exact match (e.g. "fr_FR")
-            if (\in_array($normalized, $availableIsocodes, true)) {
-                return $normalized;
-            }
-
-            // Extract root language code ("fr" from "fr_BE" or from bare "fr")
-            $root = substr($normalized, 0, 2);
-
-            // 2. Bare root exact match (e.g. "es" isocode exists)
-            if (\in_array($root, $availableIsocodes, true)) {
-                return $root;
-            }
-
-            // 3. Root prefix match: "fr-BE" → no "fr_BE", no "fr" → first available "fr_XX"
-            foreach ($availableIsocodes as $iso) {
-                if (str_starts_with($iso, $root.'_')) {
-                    return $iso;
-                }
+            if (null !== $match) {
+                return $match->getIsocode();
             }
         }
 

@@ -13,31 +13,34 @@ use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CoreBundle\Exception\NotAllowedException;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+
+use const FILTER_VALIDATE_BOOLEAN;
 
 /**
  * @extends Voter<'VIEW'|'EDIT'|'DELETE', Course>
  */
 class CourseVoter extends Voter
 {
-    public const VIEW = 'VIEW';
-    public const EDIT = 'EDIT';
-    public const DELETE = 'DELETE';
+    public const string VIEW = 'VIEW';
+    public const string EDIT = 'EDIT';
+    public const string DELETE = 'DELETE';
 
     private RequestStack $requestStack;
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        private readonly Security $security,
+        private readonly AccessDecisionManagerInterface $accessDecisionManager,
         private readonly TranslatorInterface $translator,
+        private readonly SettingsManager $settingsManager,
         RequestStack $requestStack,
         EntityManagerInterface $entityManager,
-        private readonly SettingsManager $settingsManager
     ) {
         $this->requestStack = $requestStack;
         $this->entityManager = $entityManager;
@@ -60,23 +63,22 @@ class CourseVoter extends Voter
         return $subject instanceof Course;
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         $user = $token->getUser();
 
         // Admins have access to everything.
-        if ($this->security->isGranted('ROLE_ADMIN')) {
+        if ($this->accessDecisionManager->decide($token, ['ROLE_ADMIN'])) {
             return true;
         }
 
         /** @var Course $course */
         $course = $subject;
-
         $request = $this->requestStack->getCurrentRequest();
+
         $sessionId = $request?->query?->get('sid');
         $session = null;
 
-        $session = null;
         if (!empty($sessionId)) {
             /** @var Session|null $session */
             $session = $this->entityManager->getRepository(Session::class)->find($sessionId);

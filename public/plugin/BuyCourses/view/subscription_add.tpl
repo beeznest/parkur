@@ -12,7 +12,7 @@
                         {{ page_title }}
                     </h1>
                     <p class="mt-2 max-w-3xl text-sm leading-6 text-gray-50">
-                        Create a subscription for this product, define the optional tax rate, and add one or more subscription periods with their prices.
+                        {{ 'SubscriptionAddIntro'|get_plugin_lang('BuyCoursesPlugin') }}
                     </p>
                 </div>
             </div>
@@ -22,7 +22,7 @@
                         href="{{ back_url }}"
                         class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-25 bg-white px-4 py-2.5 text-sm font-semibold text-gray-90 transition hover:border-primary/30 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2"
                 >
-                    <em class="fa fa-arrow-left fa-fw"></em>
+                    <em class="mdi mdi-arrow-left"></em>
                     {{ 'Back'|get_lang }}
                 </a>
 
@@ -30,7 +30,7 @@
                         href="{{ frequency_url }}"
                         class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
                 >
-                    <em class="fa fa-calendar-alt fa-fw"></em>
+                    <em class="mdi mdi-calendar-month"></em>
                     {{ 'ConfigureSubscriptionsFrequencies'|get_plugin_lang('BuyCoursesPlugin') }}
                 </a>
             </div>
@@ -70,11 +70,11 @@
                 </div>
                 <div class="mt-2 text-sm leading-6 text-gray-90">
                     {% if has_currency and has_frequencies %}
-                    Ready to configure subscription periods.
+                    {{ 'SubscriptionReadyToConfigure'|get_plugin_lang('BuyCoursesPlugin') }}
                     {% elseif not has_currency %}
-                    Currency must be configured before saving this subscription.
+                    {{ 'SubscriptionCurrencyMissing'|get_plugin_lang('BuyCoursesPlugin') }}
                     {% else %}
-                    Subscription periods must be configured before saving this subscription.
+                    {{ 'SubscriptionPeriodsMissing'|get_plugin_lang('BuyCoursesPlugin') }}
                     {% endif %}
                 </div>
             </div>
@@ -159,7 +159,7 @@
       '</td>' +
       '<td class="px-4 py-4 text-right">' +
       '<button type="button" class="subscription-delete-frequency inline-flex items-center justify-center gap-2 rounded-xl bg-danger px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-danger/30 focus:ring-offset-2">' +
-      '<em class="fa fa-remove fa-fw"></em>' +
+      '<em class="mdi mdi-close"></em>' +
       '{{ "Delete"|get_lang }}' +
       '</button>' +
       '</td>' +

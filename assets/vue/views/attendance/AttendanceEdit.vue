@@ -34,6 +34,10 @@ const route = useRoute()
 const attendanceData = ref(null)
 const loading = ref(true)
 
+function extractResourceLanguage(resource) {
+  return String(resource?.resourceNode?.language?.isocode || resource?.language || "").trim()
+}
+
 const goBack = (query = {}) => {
   router.push({
     name: "AttendanceList",
@@ -57,11 +61,13 @@ const fetchAttendance = async () => {
       id: fetchedData.iid,
       title: fetchedData.title,
       description: DOMPurify.sanitize(fetchedData.description),
-      qualifyGradebook: !!fetchedData.attendanceQualifyTitle,
-      gradebookOption: fetchedData.gradebookOption || null,
+      qualifyGradebook: false,
+      gradebookOption: null,
       gradebookTitle: fetchedData.attendanceQualifyTitle || "",
       gradeWeight: fetchedData.attendanceWeight || 0.0,
       requireUnique: !!fetchedData.requireUnique,
+      language: extractResourceLanguage(fetchedData),
+      room: typeof fetchedData.room === "string" ? fetchedData.room : fetchedData.room?.["@id"] || null,
     }
   } catch (error) {
     console.error("Error fetching attendance:", error)

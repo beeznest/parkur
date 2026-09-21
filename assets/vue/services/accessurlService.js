@@ -12,7 +12,10 @@ export async function findUserActivePortals(userIri) {
 }
 
 export async function findAll() {
-  const { items } = await baseService.getCollection("/api/access_urls")
+  const { items } = await baseService.getCollection("/api/access_urls", {
+    pagination: false,
+    "order[url]": "asc",
+  })
 
   return items
 }
@@ -27,11 +30,8 @@ export async function findById(id) {
 
 /**
  * @param {number} id
- * @param {string} [secToken]
- * @returns {Promise<Object>}
+ * @returns {Promise<void>}
  */
-export async function deleteById(id, secToken = "") {
+export async function deleteById(id) {
   await baseService.delete(`/api/access_urls/${id}`)
-
-  return { redirectUrl: "/main/admin/access_urls.php" }
 }

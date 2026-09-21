@@ -58,7 +58,6 @@ $courseActions = [
     'get_work_user_list',
     'get_work_user_list_others',
     'get_work_user_list_all',
-    'get_work_pending_list',
     'get_course_announcements',
     'course_log_events',
     'get_learning_path_calendars',
@@ -129,14 +128,35 @@ if ($isDiagnosisLoadSearch) {
     if (!$canViewUsergroupFromCourse) {
         $usergroupAjax->protectScript($userGroupInfoAjax, true, true);
     }
+} elseif ('get_work_pending_list' === $action) {
+    api_block_anonymous_users();
+
+    if (!api_is_platform_admin(false, true) && false === api_is_teacher()) {
+        api_not_allowed(true);
+    }
 } elseif (in_array($action, $courseActions, true)) {
     api_protect_course_script();
 
-    if (!api_is_allowed_to_edit(null, true)) {
+    $studentAllowedActions = [
+        'get_course_announcements',
+    ];
+
+    if (
+        !in_array($action, $studentAllowedActions, true)
+        && !api_is_allowed_to_edit(null, true)
+    ) {
         api_not_allowed(true);
     }
 } elseif (in_array($action, $adminActions, true)) {
-    api_protect_admin_script(true);
+    // Admin actions whose result sets are already scoped to the entities the HR manager
+    // (DRH) actually follows. Only these may be opened to DRH; the rest (e.g. get_sessions,
+    // which lists every session on the platform) stay admin / session-admin only.
+    $drhScopedActions = [
+        'get_sessions_tracking',
+        'get_user_course_report',
+        'get_user_course_report_resumed',
+    ];
+    api_protect_admin_script(true, in_array($action, $drhScopedActions, true));
 } else {
     api_protect_admin_script(true);
 }
@@ -464,7 +484,9 @@ switch ($action) {
         break;
     case 'get_user_course_report':
     case 'get_user_course_report_resumed':
-        $userNotAllowed = !api_is_student_boss() && !api_is_platform_admin(false, true);
+        $userNotAllowed = !api_is_drh()
+            && !api_is_student_boss()
+            && !api_is_platform_admin(false, true);
 
         if ($userNotAllowed) {
             exit;
@@ -499,7 +521,10 @@ switch ($action) {
                     }
                 }
             } else {
-                $userList = UserManager::get_users_followed_by_drh(api_get_user_id());
+                $userList = UserManager::get_users_followed_by_drh(
+                    api_get_user_id(),
+                    applyReportingWorkflowSetting: true
+                );
                 if (!empty($userList)) {
                     $userIdList = array_keys($userList);
                 }
@@ -695,9 +720,10 @@ switch ($action) {
         $count = get_count_work($work_id);
         break;
     case 'get_work_pending_list':
-        $courseId = $_REQUEST['course'] ?? 0;
-        $status = $_REQUEST['status'] ?? 0;
-        $count = getAllWork(
+        $courseId = !empty($_REQUEST['course']) ? (int) $_REQUEST['course'] : null;
+        $status = !empty($_REQUEST['status']) ? (int) $_REQUEST['status'] : 0;
+
+        $count = getPendingWorkList(
             null,
             null,
             null,
@@ -1681,13 +1707,14 @@ switch ($action) {
         break;
     case 'get_work_pending_list':
         api_block_anonymous_users();
-        if (false === api_is_teacher()) {
+
+        if (!api_is_platform_admin(false, true) && false === api_is_teacher()) {
             exit;
         }
-        $plagiarismColumns = [];
-        if (('true' === api_get_setting('work.allow_compilatio_tool'))) {
-            $plagiarismColumns = ['compilatio'];
-        }
+
+        $courseId = !empty($_REQUEST['course']) ? (int) $_REQUEST['course'] : null;
+        $status = !empty($_REQUEST['status']) ? (int) $_REQUEST['status'] : 0;
+
         $columns = [
             'course',
             'work_name',
@@ -1697,11 +1724,12 @@ switch ($action) {
             'sent_date',
             'qualificator_id',
             'correction',
+            'actions',
         ];
-        $columns = array_merge($columns, $plagiarismColumns);
-        $columns[] = 'actions';
-        $sidx = in_array($sidx, $columns) ? $sidx : 'work_name';
-        $result = getAllWork(
+
+        $sidx = in_array($sidx, $columns, true) ? $sidx : 'sent_date';
+
+        $result = getPendingWorkList(
             $start,
             $limit,
             $sidx,
@@ -2486,7 +2514,7 @@ switch ($action) {
 
             $item['title'] = Display::url(
                 $item['title'],
-                api_get_path(WEB_CODE_PATH).'gradebook/index.php?sid=0&cid='.$courseInfo['real_id']
+                api_get_path(WEB_PATH).'gradebook/redirect?view=overview&sid=0&gid=0&cid='.$courseInfo['real_id']
             );
 
             if (!empty($item['certif_min_score']) && !empty($item['document_id'])) {
@@ -2797,7 +2825,7 @@ switch ($action) {
         $currentUserId = api_get_user_id();
         $isAllow = api_is_allowed_to_edit();
         if (!empty($result)) {
-            $urlUserGroup = api_get_path(WEB_CODE_PATH).'admin/usergroup_users.php?'.api_get_cidreq();
+            $urlUserGroup = '/admin/usergroup-users/';
             foreach ($result as $group) {
                 $countUsers = count($obj->get_users_by_usergroup($group['id']));
                 $group['users'] = $countUsers;

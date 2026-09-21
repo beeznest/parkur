@@ -238,8 +238,9 @@ class SurveyManager
             }
 
             try {
-                $start = new \DateTime($values['start_date']);
-                $end   = new \DateTime($values['end_date']);
+                $platformTz = new \DateTimeZone(api_get_timezone());
+                $start = (new \DateTime($values['start_date'], $platformTz))->setTimezone(new \DateTimeZone('UTC'));
+                $end   = (new \DateTime($values['end_date'], $platformTz))->setTimezone(new \DateTimeZone('UTC'));
             } catch (\Exception $e) {
                 Display::addFlash(Display::return_message(get_lang('Invalid date'), 'error'));
                 return ['type' => 'error', 'id' => 0];
@@ -335,8 +336,13 @@ class SurveyManager
             $showFormProfile         = !empty($values['show_form_profile']) ? 1 : 0;
 
             try {
-                $start = !empty($values['start_date']) ? new \DateTime($values['start_date']) : $survey->getAvailFrom();
-                $end   = !empty($values['end_date'])   ? new \DateTime($values['end_date'])   : $survey->getAvailTill();
+                $platformTz = new \DateTimeZone(api_get_timezone());
+                $start = !empty($values['start_date'])
+                    ? (new \DateTime($values['start_date'], $platformTz))->setTimezone(new \DateTimeZone('UTC'))
+                    : $survey->getAvailFrom();
+                $end   = !empty($values['end_date'])
+                    ? (new \DateTime($values['end_date'], $platformTz))->setTimezone(new \DateTimeZone('UTC'))
+                    : $survey->getAvailTill();
             } catch (\Exception $e) {
                 Display::addFlash(Display::return_message(get_lang('Invalid date'), 'error'));
                 return ['type' => 'error', 'id' => $surveyId];
@@ -1438,84 +1444,6 @@ class SurveyManager
 
         return api_get_path(WEB_CODE_PATH).'survey/link.php?h='.$code.'&i='.$survey_id.'&c='.intval($course_id).'&s='
             .intval($session_id).'&g='.$group_id;
-    }
-
-    /**
-     * Check if the current user has mandatory surveys no-answered
-     * and redirect to fill the first found survey.
-     */
-    public static function protectByMandatory()
-    {
-        if (false !== strpos($_SERVER['SCRIPT_NAME'], 'fillsurvey.php')) {
-            return;
-        }
-
-        $userId = api_get_user_id();
-        $courseId = api_get_course_int_id();
-        $sessionId = api_get_session_id();
-
-        if (!$userId) {
-            return;
-        }
-
-        if (!$courseId) {
-            return;
-        }
-
-        try {
-            /** @var CSurveyInvitation $invitation */
-            $invitation = Database::getManager()
-                ->createQuery("
-                    SELECT i FROM ChamiloCourseBundle:CSurveyInvitation i
-                    INNER JOIN ChamiloCourseBundle:CSurvey s
-                        WITH (s.code = i.surveyCode AND s.cId = i.cId AND s.sessionId = i.sessionId)
-                    INNER JOIN ChamiloCoreBundle:ExtraFieldValues efv WITH efv.itemId = s.iid
-                    INNER JOIN ChamiloCoreBundle:ExtraField ef WITH efv.field = ef.id
-                    WHERE
-                        i.answered = 0 AND
-                        i.cId = :course AND
-                        i.user = :user AND
-                        i.sessionId = :session AND
-                        :now BETWEEN s.availFrom AND s.availTill AND
-                        ef.variable = :variable AND
-                        efv.field_value = 1 AND
-                        s.surveyType != 3
-                    ORDER BY s.availTill ASC
-                ")
-                ->setMaxResults(1)
-                ->setParameters([
-                    'course' => $courseId,
-                    'user' => $userId,
-                    'session' => $sessionId,
-                    'now' => new DateTime('UTC', new DateTimeZone('UTC')),
-                    'variable' => 'is_mandatory',
-                ])
-                ->getSingleResult();
-        } catch (Exception $e) {
-            $invitation = null;
-        }
-
-        if (!$invitation) {
-            return;
-        }
-
-        Display::addFlash(
-            Display::return_message(
-                get_lang(
-                    'A mandatory survey is waiting your answer. To enter the course, you must first complete the survey.'
-                ),
-                'warning'
-            )
-        );
-
-        $url = SurveyUtil::generateFillSurveyLink(
-            $invitation->getInvitationCode(),
-            api_get_course_info(),
-            api_get_session_id()
-        );
-
-        header('Location: '.$url);
-        exit;
     }
 
     /**

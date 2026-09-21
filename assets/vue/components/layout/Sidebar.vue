@@ -12,30 +12,9 @@
         <BaseSidebarPanelMenu v-model="menuItemsBeforeMyCourse" />
 
         <BaseSidebarPanelMenu
-          v-if="menuItemMyCourse.length > 0 && enrolledStore.isInitialized"
+          v-if="menuItemMyCourse.length > 0"
           v-model="menuItemMyCourse"
         />
-        <div
-          v-else-if="!hasOnlyOneItem && !enrolledStore.isInitialized"
-          class="flex mx-7 my-1.5 py-2 ml-8 gap-4"
-        >
-          <BaseIcon
-            class="text-sm"
-            icon="courses"
-            size="small"
-          />
-          <div
-            v-if="sidebarIsOpen"
-            class="font-bold text-sm self-center"
-          >
-            {{ t("Course") }}
-          </div>
-          <BaseIcon
-            class="text-sm animate-spin"
-            icon="sync"
-            size="small"
-          />
-        </div>
 
         <BaseSidebarPanelMenu v-model="menuItemsAfterMyCourse" />
       </div>
@@ -43,12 +22,22 @@
         <CategoryLinks category="menu_links" />
         <PageList category-title="footer_private" />
 
+        <p
+          v-if="institutionAddress"
+          class="app-sidebar__institution-address"
+        >
+          {{ institutionAddress }}
+        </p>
+
         <p v-html="t('Created with Chamilo copyright year', [currentYear])" />
       </div>
       <a
         v-if="securityStore.isAuthenticated && !isAnonymous && !hideLogoutButton"
         class="app-sidebar__logout-link"
-        href="/logout"
+        :class="{ 'opacity-60': externalLogoutBehaviour?.disabled }"
+        :href="sidebarLogoutUrl"
+        :title="sidebarLogoutTitle"
+        @click="handleLogoutClick"
       >
         <span class="mdi mdi-logout-variant" />
         <span class="logout-text">{{ t("Sign out") }}</span>
@@ -74,6 +63,10 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: "AppSidebar",
+})
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import ToggleButton from "primevue/togglebutton"
 import { useI18n } from "vue-i18n"
@@ -82,19 +75,15 @@ import { useSecurityStore } from "../../store/securityStore"
 import { useSidebarMenu } from "../../composables/sidebarMenu"
 import { usePlatformConfig } from "../../store/platformConfig"
 import PageList from "../page/PageList.vue"
-import { useEnrolledStore } from "../../store/enrolledStore"
-import BaseIcon from "../basecomponents/BaseIcon.vue"
 import BaseSidebarPanelMenu from "../basecomponents/BaseSidebarPanelMenu.vue"
 import CategoryLinks from "../page/CategoryLinks.vue"
 
 const { t } = useI18n()
 const route = useRoute()
 const securityStore = useSecurityStore()
-const enrolledStore = useEnrolledStore()
 const platformConfigStore = usePlatformConfig()
 
-const { menuItemsBeforeMyCourse, menuItemMyCourse, menuItemsAfterMyCourse, hasOnlyOneItem, initialize } =
-  useSidebarMenu()
+const { menuItemsBeforeMyCourse, menuItemMyCourse, menuItemsAfterMyCourse, initialize } = useSidebarMenu()
 
 const MOBILE_BREAKPOINT = 640
 
@@ -109,11 +98,28 @@ if (!isMobile() && storedSidebarState === null) {
   window.localStorage.setItem("sidebarIsOpen", "true")
 }
 const expandingDueToPanelClick = ref(false)
+const externalLogoutBehaviour = ref(null)
+
+const externalLogoutPluginEnabled = computed(
+  () => platformConfigStore.plugins?.extauthchamilologoutbuttonbehaviour?.enabled === true,
+)
 
 const currentYear = new Date().getFullYear()
 
 const hideLogoutButton = computed(() => {
   return platformConfigStore.getSetting("display.hide_logout_button") === "true"
+})
+
+const sidebarLogoutUrl = computed(() => {
+  return externalLogoutBehaviour.value?.logoutUrl || "/logout"
+})
+
+const sidebarLogoutTitle = computed(() => {
+  return externalLogoutBehaviour.value?.tooltip || ""
+})
+
+const institutionAddress = computed(() => {
+  return String(platformConfigStore.getSetting("platform.institution_address") || "").trim()
 })
 
 const isAnonymous = computed(() => {
@@ -273,6 +279,10 @@ onMounted(async () => {
 
   if (securityStore.isAuthenticated && !isAnonymous.value) {
     await initialize()
+
+    if (externalLogoutPluginEnabled.value) {
+      externalLogoutBehaviour.value = await fetchExternalLogoutBehaviour()
+    }
   }
 })
 

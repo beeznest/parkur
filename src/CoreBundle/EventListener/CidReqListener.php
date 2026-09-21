@@ -11,19 +11,23 @@ use Chamilo\CoreBundle\Entity\Course;
 use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\TrackECourseAccess;
 use Chamilo\CoreBundle\Entity\User;
-use Chamilo\CoreBundle\Exception\NotAllowedException;
+use Chamilo\CoreBundle\Helpers\CourseFromRequestHelper;
+use Chamilo\CoreBundle\Helpers\RequestExpectsJsonHelper;
 use Chamilo\CoreBundle\Repository\ExtraFieldValuesRepository;
 use Chamilo\CoreBundle\Repository\LegalRepository;
 use Chamilo\CoreBundle\Security\Authorization\Voter\CourseVoter;
 use Chamilo\CoreBundle\Security\Authorization\Voter\GroupVoter;
 use Chamilo\CoreBundle\Security\Authorization\Voter\SessionVoter;
+use Chamilo\CoreBundle\Security\CourseAccessResolver;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\CourseBundle\Controller\CourseControllerInterface;
 use Chamilo\CourseBundle\Entity\CGroup;
 use ChamiloSession;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -32,6 +36,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Throwable;
 use Twig\Environment;
 
 /**
@@ -43,7 +48,7 @@ class CidReqListener
      * These roles are context roles and must be cleared every request
      * to avoid "role leakage" between courses/groups/sessions.
      */
-    private const CONTEXT_ROLES = [
+    private const array CONTEXT_ROLES = [
         'ROLE_CURRENT_COURSE_GROUP_TEACHER',
         'ROLE_CURRENT_COURSE_GROUP_STUDENT',
         'ROLE_CURRENT_COURSE_STUDENT',
@@ -52,15 +57,25 @@ class CidReqListener
         'ROLE_CURRENT_COURSE_SESSION_TEACHER',
     ];
 
+    /**
+     * Routes that expose the course id through the {id} route parameter instead of a
+     * cid query param. For these, the course id is read from the route attributes.
+     */
+    private const array ROUTES_WITH_COURSE_ID_PARAM = [
+        'chamilo_core_course_gettoolintro',
+    ];
+
     public function __construct(
         private readonly Environment $twig,
         private readonly AuthorizationCheckerInterface $authorizationChecker,
         private readonly TranslatorInterface $translator,
         private readonly EntityManagerInterface $entityManager,
         private readonly TokenStorageInterface $tokenStorage,
+        private readonly CourseFromRequestHelper $courseFromRequest,
+        private readonly CourseAccessResolver $courseAccessResolver,
         private readonly SettingsManager $settingsManager,
         private readonly LegalRepository $legalRepository,
-        private readonly ExtraFieldValuesRepository $extraFieldValuesRepository
+        private readonly ExtraFieldValuesRepository $extraFieldValuesRepository,
     ) {}
 
     /**
@@ -115,22 +130,35 @@ class CidReqListener
         $course = null;
         $courseInfo = [];
 
-        // Check if URL has cid value. Using Symfony request.
-        $courseId = (int) $request->get('cid');
+        // Course reference from the URL: cid (id or code) or the legacy 1.11.x cidReq (code).
+        $courseReference = $this->courseFromRequest->getCourseReference($request);
+
+        // Some course routes carry the course id as the {id} route parameter instead of
+        // a cid query param (e.g. chamilo_core_course_gettoolintro). Without this fallback
+        // the listener would find no cid and clear the whole course/session context.
+        if (null === $courseReference && \in_array($request->attributes->get('_route'), self::ROUTES_WITH_COURSE_ID_PARAM, true)) {
+            $routeCourseId = (int) $request->attributes->get('id');
+            if ($routeCourseId > 0) {
+                $courseReference = (string) $routeCourseId;
+            }
+        }
+
         $checker = $this->authorizationChecker;
 
-        if (!empty($courseId)) {
+        if (null !== $courseReference) {
             if ($sessionHandler->has('course')) {
                 /** @var Course $courseFromSession */
                 $courseFromSession = $sessionHandler->get('course');
-                if ($courseFromSession instanceof Course && $courseId === $courseFromSession->getId()) {
+                if ($courseFromSession instanceof Course
+                    && ($courseReference === (string) $courseFromSession->getId() || $courseReference === $courseFromSession->getCode())
+                ) {
                     $course = $courseFromSession;
                     $courseInfo = (array) $sessionHandler->get('_course');
                 }
             }
 
             if (null === $course) {
-                $course = $this->entityManager->find(Course::class, $courseId);
+                $course = $this->courseFromRequest->resolveByReference($courseReference);
 
                 if (null === $course) {
                     throw new NotFoundHttpException($this->translator->trans('Course does not exist'));
@@ -167,17 +195,26 @@ class CidReqListener
                 }
             }
 
-            // The dedicated checkLegal.json endpoint computes this redirect itself
-            // and returns it as JSON (consumed by the Vue router guard on SPA-internal
-            // navigation); skip it here to avoid turning that AJAX call into an HTTP redirect.
+            $sessionId = $this->courseFromRequest->getSessionId($request) ?? 0;
+
+            // The dedicated checkLegal.json endpoint computes redirects itself and
+            // returns them as JSON for the Vue router guard. Direct page requests are
+            // redirected here before the generic course access voter is evaluated.
             if ('chamilo_core_course_check_legal_json' !== $request->attributes->get('_route')) {
+                $passwordRedirect = $this->redirectForRegistrationPassword($course, $sessionId);
+                if (null !== $passwordRedirect) {
+                    $event->setResponse($passwordRedirect);
+
+                    return;
+                }
+
                 $tokenUser = $this->tokenStorage->getToken()?->getUser();
                 if ($tokenUser instanceof User) {
                     $termsRedirect = $this->redirectForPendingTermsAndConditions(
                         $request,
                         $tokenUser,
                         $course,
-                        (int) $request->get('sid')
+                        $sessionId
                     );
                     if (null !== $termsRedirect) {
                         $event->setResponse($termsRedirect);
@@ -188,11 +225,10 @@ class CidReqListener
             }
 
             if (false === $checker->isGranted(CourseVoter::VIEW, $course)) {
-                throw new NotAllowedException($this->translator->trans("You're not allowed in this course"));
-            }
+                $this->denyRequest($event, $request, $this->translator->trans("You're not allowed in this course"));
 
-            // Checking if sid is used.
-            $sessionId = (int) $request->get('sid');
+                return;
+            }
 
             if (empty($sessionId)) {
                 $sessionHandler->remove('session_name');
@@ -207,7 +243,9 @@ class CidReqListener
                     $session->setCurrentCourse($course);
 
                     if (false === $checker->isGranted(SessionVoter::VIEW, $session)) {
-                        throw new AccessDeniedHttpException($this->translator->trans("You're not allowed in this session"));
+                        $this->denyRequest($event, $request, $this->translator->trans("You're not allowed in this session"));
+
+                        return;
                     }
                     $sessionHandler->set('session_name', $session->getTitle());
                     $sessionHandler->set('sid', $session->getId());
@@ -221,7 +259,7 @@ class CidReqListener
             }
 
             // Group
-            $groupId = (int) $request->get('gid');
+            $groupId = $this->courseFromRequest->getGroupId($request) ?? 0;
 
             if (empty($groupId)) {
                 $sessionHandler->remove('gid');
@@ -236,7 +274,9 @@ class CidReqListener
                 $group->setParent($course);
 
                 if (false === $checker->isGranted(GroupVoter::VIEW, $group)) {
-                    throw new AccessDeniedHttpException($this->translator->trans("You're not allowed in this group"));
+                    $this->denyRequest($event, $request, $this->translator->trans("You're not allowed in this group"));
+
+                    return;
                 }
 
                 $sessionHandler->set('group', $group);
@@ -244,9 +284,14 @@ class CidReqListener
                 ChamiloSession::write('gid', $groupId);
             }
 
-            $origin = $request->get('origin');
-            if (!empty($origin)) {
+            $bodyOrigin = $request->request->get('origin');
+            $origin = self::normalizeOrigin(
+                $request->query->get('origin', null !== $bodyOrigin ? (string) $bodyOrigin : null)
+            );
+            if (null !== $origin) {
                 $sessionHandler->set('origin', $origin);
+            } else {
+                $sessionHandler->remove('origin');
             }
 
             $courseParams = $this->generateCourseUrl($course, $sessionId, $groupId, $origin);
@@ -283,7 +328,7 @@ class CidReqListener
 
         $sessionHandler = $request->getSession();
 
-        $courseId = (int) $request->get('cid');
+        $courseReference = $this->courseFromRequest->getCourseReference($request);
 
         if (\is_array($controllerList)
             && (
@@ -291,7 +336,7 @@ class CidReqListener
                 || $controllerList[0] instanceof EditorController
             )
         ) {
-            if (!empty($courseId)) {
+            if (null !== $courseReference) {
                 $controller = $controllerList[0];
                 $session = $sessionHandler->get('session');
                 $course = $sessionHandler->get('course');
@@ -337,10 +382,14 @@ class CidReqListener
                 // The token user might be a string (e.g., "anon.") or another UserInterface implementation.
                 // We must only log access when it is the Doctrine-backed Chamilo User entity with a valid ID.
                 if ($tokenUser instanceof User && (int) $tokenUser->getId() > 0) {
-                    $this->entityManager
-                        ->getRepository(TrackECourseAccess::class)
-                        ->logoutAccess($tokenUser, $courseId, $sessionId, $ip)
-                    ;
+                    try {
+                        $this->entityManager
+                            ->getRepository(TrackECourseAccess::class)
+                            ->logoutAccess($tokenUser, $courseId, $sessionId, $ip)
+                        ;
+                    } catch (Throwable) {
+                        // Tracking must never break the current request.
+                    }
                 }
             }
         }
@@ -375,6 +424,32 @@ class CidReqListener
 
         // Remove context roles also when leaving the course/session/group
         $this->resetContextRolesOnTokenUser();
+    }
+
+    /**
+     * Redirects a visitor to the course password form before the modern course
+     * home or one of its tools is rendered.
+     */
+    private function redirectForRegistrationPassword(Course $course, int $sessionId): ?RedirectResponse
+    {
+        if (true === (bool) ChamiloSession::read('course_password_'.$course->getId(), false)) {
+            return null;
+        }
+
+        $tokenUser = $this->tokenStorage->getToken()?->getUser();
+        $user = $tokenUser instanceof User ? $tokenUser : null;
+        $session = $sessionId > 0 ? $this->entityManager->find(Session::class, $sessionId) : null;
+
+        if (!$this->courseAccessResolver->requiresRegistrationPassword($course, $user, $session)) {
+            return null;
+        }
+
+        return new RedirectResponse(
+            '/main/auth/set_temp_password.php?'.http_build_query([
+                'course_id' => $course->getId(),
+                'session_id' => $sessionId,
+            ])
+        );
     }
 
     /**
@@ -431,6 +506,20 @@ class CidReqListener
         return new RedirectResponse('/main/auth/tc.php?return='.urlencode($returnUrl));
     }
 
+    private function denyRequest(RequestEvent $event, Request $request, string $message): void
+    {
+        if (RequestExpectsJsonHelper::expectsJson($request)) {
+            $event->setResponse(new JsonResponse([
+                'error' => 'access_denied',
+                'message' => $message,
+            ], Response::HTTP_FORBIDDEN));
+
+            return;
+        }
+
+        throw new AccessDeniedHttpException($message);
+    }
+
     private function resetContextRolesOnTokenUser(): void
     {
         $token = $this->tokenStorage->getToken();
@@ -452,13 +541,42 @@ class CidReqListener
         }
     }
 
+    private static function normalizeOrigin(mixed $origin): ?string
+    {
+        if (\is_array($origin)) {
+            foreach ($origin as $value) {
+                $normalizedOrigin = self::normalizeOrigin($value);
+                if (null !== $normalizedOrigin) {
+                    return $normalizedOrigin;
+                }
+            }
+
+            return null;
+        }
+
+        if (!\is_scalar($origin)) {
+            return null;
+        }
+
+        $origin = trim((string) $origin);
+
+        if ('' === $origin) {
+            return null;
+        }
+
+        return $origin;
+    }
+
     private function generateCourseUrl(?Course $course, int $sessionId, int $groupId, ?string $origin): string
     {
         if (null !== $course) {
             $cidReqURL = '&cid='.$course->getId();
             $cidReqURL .= '&sid='.$sessionId;
             $cidReqURL .= '&gid='.$groupId;
-            $cidReqURL .= '&origin='.$origin;
+
+            if (null !== $origin) {
+                $cidReqURL .= '&origin='.urlencode($origin);
+            }
 
             return $cidReqURL;
         }

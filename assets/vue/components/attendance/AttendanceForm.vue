@@ -18,8 +18,19 @@
       editor-id="attendance_description"
     />
 
+    <BaseSelect
+      id="attendance_room"
+      v-model="formData.room"
+      :label="t('Default room')"
+      :options="roomOptions"
+    />
+
     <!-- Advanced Settings (create + edit) -->
     <BaseAdvancedSettingsButton v-model="showAdvancedSettings">
+      <ResourceLanguageSelector
+        id="attendance-language"
+        v-model="formData.language"
+      />
       <!-- Require unique presence -->
       <div class="flex flex-col gap-2 mb-4">
         <BaseCheckbox
@@ -33,8 +44,8 @@
         </p>
       </div>
 
-      <!-- Gradebook options (only in creation mode) -->
-      <div v-if="!isEditMode">
+      <!-- Gradebook options -->
+      <div>
         <div class="flex flex-row mb-4">
           <label class="font-semibold w-28">{{ t("Gradebook options") }}:</label>
           <BaseCheckbox
@@ -51,9 +62,12 @@
           class="ml-6"
         >
           <BaseSelect
+            v-if="gradebookOptions.length > 1"
+            id="attendance_gradebook_category"
             v-model="formData.gradebookOption"
             :label="t('Select gradebook option')"
             :options="gradebookOptions"
+            name="gradebook_category_id"
           />
 
           <BaseInputText
@@ -103,15 +117,17 @@ import LayoutFormButtons from "../../components/layout/LayoutFormButtons.vue"
 import BaseButton from "../../components/basecomponents/BaseButton.vue"
 import BaseAdvancedSettingsButton from "../../components/basecomponents/BaseAdvancedSettingsButton.vue"
 import BaseInputText from "../basecomponents/BaseInputText.vue"
+import ResourceLanguageSelector from "../resources/ResourceLanguageSelector.vue"
 import { useRoute, useRouter } from "vue-router"
 import { RESOURCE_LINK_PUBLISHED } from "../../constants/entity/resourcelink"
-import { useCidReq } from "../../composables/cidReq"
+import { getCourseContext } from "../../utils/courseContext"
 import gradebookService from "../../services/gradebookService"
+import roomService from "../../services/roomService"
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { sid, cid } = useCidReq()
+const { sid, cid, gid } = getCourseContext()
 const emit = defineEmits(["backPressed"])
 const props = defineProps({
   initialData: {
@@ -133,9 +149,12 @@ const formData = reactive({
   gradebookTitle: "",
   gradeWeight: 0.0,
   requireUnique: false,
+  language: "",
+  room: null,
 })
 
 const gradebookOptions = ref([])
+const roomOptions = ref([])
 
 const rules = {
   title: { required },
@@ -145,6 +164,7 @@ const rules = {
   gradebookTitle: {},
   gradeWeight: {},
   requireUnique: {},
+  room: {},
 }
 
 const v$ = useVuelidate(rules, formData)
@@ -152,31 +172,73 @@ const showAdvancedSettings = ref(false)
 const isEditMode = computed(() => !!props.initialData?.id)
 
 onMounted(async () => {
-  if (!isEditMode.value) {
-    try {
-      const categories = await gradebookService.getCategories(cid, sid)
-      gradebookOptions.value = categories.map((cat) => ({
-        label: cat.title,
-        value: cat.id,
-      }))
-    } catch (error) {
-      console.error("Error loading gradebook categories:", error)
+  try {
+    roomOptions.value = await roomService.getOptions({
+      includeDefault: true,
+      defaultLabel: t("No default room"),
+      floorLabel: t("Floor"),
+      capacityLabel: t("Capacity"),
+    })
+  } catch (error) {
+    console.error("Error loading rooms:", error)
+  }
+
+  try {
+    const response = await gradebookService.getLinkOptions({
+      cid,
+      ...(sid ? { sid } : {}),
+      ...(gid ? { gid } : {}),
+      node: Number(route.params.node),
+      type: 7,
+      refId: Number(props.initialData?.id || route.params.id || 0),
+    })
+
+    gradebookOptions.value = (response?.categories || []).map((category) => ({
+      label: category.label,
+      value: Number(category.value),
+    }))
+
+    const rootCategoryId = Number(gradebookOptions.value?.[0]?.value || 0)
+    const link = response?.link || null
+
+    if (link) {
+      formData.qualifyGradebook = true
+      formData.gradebookOption = Number(link.categoryId || rootCategoryId) || null
+      formData.gradeWeight = Number(link.weight || 0)
+      showAdvancedSettings.value = true
+    } else {
+      formData.qualifyGradebook = false
+      formData.gradebookOption = rootCategoryId || null
     }
+  } catch (error) {
+    console.error("Error loading attendance Gradebook configuration:", error)
+    gradebookOptions.value = []
+    formData.gradebookOption = null
   }
 })
 
 const toggleGradebookOptions = () => {
-  if (!formData.qualifyGradebook) {
-    formData.gradebookOption = null
-    formData.gradebookTitle = ""
-    formData.gradeWeight = 0.0
+  if (formData.qualifyGradebook) {
+    if (!formData.gradebookOption) {
+      formData.gradebookOption = Number(gradebookOptions.value?.[0]?.value || 0) || null
+    }
+
+    return
   }
+
+  formData.gradebookOption = Number(gradebookOptions.value?.[0]?.value || 0) || null
+  formData.gradebookTitle = ""
+  formData.gradeWeight = 0.0
 }
 
 watch(
   () => props.initialData,
   (newData) => {
     Object.assign(formData, newData || {})
+
+    if (newData?.room && typeof newData.room === "object") {
+      formData.room = newData.room["@id"] || null
+    }
   },
   { immediate: true },
 )
@@ -192,9 +254,13 @@ const submitForm = async () => {
     description: formData.description,
     sid: route.query.sid || null,
     cid: route.query.cid || null,
-    attendanceQualifyTitle: formData.gradebookTitle,
-    attendanceWeight: formData.gradeWeight,
+    addToGradebook: !!formData.qualifyGradebook,
+    gradebookCategoryId: formData.qualifyGradebook ? Number(formData.gradebookOption) : 0,
+    attendanceQualifyTitle: formData.qualifyGradebook ? formData.gradebookTitle : "",
+    attendanceWeight: formData.qualifyGradebook ? Number(formData.gradeWeight) : 0,
     requireUnique: !!formData.requireUnique,
+    language: formData.language || "",
+    room: formData.room || null,
   }
 
   // Only send these on create (safer)

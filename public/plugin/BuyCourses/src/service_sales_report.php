@@ -322,8 +322,10 @@ if ($form->validate()) {
     }
 }
 
+$searchLabel = get_lang('Search').' ('.get_lang('User').', '.get_lang('Email').', '.get_lang('Name').', '.$plugin->get_lang('OrderReference').')';
+
 $form->addSelect('status', $plugin->get_lang('OrderStatus'), $saleStatuses);
-$form->addText('user', get_lang('User'), false);
+$form->addText('user', $searchLabel, false);
 $form->addButtonSearch(get_lang('Search'), 'search');
 $form->setDefaults([
     'status' => $selectedStatus,
@@ -331,24 +333,26 @@ $form->setDefaults([
 ]);
 
 $servicesSales = $plugin->getServiceSales(0, $selectedStatus);
+$paymentTypeLabels = $plugin->getPaymentTypes();
 
 foreach ($servicesSales as &$sale) {
     $sale['total_discount'] = '';
     $sale['coupon_code'] = '';
-    $sale['complete_user_name'] = api_get_person_name(
-        $sale['firstname'] ?? '',
-        $sale['lastname'] ?? ''
-    );
+    $sale['service_name'] = (string) ($sale['service']['name'] ?? $sale['name'] ?? '');
+    $sale['complete_user_name'] = (string) ($sale['buyer']['name'] ?? '');
+    $sale['username'] = (string) ($sale['buyer']['username'] ?? '');
+    $sale['email'] = (string) ($sale['buyer']['email'] ?? '');
     $sale['status_label'] = $saleStatuses[$sale['status']] ?? ($sale['status'] ?? '');
+    $sale['payment_type_label'] = $paymentTypeLabels[(int) ($sale['payment_type'] ?? 0)] ?? '';
     $sale['total_price'] = $plugin->getPriceWithCurrencyFromIsoCode(
         (float) ($sale['price'] ?? 0),
-        $sale['iso_code'] ?? ''
+        (string) ($sale['service']['currency'] ?? '')
     );
 
-    if (isset($sale['discount_amount']) && 0 != $sale['discount_amount']) {
+    if (0.0 !== (float) ($sale['discount_amount'] ?? 0)) {
         $sale['total_discount'] = $plugin->getPriceWithCurrencyFromIsoCode(
-            (float) $sale['discount_amount'],
-            $sale['iso_code']
+            (float) ($sale['discount_amount'] ?? 0),
+            (string) ($sale['service']['currency'] ?? '')
         );
         $sale['coupon_code'] = $plugin->getServiceSaleCouponCode($sale['id']);
     }
@@ -363,6 +367,7 @@ if ('' !== $searchUser) {
         static function (array $sale) use ($normalizedSearch): bool {
             $haystacks = [
                 (string) ($sale['complete_user_name'] ?? ''),
+                (string) ($sale['username'] ?? ''),
                 (string) ($sale['email'] ?? ''),
                 (string) ($sale['service_name'] ?? ''),
                 (string) ($sale['reference'] ?? ''),
@@ -378,6 +383,11 @@ if ('' !== $searchUser) {
         }
     ));
 }
+
+usort(
+    $servicesSales,
+    static fn (array $a, array $b): int => strtotime((string) ($b['buy_date'] ?? '')) <=> strtotime((string) ($a['buy_date'] ?? ''))
+);
 
 $interbreadcrumb[] = [
     'url' => '../index.php',
@@ -397,7 +407,7 @@ $template->assign('back_url', $backUrl);
 
 $template->assign(
     'export_report_url',
-    api_get_path(WEB_PLUGIN_PATH).'BuyCourses/src/export_report.php'
+    api_get_path(WEB_PLUGIN_PATH).'BuyCourses/src/export_report.php?source=service'
 );
 $template->assign(
     'paypal_payout_url',

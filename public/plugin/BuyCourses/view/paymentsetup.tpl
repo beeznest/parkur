@@ -1,5 +1,5 @@
 {% autoescape false %}
-<div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+<div class="mx-auto w-full space-y-6 px-4 py-6 sm:px-6 lg:px-8">
     <section class="rounded-3xl border border-gray-25 bg-white p-6 shadow-sm">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div class="space-y-3">
@@ -12,7 +12,7 @@
                         {{ page_title }}
                     </h1>
                     <p class="mt-2 max-w-3xl text-sm leading-6 text-gray-50">
-                        Configure the global e-commerce settings, choose the active payment methods, and update the credentials required by each gateway.
+                        {{ 'PaymentSetupIntro'|get_plugin_lang('BuyCoursesPlugin') }}
                     </p>
                 </div>
             </div>
@@ -22,7 +22,7 @@
                         href="{{ plugin_index_url }}"
                         class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-25 bg-white px-4 py-2.5 text-sm font-semibold text-gray-90 transition hover:border-primary/30 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2"
                 >
-                    <em class="fa fa-arrow-left fa-fw"></em>
+                    <em class="mdi mdi-arrow-left"></em>
                     {{ 'Back'|get_lang }}
                 </a>
 
@@ -30,7 +30,7 @@
                         href="{{ plugin_settings_url }}"
                         class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
                 >
-                    <em class="fa fa-sliders fa-fw"></em>
+                    <em class="mdi mdi-tune"></em>
                     {{ 'PluginSettings'|get_plugin_lang('BuyCoursesPlugin') }}
                 </a>
             </div>
@@ -93,7 +93,7 @@
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex items-start gap-3">
                 <div class="mt-0.5 text-primary">
-                    <em class="fa fa-info-circle text-lg"></em>
+                    <em class="mdi mdi-information-outline text-lg"></em>
                 </div>
                 <div class="space-y-1">
                     <p class="font-semibold text-gray-90">
@@ -109,7 +109,7 @@
                     href="{{ plugin_settings_url }}"
                     class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2"
             >
-                <em class="fa fa-external-link fa-fw"></em>
+                <em class="mdi mdi-open-in-new"></em>
                 {{ 'OpenPluginSettings'|get_plugin_lang('BuyCoursesPlugin') }}
             </a>
         </div>
@@ -172,7 +172,7 @@
                     {{ 'GlobalConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Configure currency, terms and conditions, sales contact email, tax rules, and invoicing data.
+                    {{ 'GeneralSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -190,7 +190,7 @@
                     {{ 'PayPalConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Configure the API credentials required to process payments through PayPal.
+                    {{ 'PayPalSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -232,7 +232,7 @@
                     {{ 'TpvRedsysConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Configure the Redsys terminal credentials and sandbox settings.
+                    {{ 'RedsysSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -251,7 +251,7 @@
                     {{ 'CommissionsConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Set the platform commission percentage used by the marketplace.
+                    {{ 'CommissionsSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -261,7 +261,9 @@
                 {{ 'InfoCommissions'|get_plugin_lang('BuyCoursesPlugin') }}
             </aside>
 
-            <div>
+            <div
+                class="rounded-2xl border border-gray-25 bg-white p-5 shadow-sm
+            >
                 {{ commission_form }}
             </div>
         </div>
@@ -276,7 +278,7 @@
                     {{ 'TransfersConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Manage bank accounts for manual transfers and the extra message sent by email after a transfer purchase.
+                    {{ 'BankTransferSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -328,7 +330,7 @@
                                         href="{{ delete_transfer_base_url ~ '?' ~ {'action': 'delete_taccount', 'id': account.id}|url_encode }}"
                                         class="inline-flex items-center justify-center gap-2 rounded-xl bg-danger px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-danger/30 focus:ring-offset-2"
                                 >
-                                    <em class="fa fa-remove fa-fw"></em>
+                                    <em class="mdi mdi-close"></em>
                                     {{ 'Delete'|get_lang }}
                                 </a>
                             </td>
@@ -353,7 +355,7 @@
                         {{ 'TransferEmailInformation'|get_plugin_lang('BuyCoursesPlugin') }}
                     </h3>
                     <p class="mt-1 text-sm text-gray-50">
-                        {{ 'TransferEmailInformationHelp'|get_plugin_lang('BuyCoursesPlugin') }}
+                        {{ 'TransferEmailHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                     </p>
                 </div>
 
@@ -371,7 +373,7 @@
                     {{ 'CulqiConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Configure the API credentials required to process payments through Culqi.
+                    {{ 'CulqiSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -396,7 +398,7 @@
                     {{ 'StripeConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Configure your Stripe account ID, secret key and webhook endpoint secret.
+                    {{ 'StripeSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>
@@ -421,7 +423,7 @@
                     {{ 'CecabankConfig'|get_plugin_lang('BuyCoursesPlugin') }}
                 </h2>
                 <p class="text-sm text-gray-50">
-                    Configure the keys and merchant identifiers required by Cecabank.
+                    {{ 'CecabankSettingsHelp'|get_plugin_lang('BuyCoursesPlugin') }}
                 </p>
             </div>
         </div>

@@ -88,32 +88,6 @@ $pagesCount = $totalItems > 0 ? (int) ceil($totalItems / $pageSize) : 1;
 $pluginIndexUrl = api_get_path(WEB_PLUGIN_PATH).'BuyCourses/index.php';
 $backUrl = $pluginIndexUrl;
 
-if (api_is_platform_admin()) {
-    $backUrl = 'paymentsetup.php';
-
-    $interbreadcrumb[] = [
-        'name' => get_lang('Administration'),
-        'url' => api_get_path(WEB_PATH).'admin',
-    ];
-    $interbreadcrumb[] = [
-        'name' => get_lang('Plugins'),
-        'url' => api_get_path(WEB_CODE_PATH).'admin/settings.php?category=Plugins',
-    ];
-    $interbreadcrumb[] = [
-        'url' => 'list.php',
-        'name' => $plugin->get_lang('AvailableCoursesConfiguration'),
-    ];
-    $interbreadcrumb[] = [
-        'url' => 'paymentsetup.php',
-        'name' => $plugin->get_lang('PaymentsConfiguration'),
-    ];
-} else {
-    $interbreadcrumb[] = [
-        'url' => $pluginIndexUrl,
-        'name' => get_lang('TabsDashboard'),
-    ];
-}
-
 $templateName = $plugin->get_lang('CourseListOnSale');
 $tpl = new Template($templateName);
 
@@ -126,7 +100,7 @@ $tpl->assign('showing_services', false);
 
 $tpl->assign('show_courses_tab', true);
 $tpl->assign('show_sessions_tab', $includeSessions);
-$tpl->assign('show_services_tab', $includeServices);
+$tpl->assign('show_services_tab', false);
 
 $tpl->assign('courses', []);
 $tpl->assign('sessions', $sessionList);
@@ -145,6 +119,9 @@ $tpl->assign('pagination_current_page', $currentPage);
 $tpl->assign('pagination_pages_count', $pagesCount);
 $tpl->assign('pagination_total_items', $totalItems);
 $tpl->assign('pagination_base_path', 'session_catalog.php');
+
+$tpl->assign('admin_empty_catalog_action_url', api_is_platform_admin() ? api_get_path(WEB_PLUGIN_PATH).'BuyCourses/src/list_session.php' : '');
+$tpl->assign('admin_empty_catalog_action_label', api_is_platform_admin() ? $plugin->get_lang('EnableSession') : '');
 
 $content = $tpl->fetch('BuyCourses/view/catalog.tpl');
 

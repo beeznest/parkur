@@ -197,9 +197,10 @@
               />
 
               <Button
-                v-if="slotProps.data?.resourceNode?.firstResourceFile"
+                v-if="canDeleteEntry(slotProps.data)"
                 class="!rounded-xl !border-0 !bg-danger !px-3 !py-2 !text-danger-button-text hover:!bg-danger"
                 icon="mdi mdi-delete"
+                :aria-label="$t('Delete')"
                 @click="confirmDeleteItem(slotProps.data)"
               />
             </div>
@@ -377,19 +378,11 @@
       @done="onUploaded"
       @cancel="closeUploadDialog"
     />
-    <template #footer>
-      <Button
-        class="p-button-text"
-        icon="mdi mdi-close"
-        :label="$t('Cancel')"
-        @click="closeUploadDialog"
-      />
-    </template>
   </Dialog>
 </template>
 
 <script setup>
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import { useFileManager } from "../../composables/useFileManager"
 import { useI18n } from "vue-i18n"
@@ -403,6 +396,15 @@ const { relativeDatetime } = useFormatDate()
 const route = useRoute()
 
 const uploadDialogVisible = ref(false)
+
+function normalizeNodeId(raw) {
+  if (raw === null || raw === undefined || raw === "") {
+    return null
+  }
+
+  const value = Number(raw)
+  return Number.isFinite(value) && value > 0 ? value : null
+}
 
 const {
   files,
@@ -442,7 +444,32 @@ const {
   currentFolderTitle,
 } = useFileManager("personalfile", "/api/personal_files", "FileManagerUploadFile")
 
+async function syncParentNodeFromRoute() {
+  const routeNodeId = normalizeNodeId(route.params.node)
+
+  if (!routeNodeId) {
+    return
+  }
+
+  const currentParent = normalizeNodeId(filters.value["resourceNode.parent"])
+
+  if (currentParent === routeNodeId) {
+    return
+  }
+
+  filters.value["resourceNode.parent"] = routeNodeId
+  await onUpdateOptions()
+}
+
 onMountedCallback()
+void syncParentNodeFromRoute()
+
+watch(
+  () => route.params.node,
+  () => {
+    void syncParentNodeFromRoute()
+  },
+)
 
 const isTinyPicker = computed(() => String(route.query.picker || "") === "tinymce")
 
@@ -529,6 +556,18 @@ function getFileExtension(name) {
 
 function isFolderEntry(entry) {
   return !entry?.resourceNode?.firstResourceFile
+}
+
+function canDeleteEntry(entry) {
+  if (!entry?.id) {
+    return false
+  }
+
+  if (isTinyPicker.value && isFolderEntry(entry)) {
+    return false
+  }
+
+  return true
 }
 
 function isImageLike(entryOrFile) {

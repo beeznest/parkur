@@ -6,10 +6,10 @@
     >
       <!-- FAB -->
       <button
-        class="chd-fab"
         :class="{ 'has-unread': fabHasUnread }"
         :title="t('Chat')"
         aria-label="Open chat"
+        class="chd-fab"
         @click="toggleDock(true)"
       >
         <i class="mdi mdi-message-text-outline" />
@@ -18,9 +18,9 @@
       <!-- Dock -->
       <div
         v-if="open"
+        aria-label="Chat dock"
         class="chd-dock"
         role="dialog"
-        aria-label="Chat dock"
       >
         <header class="chd-header">
           <div class="chd-title">
@@ -33,15 +33,15 @@
               @click="toggleStatus"
             >
               <span
-                class="chd-dot"
                 :class="userStatus === 1 ? 'chd-dot--on' : 'chd-dot--off'"
+                class="chd-dot"
               />
               {{ userStatus === 1 ? t("Online") : t("Offline") }}
             </button>
             <button
+              aria-label="Close"
               class="chd-btn chd-btn--ghost"
               @click="toggleDock(false)"
-              aria-label="Close"
             >
               <i class="mdi mdi-close" />
             </button>
@@ -54,31 +54,31 @@
             <div class="chd-sidebar__head">
               <strong>{{ t("Contacts") }}</strong>
               <button
+                :disabled="loadingContacts"
                 class="chd-btn chd-btn--ghost chd-btn--xs"
                 @click="loadContacts"
-                :disabled="loadingContacts"
               >
                 <i class="mdi mdi-refresh" />
               </button>
             </div>
 
-            <!-- AI Tutor quick entry (only when course context is available) -->
+            <!-- AI Tutor quick entry (course tutor or global Chamilo support) -->
             <div
-              v-if="inCourse && tutorCtx.enabled && !contactsHasAiTutor"
+              v-if="tutorCtx.enabled && !contactsHasAiTutor"
               class="chd-ai"
             >
               <button
-                class="chd-ai__btn"
                 :class="{ 'is-active': Number(activePeer?.id || 0) === AI_PEER_ID }"
-                @click="openConversation({ id: AI_PEER_ID, name: t('AI Tutor'), image: '' })"
                 :disabled="tutorCtx.inTest"
                 :title="tutorCtx.inTest ? t('AI tutor is disabled during tests') : t('AI Tutor')"
+                class="chd-ai__btn"
+                @click="openConversation({ id: AI_PEER_ID, name: t('AI Tutor'), image: '' })"
               >
                 <i class="mdi mdi-robot-outline" />
                 <span class="chd-truncate">{{ t("AI Tutor") }}</span>
                 <span
-                  class="chd-presence on"
                   aria-hidden="true"
+                  class="chd-presence on"
                 />
               </button>
 
@@ -118,19 +118,19 @@
                   <img
                     v-if="activePeerAvatar"
                     :src="activePeerAvatar"
-                    class="chd-avatar"
                     alt=""
+                    class="chd-avatar"
                   />
                   <i
                     v-else
-                    class="mdi mdi-account chd-avatar chd-avatar--fallback"
                     aria-hidden="true"
+                    class="mdi mdi-account chd-avatar chd-avatar--fallback"
                   />
                   <div class="chd-peer__meta">
                     <strong class="chd-truncate">{{ activePeer.name }}</strong>
                     <span
-                      class="chd-presence"
                       :class="activePeer.online ? 'on' : 'off'"
+                      class="chd-presence"
                     />
                   </div>
                 </template>
@@ -142,8 +142,8 @@
 
             <!-- Scrollable messages area -->
             <div
-              class="chd-chat__body"
               ref="scrollBox"
+              class="chd-chat__body"
               @scroll.passive="handleScroll"
             >
               <template v-if="activePeer">
@@ -153,19 +153,19 @@
                   :class="bubbleClass(msg)"
                 >
                   <div
-                    class="chd-bubble"
                     :class="{ 'is-pending': msg.pending }"
+                    class="chd-bubble"
                   >
                     <div
                       class="chd-bubble__content"
-                      v-html="renderMessage(msg.message)"
+                      v-html="renderMessage(msg)"
                     />
                     <div class="chd-bubble__meta">
                       <span class="chd-bubble__date">{{ formatTs(msg.date) }}</span>
                       <span
                         v-if="isMine(msg)"
-                        class="chd-bubble__ack"
                         :title="ackTitle(msg)"
+                        class="chd-bubble__ack"
                       >
                         {{ ackGlyph(msg) }}
                       </span>
@@ -173,7 +173,22 @@
                   </div>
                 </div>
                 <div
-                  v-if="activeMessages.length === 0"
+                  v-if="isAiThread && aiTutorResponding"
+                  :aria-label="t('AI Tutor')"
+                  aria-live="polite"
+                  class="chd-row chd-row--peer"
+                >
+                  <div
+                    class="chd-bubble chd-ai-typing"
+                    role="status"
+                  >
+                    <span class="chd-ai-typing__dot" />
+                    <span class="chd-ai-typing__dot" />
+                    <span class="chd-ai-typing__dot" />
+                  </div>
+                </div>
+                <div
+                  v-if="activeMessages.length === 0 && !aiTutorResponding"
                   class="chd-text--muted chd-center chd-py-8"
                 >
                   {{ t("No messages yet") }}
@@ -189,32 +204,62 @@
 
             <!-- Composer -->
             <div
-              class="chd-composer"
               v-if="activePeer"
+              class="chd-composer"
             >
               <textarea
                 v-model.trim="draft"
-                class="chd-input"
                 :placeholder="composerPlaceholder"
+                class="chd-input"
                 rows="2"
                 @keydown="onComposerKeydown"
                 @keydown.enter.prevent.exact="send"
                 @keydown.enter.shift.exact="newline"
               />
+              <div
+                v-if="isAiThread && selectionWordCount > 0"
+                aria-live="polite"
+                class="chd-selection-chip"
+              >
+                <i class="mdi mdi-text-box-search-outline" />
+                <span>{{ t("Selection") }} {{ selectionWordCount }}</span>
+                <button
+                  :aria-label="t('Remove selection context')"
+                  class="chd-selection-chip__close"
+                  type="button"
+                  @click="dismissSelectionContext"
+                >
+                  <i class="mdi mdi-close" />
+                </button>
+              </div>
               <div class="chd-composer__actions">
                 <span class="chd-hint">{{ t("Enter to send · Shift+Enter for newline") }}</span>
                 <div class="chd-spacer" />
                 <button
+                  v-if="isAiThread"
+                  :aria-label="t('Save')"
+                  :disabled="conversationSaved || savingConversation || sending || clearing || activeMessages.length === 0"
+                  :title="t('Save')"
+                  class="chd-btn chd-btn--ghost chd-btn--xs"
+                  type="button"
+                  @click="saveConversation"
+                >
+                  <i
+                    :class="savingConversation ? 'mdi mdi-loading mdi-spin' : conversationSaved ? 'mdi mdi-check' : 'mdi mdi-content-save-outline'"
+                    aria-hidden="true"
+                  />
+                </button>
+                <button
+                  :disabled="sending || clearing"
                   class="chd-btn chd-btn--danger-outline"
                   @click="clearConversation"
-                  :disabled="sending || clearing"
                 >
                   {{ t("Reset") }}
                 </button>
                 <button
+                  :disabled="sendDisabled"
                   class="chd-btn chd-btn--primary"
                   @click="send"
-                  :disabled="sendDisabled"
                 >
                   <i class="mdi mdi-send" /> {{ t("Send") }}
                 </button>
@@ -228,11 +273,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onBeforeUnmount, watch, onMounted } from "vue"
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import { useRoute } from "vue-router"
-import { useCidReq } from "../../composables/cidReq"
+import { getCourseContext } from "../../utils/courseContext"
 import DOMPurify from "dompurify"
+import baseService from "../../services/baseService"
 
 const { t } = useI18n({ useScope: "global" })
 const route = useRoute()
@@ -287,12 +333,12 @@ function readCidReqFromRouteAndLocation() {
 }
 
 /**
- * Keep compatibility: if useCidReq() works, bind to it.
+ * Keep compatibility: if getCourseContext() works, bind to it.
  * If it doesn't provide cid for path-based routes, route watcher will override via readCidReqFromRouteAndLocation().
  */
 function safeBindCidReq() {
   try {
-    const r = useCidReq()
+    const r = getCourseContext()
     if (r?.cid && typeof r.cid === "object" && "value" in r.cid) cid.value = toInt(r.cid.value) || 0
     if (r?.sid && typeof r.sid === "object" && "value" in r.sid) sid.value = toInt(r.sid.value) || 0
     if (r?.gid && typeof r.gid === "object" && "value" in r.gid) gid.value = toInt(r.gid.value) || 0
@@ -328,7 +374,9 @@ watch(
     return `${r.cid}:${r.sid}:${r.gid}`
   },
   async (nv, ov) => {
-    if (nv === ov) return
+    if (nv === ov) {
+      return
+    }
   },
 )
 
@@ -347,26 +395,53 @@ watch(activePeer, (v) => {
   if (v?.id) localStorage.setItem(LAST_PEER_KEY, String(v.id))
 })
 
+function currentRouteContext() {
+  const routeName = String(route?.name || "").toLowerCase()
+  const routePath = String(route?.path || "").toLowerCase()
+  const fullPath = String(route?.fullPath || "").toLowerCase()
+  const tool = String(route?.meta?.tool || "").toLowerCase()
+  const locationPath = String(window.location.pathname || "").toLowerCase()
+  const locationSearch = String(window.location.search || "").toLowerCase()
+  const context = `${routeName} ${routePath} ${fullPath} ${locationPath} ${locationSearch}`
+
+  return { routeName, tool, context }
+}
+
 function isAssignmentsPage() {
-  const p = String(window.location.pathname || "")
-  const q = String(window.location.search || "")
+  const { routeName, tool, context } = currentRouteContext()
+
   return (
-    p.includes("/work/") ||
-    p.includes("/student_publication/") ||
-    p.endsWith("/work.php") ||
-    q.includes("work.php") ||
-    q.includes("student_publication")
+    tool === "student_publication" ||
+    routeName.startsWith("assignment") ||
+    context.includes("/resources/assignment/") ||
+    context.includes("/work/") ||
+    context.includes("/student_publication/") ||
+    context.includes("/work.php") ||
+    context.includes("student_publication")
   )
 }
 
 function isExercisePage() {
-  const p = String(window.location.pathname || "")
-  const q = String(window.location.search || "")
+  const { routeName, tool, context } = currentRouteContext()
+
   return (
-    p.includes("/exercise/") ||
-    p.endsWith("/exercise.php") ||
-    q.includes("exercise.php") ||
-    (q.includes("cidReq") && (q.includes("exercise") || q.includes("lp_id")))
+    tool === "exercise" ||
+    routeName.startsWith("exercise") ||
+    context.includes("/resources/exercise/") ||
+    context.includes("/exercise/") ||
+    context.includes("/exercise.php")
+  )
+}
+
+function isLearningPathPage() {
+  const { routeName, context } = currentRouteContext()
+
+  return (
+    routeName.startsWith("lp") ||
+    context.includes("/resources/lp/") ||
+    context.includes("/lp/lp_controller.php") ||
+    context.includes("origin=learnpath") ||
+    context.includes("lp_id=")
   )
 }
 
@@ -384,6 +459,7 @@ const canRenderDock = computed(() => {
   if (!dockEnabled.value) return false
   if (isAssignmentsPage()) return false
   if (isExercisePage()) return false
+  if (isLearningPathPage()) return false
   return true
 })
 
@@ -418,6 +494,7 @@ const API = {
     "/account/chat/api/tutor_context",
   ),
   tutor_reset: RG(["chat_api_tutor_reset", "chamilo_core_chat_api_tutor_reset"], "/account/chat/api/tutor/reset"),
+  tutor_save: RG(["chat_api_tutor_save", "chamilo_core_chat_api_tutor_save"], "/account/chat/api/tutor/save"),
 }
 
 /** ===== State ===== */
@@ -433,6 +510,9 @@ const fetchingPrev = ref(false)
 
 const draft = ref("")
 const sending = ref(false)
+const aiTutorResponding = ref(false)
+const savingConversation = ref(false)
+const conversationSaved = ref(false)
 const clearing = ref(false)
 
 const scrollBox = ref(null)
@@ -440,10 +520,11 @@ const scrollBox = ref(null)
 /** Tutor context (backend-authoritative) */
 const tutorCtx = reactive({
   loaded: false,
-  enabled: false, // TRUE only when backend says enabled (course-aware)
+  enabled: false, // TRUE only when backend says enabled for the current context
   inTest: false,
   course: null, // { id, title, language }
   provider: "", // default provider key
+  mode: null, // "course" or "global"
 })
 
 /** Unread tracking */
@@ -474,10 +555,15 @@ function withCidReq(params) {
 
 function addCidReqToUrl(url) {
   try {
-    const u = new URL(url, window.location.origin)
+    const [path, existingQuery] = url.split("?")
+    const sp = new URLSearchParams(existingQuery || "")
     const p = runtimeCidReqParams()
-    Object.entries(p).forEach(([k, v]) => u.searchParams.set(k, String(v)))
-    return u.toString()
+
+    Object.entries(p).forEach(([k, v]) => sp.set(k, String(v)))
+
+    const qs = sp.toString()
+
+    return qs ? `${path}?${qs}` : path
   } catch {
     return url
   }
@@ -507,21 +593,31 @@ function normalizeContactsHtmlForAiTutor(html) {
     )
     .forEach((n) => n.remove())
 
-  const shouldShowAi = !!tutorCtx.enabled && !!inCourse.value && !tutorCtx.inTest
+  const shouldShowAi = !!tutorCtx.enabled && !tutorCtx.inTest
 
   if (shouldShowAi) {
     const row = document.createElement("div")
     row.className = "chd-ai-contact"
+    const tutorLabel = t("AI Tutor")
     row.dataset.user = String(AI_PEER_ID)
-    row.setAttribute("data-name", "AI Tutor")
+    row.setAttribute("data-name", tutorLabel)
     row.style.cursor = "pointer"
     row.style.padding = "10px"
     row.style.borderBottom = "1px solid #eee"
-    row.innerHTML = `
-      <span style="margin-right:8px;">🤖</span>
-      <strong>AI Tutor</strong>
-      <span style="float:right; color:#2e7d32;">●</span>
-    `
+
+    const robot = document.createElement("span")
+    robot.style.marginRight = "8px"
+    robot.textContent = "🤖"
+
+    const label = document.createElement("strong")
+    label.textContent = tutorLabel
+
+    const presence = document.createElement("span")
+    presence.style.float = "right"
+    presence.style.color = "#2e7d32"
+    presence.textContent = "●"
+
+    row.replaceChildren(robot, label, presence)
     wrap.prepend(row)
   }
 
@@ -598,11 +694,172 @@ function linkify(raw) {
 }
 
 /**
- * Render chat message safely for v-html.
- * Allow only <a> and <br> tags (chat messages are treated as plain text).
+ * Decode the HTML entities/line breaks produced by legacy chat storage back
+ * into plain text. The result is always escaped again before being rendered.
  */
-function renderMessage(rawMessage) {
-  const html = linkify(rawMessage)
+function normalizeStoredChatText(rawMessage) {
+  let text = String(rawMessage ?? "")
+
+  // Chat::sanitize() stores line breaks as <br>. Some AI providers can also
+  // escape the tag, so accept an optional leading backslash.
+  text = text.replace(/\\?<br\s*\/?>/gi, "\n")
+
+  // Messages coming from the legacy chat table have already passed through
+  // htmlspecialchars(). Decode once, then escape again in the renderer below.
+  const decoder = document.createElement("textarea")
+  decoder.innerHTML = text
+
+  return decoder.value
+}
+
+function safeHttpUrl(rawUrl) {
+  try {
+    const url = new URL(String(rawUrl || ""))
+    if (!/^https?:$/i.test(url.protocol)) return ""
+    return url.toString()
+  } catch {
+    return ""
+  }
+}
+
+/**
+ * Render the limited Markdown normally returned by AI providers.
+ * Raw HTML is never trusted: content is escaped first and DOMPurify remains
+ * the final safety boundary.
+ */
+function renderAiInlineMarkdown(rawText) {
+  let text = String(rawText ?? "")
+
+  // Providers occasionally escape Markdown punctuation (\*\*, \[, ...).
+  // Unescape it only for assistant messages so normal user chat stays literal.
+  text = text.replace(/\\([\\`*_[\]{}()#+\-.!>])/g, "$1")
+
+  const tokens = []
+  const token = (html) => {
+    const key = `\uE000${tokens.length}\uE001`
+    tokens.push(html)
+    return key
+  }
+
+  // Markdown links first so the URL is not picked up again by bare-link logic.
+  text = text.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, label, rawUrl) => {
+    const href = safeHttpUrl(rawUrl)
+    if (!href) return match
+
+    return token(
+      `<a href="${escapeForHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeForHtml(label)}</a>`,
+    )
+  })
+
+  // Inline code.
+  text = text.replace(/`([^`\n]+)`/g, (match, code) => token(`<code>${escapeForHtml(code)}</code>`))
+
+  // Bare HTTP(S) URLs.
+  text = text.replace(/https?:\/\/[^\s<>"']+/g, (rawUrl) => {
+    const href = safeHttpUrl(rawUrl)
+    if (!href) return rawUrl
+
+    return token(
+      `<a href="${escapeForHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeForHtml(rawUrl)}</a>`,
+    )
+  })
+
+  let html = escapeForHtml(text)
+
+  // Limited emphasis support. Keep this intentionally small and predictable.
+  html = html.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+  html = html.replace(/__([^_\n]+)__/g, "<strong>$1</strong>")
+  html = html.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>")
+  html = html.replace(/(^|[^_])_([^_\n]+)_(?!_)/g, "$1<em>$2</em>")
+
+  tokens.forEach((value, index) => {
+    html = html.replaceAll(`\uE000${index}\uE001`, value)
+  })
+
+  return html
+}
+
+function renderAiMarkdown(rawMessage) {
+  const text = normalizeStoredChatText(rawMessage)
+  const lines = text.split(/\n/)
+  const out = []
+  let listType = ""
+
+  const closeList = () => {
+    if (!listType) return
+    out.push(`</${listType}>`)
+    listType = ""
+  }
+
+  const openList = (type) => {
+    if (listType === type) return
+    closeList()
+    listType = type
+    out.push(`<${type}>`)
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd()
+
+    if (!line.trim()) {
+      closeList()
+      out.push("<br>")
+      continue
+    }
+
+    const heading = line.match(/^#{1,6}\s+(.+)$/)
+    if (heading) {
+      closeList()
+      out.push(`<strong>${renderAiInlineMarkdown(heading[1])}</strong><br>`)
+      continue
+    }
+
+    if (/^\s*---+\s*$/.test(line)) {
+      closeList()
+      out.push("<br>")
+      continue
+    }
+
+    const bullet = line.match(/^\s*[-*]\s+(.+)$/)
+    if (bullet) {
+      openList("ul")
+      out.push(`<li>${renderAiInlineMarkdown(bullet[1])}</li>`)
+      continue
+    }
+
+    const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/)
+    if (numbered) {
+      openList("ol")
+      out.push(`<li>${renderAiInlineMarkdown(numbered[1])}</li>`)
+      continue
+    }
+
+    closeList()
+    out.push(`${renderAiInlineMarkdown(line)}<br>`)
+  }
+
+  closeList()
+
+  return DOMPurify.sanitize(out.join(""), {
+    ALLOWED_TAGS: ["a", "br", "strong", "em", "code", "ul", "ol", "li"],
+    ALLOWED_ATTR: ["href", "target", "rel"],
+    ADD_ATTR: ["target", "rel"],
+  })
+}
+
+/**
+ * Render chat messages safely for v-html.
+ * - Normal chat stays plain text with safe clickable links.
+ * - AI assistant messages get a small, sanitized Markdown renderer.
+ */
+function renderMessage(message) {
+  const fromId = Number(message?.from_user_info?.id ?? message?.f ?? 0)
+
+  if (fromId === AI_PEER_ID) {
+    return renderAiMarkdown(message?.message)
+  }
+
+  const html = linkify(normalizeStoredChatText(message?.message))
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ["a", "br"],
     ALLOWED_ATTR: ["href", "target", "rel"],
@@ -629,21 +886,21 @@ function ackTitle(msg) {
 
 async function getJSON(url, params) {
   const full = params ? `${url}?${qs(withCidReq(params))}` : addCidReqToUrl(url)
-  const r = await fetch(full, { credentials: "same-origin" })
-  if (!r.ok) throw new Error("Network error")
-  return r.json()
+  return baseService.get(full)
 }
 
 async function post(url, params, expectJson = true) {
   const fullUrl = addCidReqToUrl(url)
-  const r = await fetch(fullUrl, {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-    body: new URLSearchParams(withCidReq(params || {})),
-  })
-  if (!r.ok) throw new Error("Network error")
-  return expectJson ? r.json() : r.text()
+  // URLSearchParams body makes axios send application/x-www-form-urlencoded.
+  const body = new URLSearchParams(withCidReq(params || {}))
+
+  if (expectJson) {
+    return baseService.post(fullUrl, body)
+  }
+
+  const r = await baseService.postRaw(fullUrl, body, { responseType: "text" })
+
+  return r.data
 }
 
 function byChronoId(a, b) {
@@ -804,16 +1061,13 @@ function extractPeerIdFromNode(node) {
   if (cand) return cand
   if (node.matches?.("a[href]")) {
     try {
-      const u = new URL(node.getAttribute("href"), window.location.origin)
-      const p = Number(
-        u.searchParams.get("user") ||
-          u.searchParams.get("id") ||
-          u.searchParams.get("uid") ||
-          u.searchParams.get("friend") ||
-          u.searchParams.get("contact") ||
-          0,
-      )
-      if (p) return p
+      const href = node.getAttribute("href") || ""
+      const sp = new URLSearchParams(href.includes("?") ? href.slice(href.indexOf("?") + 1) : "")
+      const p = Number(sp.get("user") || sp.get("id") || sp.get("uid") || sp.get("friend") || sp.get("contact") || 0)
+
+      if (p) {
+        return p
+      }
     } catch {
       // ignore
     }
@@ -890,8 +1144,8 @@ function collectVisibleContactIds() {
   const root = document.querySelector(".chd .chd-contacts .chd-contacts-html")
   const ids = new Set()
 
-  // Only include AI Tutor when backend says it is enabled (course-aware).
-  if (tutorCtx.enabled && inCourse.value) ids.add(AI_PEER_ID)
+  // Include AI Tutor whenever the backend enables it for the current context.
+  if (tutorCtx.enabled) ids.add(AI_PEER_ID)
 
   if (root) {
     root
@@ -927,13 +1181,24 @@ function paintPresenceOnContacts(map) {
   })
 }
 
+/** Current Chamilo URL without scheme or domain, for AI contextual help. */
+function currentRelativeUrl() {
+  const pathname = String(window.location.pathname || "/")
+  const search = String(window.location.search || "")
+  const hash = String(window.location.hash || "")
+
+  return `${pathname}${search}${hash}`
+}
+
 /** Tutor context */
 async function loadTutorContext() {
   tutorCtx.loaded = false
+  conversationSaved.value = false
   tutorCtx.enabled = false
   tutorCtx.inTest = false
   tutorCtx.course = null
   tutorCtx.provider = ""
+  tutorCtx.mode = null
 
   try {
     const r = await getJSON(API.tutor_context)
@@ -941,11 +1206,13 @@ async function loadTutorContext() {
     tutorCtx.inTest = !!r?.in_test
     tutorCtx.course = r?.course || null
     tutorCtx.provider = typeof r?.provider === "string" ? r.provider : ""
+    tutorCtx.mode = typeof r?.mode === "string" ? r.mode : null
   } catch {
     tutorCtx.enabled = false
     tutorCtx.inTest = false
     tutorCtx.course = null
     tutorCtx.provider = ""
+    tutorCtx.mode = null
   } finally {
     tutorCtx.loaded = true
   }
@@ -1013,10 +1280,13 @@ function onContactsClick(e) {
 
   if (a) {
     try {
-      const u = new URL(a.getAttribute("href"), window.location.origin)
-      const id = Number(u.searchParams.get("user") || u.searchParams.get("id") || 0)
+      const href = a.getAttribute("href") || ""
+      const sp = new URLSearchParams(href.includes("?") ? href.slice(href.indexOf("?") + 1) : "")
+      const id = Number(sp.get("user") || sp.get("id") || 0)
+
       if (id) {
         const name = a.getAttribute("data-name") || a.textContent?.trim() || "User"
+
         return openConversation({ id, name })
       }
     } catch {
@@ -1056,8 +1326,8 @@ function resetAiThreadCache() {
 async function openConversation(peer) {
   const pid = Number(peer.id)
 
-  // Guard: AI Tutor must be course-only and enabled by backend.
-  if (pid === AI_PEER_ID && (!tutorCtx.enabled || !inCourse.value || tutorCtx.inTest)) return
+  // Backend decides whether the AI Tutor is available in course or global support mode.
+  if (pid === AI_PEER_ID && (!tutorCtx.enabled || tutorCtx.inTest)) return
 
   activePeer.value = {
     id: pid,
@@ -1353,8 +1623,324 @@ const sendDisabled = computed(() => {
   if (sending.value) return true
   if (userStatus.value !== 1) return true
   if (isAiThread.value && tutorCtx.inTest) return true
-  if (isAiThread.value && (!tutorCtx.enabled || !inCourse.value)) return true
+  if (isAiThread.value && !tutorCtx.enabled) return true
   return false
+})
+
+const selectionWordCount = ref(0)
+const selectedTextContext = ref("")
+const dismissedSelectedTextContext = ref("")
+let selectionRefreshTimer = null
+let selectionPollingTimer = null
+let selectionFrameObserver = null
+const observedSelectionDocuments = new Set()
+const observedSelectionFrames = new Set()
+
+function nodeToElement(node) {
+  if (!node) return null
+  if (node.nodeType === Node.ELEMENT_NODE) return node
+  return node.parentElement || null
+}
+
+function nodeMatches(node, selector) {
+  const el = nodeToElement(node)
+  return !!el?.closest?.(selector)
+}
+
+function isSelectionInsideChatDock(selection) {
+  return (
+    nodeMatches(selection?.anchorNode, ".chd") ||
+    nodeMatches(selection?.focusNode, ".chd") ||
+    nodeMatches(selection?.rangeCount ? selection.getRangeAt(0).commonAncestorContainer : null, ".chd")
+  )
+}
+
+function isSelectionInsideEditable(selection) {
+  const selector = "input, textarea, select, [contenteditable='true'], [contenteditable='']"
+  return (
+    nodeMatches(selection?.anchorNode, selector) ||
+    nodeMatches(selection?.focusNode, selector) ||
+    nodeMatches(selection?.rangeCount ? selection.getRangeAt(0).commonAncestorContainer : null, selector)
+  )
+}
+
+function isTextSelectionContextAllowed() {
+  const tool = String(route?.meta?.tool || "").toLowerCase()
+  if (["document", "forum", "wiki", "portfolio"].includes(tool)) return true
+
+  const routeName = String(route?.name || "").toLowerCase()
+  const routePath = String(route?.path || "").toLowerCase()
+  const fullPath = String(route?.fullPath || "").toLowerCase()
+  const currentPath = String(window.location.pathname || "").toLowerCase()
+  const currentSearch = String(window.location.search || "").toLowerCase()
+  const context = `${routeName} ${routePath} ${fullPath} ${currentPath} ${currentSearch}`
+
+  if (routeName.startsWith("lp") || context.includes("/resources/lp") || context.includes("learnpath")) return true
+  if (context.includes("lp_id=") || context.includes("origin=learnpath")) return true
+
+  return ["document", "forum", "wiki", "portfolio"].some((name) => {
+    return (
+      routeName.includes(name) ||
+      context.includes(`/resources/${name}`) ||
+      context.includes(`/${name}/`) ||
+      context.includes(`${name}.php`) ||
+      context.includes(`tool=${name}`)
+    )
+  })
+}
+
+function normalizeSelectedText(text) {
+  return String(text || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function countWords(text) {
+  const normalized = normalizeSelectedText(text)
+  if (!normalized) return 0
+
+  if (typeof Intl !== "undefined" && typeof Intl.Segmenter === "function") {
+    try {
+      const segmenter = new Intl.Segmenter(undefined, { granularity: "word" })
+      let count = 0
+      for (const segment of segmenter.segment(normalized)) {
+        if (segment.isWordLike) count++
+      }
+
+      if (count > 0) return count
+    } catch {
+      // Fall back to the regex-based counter below.
+    }
+  }
+
+  try {
+    const matches = normalized.match(/[\p{L}\p{N}]+(?:[’'_\-][\p{L}\p{N}]+)*/gu)
+    return matches ? matches.length : 0
+  } catch {
+    const matches = normalized.match(/[^\s.,;:!?()[\]{}"“”‘’<>/\\|]+/g)
+    return matches ? matches.length : 0
+  }
+}
+
+function getSelectionText(selection) {
+  if (!selection || !selection.rangeCount) return ""
+
+  const rangeTexts = []
+  for (let i = 0; i < selection.rangeCount; i++) {
+    try {
+      const fragmentText = selection.getRangeAt(i).cloneContents().textContent || ""
+      if (fragmentText) rangeTexts.push(fragmentText)
+    } catch {
+      // Some browser selections cannot be cloned. Use selection.toString() below.
+    }
+  }
+
+  const rangeText = normalizeSelectedText(rangeTexts.join(" "))
+  if (rangeText) return rangeText
+
+  return normalizeSelectedText(selection.toString())
+}
+
+function getSameOriginSelectionDocuments(rootDocument = document, visited = new Set()) {
+  if (!rootDocument || visited.has(rootDocument)) return []
+
+  visited.add(rootDocument)
+
+  const docs = [rootDocument]
+
+  rootDocument.querySelectorAll("iframe").forEach((iframe) => {
+    try {
+      const frameDocument = iframe.contentDocument || iframe.contentWindow?.document
+      if (frameDocument && !visited.has(frameDocument)) {
+        docs.push(...getSameOriginSelectionDocuments(frameDocument, visited))
+      }
+    } catch {
+      // Ignore cross-origin frames. Their selection cannot be read safely.
+    }
+  })
+
+  return docs
+}
+
+function getSelectionFromDocument(doc) {
+  try {
+    return doc.getSelection?.() || doc.defaultView?.getSelection?.() || null
+  } catch {
+    return null
+  }
+}
+
+function getSelectedTextCandidateFromDocument(doc) {
+  const selection = getSelectionFromDocument(doc)
+  if (!selection || selection.isCollapsed || !selection.rangeCount) return null
+
+  if (isSelectionInsideChatDock(selection) || isSelectionInsideEditable(selection)) {
+    return null
+  }
+
+  const normalizedText = getSelectionText(selection)
+  const wordCount = countWords(normalizedText)
+
+  if (!normalizedText || wordCount <= 0) return null
+
+  return {
+    text: normalizedText,
+    wordCount,
+  }
+}
+
+function getBestSelectedTextCandidate() {
+  return getSameOriginSelectionDocuments()
+    .map((doc) => getSelectedTextCandidateFromDocument(doc))
+    .filter(Boolean)
+    .sort((a, b) => b.wordCount - a.wordCount || b.text.length - a.text.length)[0]
+}
+
+function registerSelectionFrameLoadListeners() {
+  getSameOriginSelectionDocuments().forEach((doc) => {
+    doc.querySelectorAll("iframe").forEach((iframe) => {
+      if (observedSelectionFrames.has(iframe)) return
+
+      iframe.addEventListener("load", scheduleSelectionRefresh, true)
+      observedSelectionFrames.add(iframe)
+    })
+  })
+}
+
+function registerSelectionDocumentListeners() {
+  getSameOriginSelectionDocuments().forEach((doc) => {
+    if (!observedSelectionDocuments.has(doc)) {
+      doc.addEventListener("selectionchange", scheduleSelectionRefresh, true)
+      doc.addEventListener("mouseup", scheduleSelectionRefresh, true)
+      doc.addEventListener("pointerup", scheduleSelectionRefresh, true)
+      doc.addEventListener("touchend", scheduleSelectionRefresh, true)
+      observedSelectionDocuments.add(doc)
+    }
+  })
+
+  registerSelectionFrameLoadListeners()
+}
+
+function unregisterSelectionDocumentListeners() {
+  observedSelectionDocuments.forEach((doc) => {
+    doc.removeEventListener("selectionchange", scheduleSelectionRefresh, true)
+    doc.removeEventListener("mouseup", scheduleSelectionRefresh, true)
+    doc.removeEventListener("pointerup", scheduleSelectionRefresh, true)
+    doc.removeEventListener("touchend", scheduleSelectionRefresh, true)
+  })
+  observedSelectionDocuments.clear()
+
+  observedSelectionFrames.forEach((iframe) => {
+    iframe.removeEventListener("load", scheduleSelectionRefresh, true)
+  })
+  observedSelectionFrames.clear()
+}
+
+function startSelectionFrameObserver() {
+  if (selectionFrameObserver) return
+
+  selectionFrameObserver = new MutationObserver(() => {
+    refreshSelectionDocumentListeners()
+    scheduleSelectionRefresh()
+  })
+
+  selectionFrameObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  })
+}
+
+function stopSelectionFrameObserver() {
+  if (!selectionFrameObserver) return
+
+  selectionFrameObserver.disconnect()
+  selectionFrameObserver = null
+}
+
+function startSelectionPolling() {
+  if (selectionPollingTimer) return
+
+  selectionPollingTimer = window.setInterval(() => {
+    if (!open.value || !isAiThread.value || !isTextSelectionContextAllowed()) return
+
+    refreshSelectionDocumentListeners()
+    refreshSelectedTextWordCount()
+  }, 500)
+}
+
+function stopSelectionPolling() {
+  if (!selectionPollingTimer) return
+
+  window.clearInterval(selectionPollingTimer)
+  selectionPollingTimer = null
+}
+
+function refreshSelectionDocumentListeners() {
+  registerSelectionDocumentListeners()
+  window.setTimeout(registerSelectionDocumentListeners, 300)
+  window.setTimeout(registerSelectionDocumentListeners, 1000)
+  window.setTimeout(registerSelectionDocumentListeners, 2000)
+}
+
+function refreshSelectedTextWordCount() {
+  if (!open.value || !isAiThread.value || !isTextSelectionContextAllowed()) {
+    return
+  }
+
+  refreshSelectionDocumentListeners()
+
+  const candidate = getBestSelectedTextCandidate()
+  if (!candidate) {
+    dismissedSelectedTextContext.value = ""
+    return
+  }
+
+  if (dismissedSelectedTextContext.value && dismissedSelectedTextContext.value === candidate.text) {
+    selectedTextContext.value = ""
+    selectionWordCount.value = 0
+    return
+  }
+
+  dismissedSelectedTextContext.value = ""
+  selectedTextContext.value = candidate.text
+  selectionWordCount.value = candidate.wordCount
+}
+
+function scheduleSelectionRefresh() {
+  if (selectionRefreshTimer) clearTimeout(selectionRefreshTimer)
+  selectionRefreshTimer = setTimeout(refreshSelectedTextWordCount, 120)
+}
+
+function clearSelectionContext(rememberDismissed = false) {
+  if (rememberDismissed && selectedTextContext.value) {
+    dismissedSelectedTextContext.value = selectedTextContext.value
+  }
+  selectedTextContext.value = ""
+  selectionWordCount.value = 0
+}
+
+function clearSelectionWordCount() {
+  clearSelectionContext(false)
+}
+
+function dismissSelectionContext() {
+  clearSelectionContext(true)
+}
+
+watch([open, isAiThread, () => route.fullPath], () => {
+  refreshSelectionDocumentListeners()
+  scheduleSelectionRefresh()
+
+  if (open.value && isAiThread.value && isTextSelectionContextAllowed()) {
+    startSelectionFrameObserver()
+    startSelectionPolling()
+    return
+  }
+
+  stopSelectionPolling()
+  stopSelectionFrameObserver()
 })
 
 async function send() {
@@ -1365,7 +1951,7 @@ async function send() {
 
   if (pid === AI_PEER_ID) {
     if (tutorCtx.inTest) return
-    if (!tutorCtx.enabled || !inCourse.value) return
+    if (!tutorCtx.enabled) return
   }
 
   const nowSec = Math.floor(Date.now() / 1000)
@@ -1395,14 +1981,32 @@ async function send() {
   draft.value = ""
   sending.value = true
 
+  if (pid === AI_PEER_ID) {
+    conversationSaved.value = false
+    aiTutorResponding.value = true
+    requestAnimationFrame(() => {
+      const el = scrollBox.value
+      if (el) el.scrollTop = el.scrollHeight
+    })
+  }
+
   try {
-    const extra = pid === AI_PEER_ID ? { ai_provider: tutorCtx.provider } : {}
+    const selectionContext = pid === AI_PEER_ID && selectedTextContext.value ? selectedTextContext.value : ""
+    const extra =
+      pid === AI_PEER_ID
+        ? { ai_provider: tutorCtx.provider, selected_text: selectionContext, current_path: currentRelativeUrl() }
+        : {}
     const res = await post(API.send, { to: pid, message: raw, chat_sec_token: me.secToken, ...extra })
 
-    if (res?.assistant?.id) {
+    if (res?.assistant) {
+      const assistant = { ...res.assistant }
+      if (!Number(assistant.id)) {
+        assistant.id = -Date.now() - 1
+      }
+
       const arr2 = messagesByPeer.get(pid) || []
-      if (!arr2.find((m) => Number(m.id) === Number(res.assistant.id))) {
-        messagesByPeer.set(pid, [...arr2, res.assistant].sort(byChronoId))
+      if (!arr2.find((m) => Number(m.id) === Number(assistant.id))) {
+        messagesByPeer.set(pid, [...arr2, assistant].sort(byChronoId))
       }
       requestAnimationFrame(() => {
         const el = scrollBox.value
@@ -1414,12 +2018,42 @@ async function send() {
       if (res.sec_token) me.secToken = res.sec_token
       replaceTempId(pid, tempId, { id: Number(res.id), recd: 2, date: nowSec })
       removePending(pid, tempId)
-      return
+    } else if (pid === AI_PEER_ID && res?.assistant) {
+      // Course AI errors are intentionally not persisted in the global chat table.
+      // Remove the optimistic user row and keep only the transient assistant error.
+      const arr2 = messagesByPeer.get(pid) || []
+      messagesByPeer.set(
+        pid,
+        arr2.filter((m) => Number(m.id) !== Number(tempId)),
+      )
+      removePending(pid, tempId)
     }
   } catch {
     // keep pending bubble
   } finally {
+    if (pid === AI_PEER_ID) {
+      aiTutorResponding.value = false
+    }
     sending.value = false
+  }
+}
+
+async function saveConversation() {
+  if (!isAiThread.value || savingConversation.value || activeMessages.value.length === 0) return
+
+  savingConversation.value = true
+  conversationSaved.value = false
+
+  try {
+    const res = await post(API.tutor_save, {
+      ai_provider: tutorCtx.provider || "",
+      current_path: currentRelativeUrl(),
+    })
+    conversationSaved.value = !!res?.ok
+  } catch {
+    conversationSaved.value = false
+  } finally {
+    savingConversation.value = false
   }
 }
 
@@ -1431,9 +2065,10 @@ async function clearConversation() {
     const pid = activePeer.value.id
 
     if (Number(pid) === AI_PEER_ID) {
-      // Server reset for AI tutor (course-only)
+      // Server reset for the current AI tutor context.
       await post(API.tutor_reset, { ai_provider: tutorCtx.provider || "" })
       resetAiThreadCache()
+      conversationSaved.value = false
       await getPreviousMessages()
     } else {
       const nowSec = Math.floor(Date.now() / 1000)
@@ -1580,7 +2215,7 @@ async function onNavigationChanged() {
   }
 
   if (aiActive) {
-    if (!tutorCtx.enabled || !inCourse.value || tutorCtx.inTest) {
+    if (!tutorCtx.enabled || tutorCtx.inTest) {
       activePeer.value = null
       resetAiThreadCache()
       return
@@ -1687,6 +2322,13 @@ function newline() {}
 
 onMounted(async () => {
   registerLegacyChatGlobals()
+  window.addEventListener("focus", scheduleSelectionRefresh, true)
+  window.addEventListener("mouseup", scheduleSelectionRefresh, true)
+  window.addEventListener("pointerup", scheduleSelectionRefresh, true)
+  window.addEventListener("touchend", scheduleSelectionRefresh, true)
+  refreshSelectionDocumentListeners()
+  startSelectionFrameObserver()
+  startSelectionPolling()
 
   if (!canRenderDock.value) return
 
@@ -1709,6 +2351,15 @@ onBeforeUnmount(() => {
   stopHeartbeat()
   clearInterval(contactsTimer)
   contactsTimer = null
+  if (selectionRefreshTimer) clearTimeout(selectionRefreshTimer)
+  stopSelectionPolling()
+  stopSelectionFrameObserver()
+  window.removeEventListener("focus", scheduleSelectionRefresh, true)
+  window.removeEventListener("mouseup", scheduleSelectionRefresh, true)
+  window.removeEventListener("pointerup", scheduleSelectionRefresh, true)
+  window.removeEventListener("touchend", scheduleSelectionRefresh, true)
+  unregisterSelectionDocumentListeners()
+  clearSelectionWordCount()
   stopBlinkNow()
 })
 </script>
@@ -1759,6 +2410,47 @@ html[dir="rtl"] .chd .chd-contacts .chd-contact-dot {
   align-items: center;
   justify-content: center;
 }
+/* AI Tutor response indicator. */
+.chd-ai-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 48px;
+  min-height: 30px;
+}
+.chd-ai-typing__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: chd-ai-typing-pulse 1.2s infinite ease-in-out;
+}
+.chd-ai-typing__dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.chd-ai-typing__dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes chd-ai-typing-pulse {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chd-ai-typing__dot {
+    animation: none;
+    opacity: 0.55;
+  }
+}
+
 /* AI contact styles (minimal and non-breaking) */
 .chd-ai {
   padding: 8px 10px;
@@ -1785,5 +2477,42 @@ html[dir="rtl"] .chd .chd-contacts .chd-contact-dot {
 .chd-ai__hint {
   margin: 6px 2px 0;
   font-size: 12px;
+}
+.chd-selection-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 193, 7, 0.14);
+  color: #4a3b00;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.chd-selection-chip .mdi {
+  font-size: 14px;
+}
+.chd-selection-chip__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-inline-start: 2px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.chd-selection-chip__close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  opacity: 1;
 }
 </style>

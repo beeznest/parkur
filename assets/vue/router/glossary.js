@@ -1,6 +1,11 @@
 export default {
   path: "/resources/glossary/:node/",
-  meta: { requiresAuth: true, showBreadcrumb: true },
+  meta: {
+    requiresAuth: true,
+    showBreadcrumb: true,
+    tool: "glossary",
+    breadcrumb: "Glossary",
+  },
   name: "glossary",
   component: () => import("../components/layout/SimpleRouterViewLayout.vue"),
   redirect: { name: "GlossaryList" },

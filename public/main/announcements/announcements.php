@@ -3,11 +3,68 @@
 /* For licensing terms, see /license.txt */
 
 use Chamilo\CoreBundle\Entity\AbstractResource;
+use Chamilo\CoreBundle\Entity\Language;
 use Chamilo\CoreBundle\Enums\ActionIcon;
 use Chamilo\CoreBundle\Enums\ObjectIcon;
 use Chamilo\CoreBundle\Framework\Container;
 use Chamilo\CourseBundle\Entity\CAnnouncement;
 use Chamilo\CourseBundle\Entity\CGroup;
+
+function announcements_get_resource_language_options(): array
+{
+    $options = [
+        '' => get_lang('No specific language'),
+    ];
+
+    $languages = Database::getManager()
+        ->getRepository(Language::class)
+        ->findBy(['available' => true], ['englishName' => 'ASC'])
+    ;
+
+    foreach ($languages as $language) {
+        if (!$language instanceof Language) {
+            continue;
+        }
+
+        $options[$language->getIsocode()] = $language->getOriginalName() ?: $language->getEnglishName();
+    }
+
+    return $options;
+}
+
+function announcements_apply_resource_language(?CAnnouncement $announcement, mixed $rawLanguage): void
+{
+    if (!$announcement instanceof CAnnouncement) {
+        return;
+    }
+
+    $resourceNode = $announcement->getResourceNode();
+    if (null === $resourceNode) {
+        return;
+    }
+
+    $languageCode = trim((string) $rawLanguage);
+    $entityManager = Database::getManager();
+    $language = null;
+
+    if ('' !== $languageCode) {
+        $language = $entityManager
+            ->getRepository(Language::class)
+            ->findOneBy([
+                'isocode' => $languageCode,
+                'available' => true,
+            ])
+        ;
+
+        if (!$language instanceof Language) {
+            return;
+        }
+    }
+
+    $resourceNode->setLanguage($language);
+    $entityManager->persist($resourceNode);
+    $entityManager->flush();
+}
 
 /**
  * @author Frederik Vermeire <frederik.vermeire@pandora.be>, UGent Internship
@@ -474,6 +531,7 @@ switch ($action) {
             null,
             ['enctype' => 'multipart/form-data']
         );
+        $languageOptions = announcements_get_resource_language_options();
 
         $form_name = get_lang('Edit announcement');
         if (empty($id)) {
@@ -555,7 +613,7 @@ switch ($action) {
                         api_get_setting('siteName')
                     );
                     $content_to_modify = get_lang(
-                        'YourAccountIsActiveYouCanLoginAndCheckYourCourses'
+                        'Your account is active, you can login and check your courses now.'
                     );
                 }
             }
@@ -590,14 +648,18 @@ switch ($action) {
                 }
             }
 
+            $language = $announcementInfo->getResourceNode()?->getLanguage();
             $defaults = [
                 'title' => $announcementInfo->getTitle(),
                 'content' => $announcementInfo->getContent(),
                 'id' => $announcementInfo->getIid(),
                 'users' => $to,
+                'language' => $language instanceof Language ? $language->getIsocode() : '',
             ];
         } else {
-            $defaults = [];
+            $defaults = [
+                'language' => '',
+            ];
             if (!empty($to)) {
                 $defaults['users'] = $to;
             }
@@ -684,6 +746,10 @@ switch ($action) {
                         });
                     }
                 });
+
+                $('#announcement').on('submit', function () {
+                    $(this).find('[type=\"submit\"]').prop('disabled', true);
+                });
             });
         </script>
         ");
@@ -732,6 +798,19 @@ switch ($action) {
             false,
             ['ToolbarSet' => 'Announcements']
         );
+        if (\count($languageOptions) > 2) {
+            $form->addButtonAdvancedSettings('resource_options', get_lang('Advanced settings'));
+            $form->addElement('html', '<div id="resource_options_options" style="display:none">');
+            $form->addSelect(
+                'language',
+                get_lang('Language'),
+                $languageOptions,
+                [
+                    'id' => 'resource_language',
+                ]
+            );
+            $form->addElement('html', '</div>');
+        }
 
     if (!$announcementAttachmentIsDisabled) {
         // Allow multiple files in one selection
@@ -784,14 +863,72 @@ switch ($action) {
 
 
     $form->addHidden('sec_token', $token);
+    $announcementScheduledByDate = 'true' === api_get_setting('announcement.course_announcement_scheduled_by_date');
 
-        if (empty($sessionId)) {
+    $dateToSendNotificationDefault = '';
+    if ($announcementScheduledByDate) {
+        if (!empty($id)) {
+            $scheduledExtraFieldValue = new ExtraFieldValue('course_announcement');
+            $storedScheduledDate = $scheduledExtraFieldValue->get_values_by_handler_and_field_variable(
+                $id,
+                'date_to_send_notification'
+            );
+
+            $dateToSendNotificationDefault = (string) (
+                $storedScheduledDate['field_value'] ??
+                $storedScheduledDate['value'] ??
+                ''
+            );
+        }
+
+        if (empty($dateToSendNotificationDefault)) {
+            $dateToSendNotificationDefault = date('Y-m-d', strtotime('+1 day'));
+        }
+    }
+
+    if (empty($sessionId)) {
+        if ($announcementScheduledByDate) {
+            $extraField = new ExtraField('course_announcement');
+            $extraField->addElements(
+                $form,
+                $id ?: 0,
+                [],
+                false,
+                false,
+                [
+                    'send_to_users_in_session',
+                    'send_notification_at_a_specific_date',
+                ],
+                [],
+                [],
+                false,
+                true
+            );
+
+            $form->addHtml(
+                '<div class="form-group">'.
+                '<label class="control-label" for="scheduled_date_to_send_notification">'.
+                get_lang('Date to send notification').
+                '</label>'.
+                '<div>'.
+                '<input
+                type="date"
+                id="scheduled_date_to_send_notification"
+                name="scheduled_date_to_send_notification"
+                class="form-control"
+                value="'.api_htmlentities($dateToSendNotificationDefault).'"
+            >'.
+                '</div>'.
+                '</div>'
+            );
+        } else {
             $form->addCheckBox(
                 'send_to_users_in_session',
                 null,
                 get_lang('Send to users in all sessions of this course')
             );
         }
+    }
 
         $config = api_get_setting('announcement.announcements_hide_send_to_hrm_users');
 
@@ -877,8 +1014,41 @@ switch ($action) {
         if ($form->validate()) {
             $data = $form->getSubmitValues();
             $data['users'] = $data['users'] ?? [];
-            $sendToUsersInSession = isset($data['send_to_users_in_session']);
+
+            if ($announcementScheduledByDate) {
+                $sendToUsersInSessionValue = $data['extra_send_to_users_in_session'] ?? 0;
+                if (is_array($sendToUsersInSessionValue)) {
+                    $sendToUsersInSessionValue = $sendToUsersInSessionValue['extra_send_to_users_in_session'] ?? 0;
+                }
+
+                $sendToUsersInSession = 1 === (int) $sendToUsersInSessionValue;
+            } else {
+                $sendToUsersInSession = isset($data['send_to_users_in_session']);
+            }
+
             $sendMeCopy = isset($data['send_me_a_copy_by_email']);
+
+            $scheduleAnnouncementNotification = false;
+            $dateToSendNotification = null;
+
+            if ($announcementScheduledByDate) {
+                $scheduleAnnouncementValue = $data['extra_send_notification_at_a_specific_date'] ?? 0;
+                if (is_array($scheduleAnnouncementValue)) {
+                    $scheduleAnnouncementValue = $scheduleAnnouncementValue['extra_send_notification_at_a_specific_date'] ?? 0;
+                }
+
+                $scheduleAnnouncementNotification = 1 === (int) $scheduleAnnouncementValue;
+
+                $dateToSendNotification = isset($_POST['scheduled_date_to_send_notification'])
+                    ? trim((string) $_POST['scheduled_date_to_send_notification'])
+                    : null;
+
+                if (empty($dateToSendNotification) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateToSendNotification)) {
+                    $dateToSendNotification = null;
+                }
+
+                $data['extra_date_to_send_notification'] = $dateToSendNotification;
+            }
 
             $notificationCount = $data['notification_count'] ?? [];
             $notificationPeriod = $data['notification_period'] ?? [];
@@ -897,8 +1067,37 @@ switch ($action) {
                     $sendToUsersInSession
                 );
 
+                announcements_apply_resource_language($announcement, $data['language'] ?? '');
+
+                if ($announcementScheduledByDate && $announcement instanceof CAnnouncement) {
+                    $extraFieldValues = new ExtraFieldValue('course_announcement');
+                    $data['item_id'] = $announcement->getIid();
+
+                    $extraFieldValues->saveFieldValues(
+                        $data,
+                        false,
+                        false,
+                        [
+                            'send_notification_at_a_specific_date',
+                            'date_to_send_notification',
+                            'send_to_users_in_session',
+                        ]
+                    );
+
+                    if ($scheduleAnnouncementNotification) {
+                        $announcement->setEmailSent(false);
+                        $em = Database::getManager();
+                        $em->persist($announcement);
+                        $em->flush();
+                    }
+                }
+
                 $messageSentTo = [];
-                if (isset($_POST['email_ann']) && empty($_POST['onlyThoseMails'])) {
+                if (
+                    isset($_POST['email_ann']) &&
+                    empty($_POST['onlyThoseMails']) &&
+                    false === $scheduleAnnouncementNotification
+                ) {
                     $messageSentTo = AnnouncementManager::sendEmail(
                         api_get_course_info(),
                         api_get_session_id(),
@@ -952,6 +1151,31 @@ switch ($action) {
                 }
 
                 if ($announcement) {
+                    announcements_apply_resource_language($announcement instanceof CAnnouncement ? $announcement : null, $data['language'] ?? '');
+
+                    if ($announcementScheduledByDate && $announcement instanceof CAnnouncement) {
+                        $extraFieldValues = new ExtraFieldValue('course_announcement');
+                        $data['item_id'] = $announcement->getIid();
+
+                        $extraFieldValues->saveFieldValues(
+                            $data,
+                            false,
+                            false,
+                            [
+                                'send_notification_at_a_specific_date',
+                                'date_to_send_notification',
+                                'send_to_users_in_session',
+                            ]
+                        );
+
+                        if ($scheduleAnnouncementNotification) {
+                            $announcement->setEmailSent(false);
+                            $em = Database::getManager();
+                            $em->persist($announcement);
+                            $em->flush();
+                        }
+                    }
+
                     if (!empty($data['event_date_start']) && !empty($data['event_date_end'])) {
                         Container::getCalendarEventRepository()
                             ->createFromAnnouncement(
@@ -974,7 +1198,11 @@ switch ($action) {
                     );
 
                     $messageSentTo = [];
-                    if (isset($data['email_ann']) && $data['email_ann']) {
+                    if (
+                        isset($data['email_ann']) &&
+                        $data['email_ann'] &&
+                        false === $scheduleAnnouncementNotification
+                    ) {
                         $messageSentTo = AnnouncementManager::sendEmail(
                             api_get_course_info(),
                             api_get_session_id(),

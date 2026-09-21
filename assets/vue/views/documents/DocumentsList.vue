@@ -1,8 +1,16 @@
 <template>
   <SectionHeader
     v-if="securityStore.isAuthenticated"
-    :title="t('Documents')"
+    :title="isCertificateMode ? t('Certificate') : t('Documents')"
   >
+    <BaseButton
+      v-if="isCertificateMode"
+      :label="t('Back')"
+      :route="gradebookReturnRoute"
+      icon="back"
+      only-icon
+      type="primary-text"
+    />
     <BaseButton
       v-if="showNewCertificateButton"
       :label="t('Create certificate')"
@@ -18,6 +26,15 @@
       only-icon
       type="black"
       @click="goToUploadFile"
+    />
+    <BaseButton
+      v-if="showUseSystemDefaultCertificateButton"
+      :disabled="isSettingDefaultCertificate"
+      :label="t('Use system default certificate')"
+      icon="restore"
+      only-icon
+      type="secondary-text"
+      @click="confirmUseSystemDefaultCertificate"
     />
 
     <BaseButton
@@ -35,6 +52,14 @@
       only-icon
       type="success"
       @click="goToNewDocument"
+    />
+    <BaseButton
+      v-if="showOnlyofficeCreateButton"
+      :label="`${t('New document')} (ONLYOFFICE)`"
+      icon="onlyoffice"
+      only-icon
+      type="success"
+      @click="goToNewOnlyofficeDocument"
     />
     <BaseButton
       v-if="showUploadButton"
@@ -55,9 +80,10 @@
     <BaseButton
       v-if="showNewDrawingButton"
       :label="t('New drawing')"
-      icon="drawing"
+      icon="shape"
       only-icon
       type="success"
+      @click="goToNewDrawing"
     />
     <BaseButton
       v-if="showRecordAudioButton"
@@ -93,11 +119,11 @@
     />
     <BaseButton
       v-if="showDownloadAllButton && !hideDownloadIcon"
+      :disabled="isDownloadingAll"
       :label="t('Download all')"
       icon="download"
       only-icon
       type="primary"
-      :disabled="isDownloadingAll"
       @click="downloadAllItems"
     />
     <BaseButton
@@ -110,13 +136,29 @@
     />
   </SectionHeader>
 
+  <div
+    v-if="isCertificateMode"
+    class="mb-4 rounded-xl border border-gray-20 bg-white px-4 py-3 text-sm shadow-sm"
+  >
+    <span class="font-semibold">{{ t("Default certificate") }}:</span>
+    <span class="ml-1">{{ defaultCertificateTitle || t("No data available") }}</span>
+    <div
+      v-if="certificateTemplateFallback"
+      class="mt-1 text-yellow-700"
+      role="status"
+    >
+      <span class="font-semibold">{{ t("Warning") }}:</span>
+      {{ t("The attached certificate is unavailable. The system default certificate will be used.") }}
+    </div>
+  </div>
+
   <BaseTable
     :key="tableRenderKey"
     v-model:filters="filters"
+    v-model:rows="options.itemsPerPage"
     v-model:selected-items="selectedItems"
     :global-filter-fields="['resourceNode.title', 'resourceNode.updatedAt']"
     :is-loading="tableIsLoading"
-    v-model:rows="options.itemsPerPage"
     :total-items="totalItems"
     :values="items"
     data-key="iid"
@@ -136,27 +178,35 @@
       field="resourceNode.title"
     >
       <template #body="slotProps">
-        <div style="display: flex; align-items: center">
-          <DocumentEntry
-            v-if="slotProps.data"
-            :data="slotProps.data"
-          />
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center">
+            <DocumentEntry
+              v-if="slotProps.data"
+              :data="slotProps.data"
+            />
 
-          <!-- AI badge at the end of the title -->
-          <span
-            v-if="slotProps.data?.ai_assisted"
-            class="ml-2 inline-flex items-center gap-1 rounded-full border border-gray-300 bg-gray-10 px-2 py-[2px] text-xs text-gray-700"
-            title="AI-assisted"
-            aria-label="AI-assisted"
-          >
-            <span aria-hidden="true">🤖</span>
-            <span class="font-semibold">AI</span>
-          </span>
+            <!-- AI badge at the end of the title -->
+            <span
+              v-if="slotProps.data?.ai_assisted"
+              aria-label="AI-assisted"
+              class="ml-2 inline-flex items-center gap-1 rounded-full border border-gray-300 bg-gray-10 px-2 py-[2px] text-xs text-gray-700"
+              title="AI-assisted"
+            >
+              <span aria-hidden="true">🤖</span>
+              <span class="font-semibold">AI</span>
+            </span>
 
-          <BaseIcon
-            v-if="isAllowedToEdit && isSessionDocument(slotProps.data)"
-            class="mr-8"
-            icon="session-star"
+            <BaseIcon
+              v-if="isAllowedToEdit && isSessionDocument(slotProps.data)"
+              class="mr-8"
+              icon="session-star"
+            />
+          </div>
+
+          <div
+            v-if="getDocumentComment(slotProps.data)"
+            class="max-w-3xl whitespace-pre-line text-sm text-gray-500"
+            v-text="getDocumentComment(slotProps.data)"
           />
         </div>
       </template>
@@ -169,9 +219,11 @@
     >
       <template #body="slotProps">
         {{
-          slotProps.data.resourceNode && slotProps.data.resourceNode.firstResourceFile
-            ? prettyBytes(slotProps.data.resourceNode.firstResourceFile.size)
-            : ""
+          slotProps.data.filetype === "link"
+            ? t("Cloud link")
+            : slotProps.data.resourceNode && slotProps.data.resourceNode.firstResourceFile
+              ? prettyBytes(slotProps.data.resourceNode.firstResourceFile.size)
+              : ""
         }}
       </template>
     </Column>
@@ -189,6 +241,14 @@
     <Column :exportable="false">
       <template #body="slotProps">
         <div class="flex flex-row justify-end gap-2">
+          <BaseButton
+            v-if="canShowCopyToMyFiles(slotProps.data)"
+            :title="t('Copy to My Files')"
+            icon="copy"
+            size="small"
+            type="secondary-text"
+            @click="copyToMyFiles(slotProps.data)"
+          />
           <BaseButton
             v-if="canEdit(slotProps.data)"
             :title="t('Move')"
@@ -244,10 +304,10 @@
 
           <BaseButton
             v-if="canEdit(slotProps.data) && allowAccessUrlFiles && isFile(slotProps.data) && securityStore.isAdmin"
+            :title="t('Add file variation')"
             icon="file-replace"
             size="small"
             type="secondary-text"
-            :title="t('Add file variation')"
             @click="goToAddVariation(slotProps.data)"
           />
 
@@ -272,7 +332,12 @@
             v-if="isCertificateMode && canEdit(slotProps.data)"
             :class="{ selected: slotProps.data.iid === defaultCertificateId }"
             :icon="slotProps.data.iid === defaultCertificateId ? 'certificate-selected' : 'certificate-not-selected'"
-            :title="t('Set as default certificate')"
+            :disabled="isSettingDefaultCertificate"
+            :title="
+              slotProps.data.iid === defaultCertificateId
+                ? t('Default certificate')
+                : t('Set as default certificate')
+            "
             size="small"
             type="slotProps.data.iid === defaultCertificateId ? 'success' : 'black'"
             @click="selectAsDefaultCertificate(slotProps.data)"
@@ -360,14 +425,14 @@
         required="true"
       />
       <label
-        v-text="t('Name')"
         for="title"
+        v-text="t('Name')"
       />
     </FloatLabel>
     <small
       v-if="submitted && !item.title"
-      v-text="t('Title is required')"
       class="p-error"
+      v-text="t('Title is required')"
     />
   </BaseDialogConfirmCancel>
 
@@ -419,30 +484,53 @@
   <BaseDialog
     v-model:is-visible="isFileUsageDialogVisible"
     :style="{ width: '28rem' }"
-    :title="t('Space available')"
+    :title="t('Document quota')"
+    :close-label="t('Close')"
   >
     <div
       v-if="usageQuotaSummary"
       class="mb-3 rounded border border-gray-200 bg-gray-10 p-3"
     >
       <div class="text-sm font-semibold">
-        {{ usageQuotaSummary.limiterLabel }}
+        {{ t("Document quota") }}
       </div>
 
-      <div class="mt-1 text-xs opacity-80">
-        {{ usageQuotaSummary.remainingLabel }}
+      <div class="mt-2 grid gap-2 text-xs">
+        <div>
+          <span class="font-semibold">{{ t("Limit") }}:</span>
+          {{ usageQuotaSummary.limitLabel }}
+        </div>
+        <div>
+          <span class="font-semibold">{{ t("Used space") }}:</span>
+          {{ usageQuotaSummary.usedLabel }}
+        </div>
+        <div>
+          <span class="font-semibold">{{ t("Available space") }}:</span>
+          {{ usageQuotaSummary.availableLabel }}
+        </div>
+        <div>
+          <span class="font-semibold">{{ t("Available percentage") }}:</span>
+          {{ usageQuotaSummary.availablePercentLabel }}
+        </div>
       </div>
 
-      <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <span class="font-semibold">{{ t("Course") }}:</span>
-          {{ usageQuotaSummary.courseLine }}
-        </div>
-        <div>
-          <span class="font-semibold">{{ t("Documents") }}:</span>
-          {{ usageQuotaSummary.documentsLine }}
-        </div>
-      </div>
+      <p
+        v-if="usageQuotaSummary.showUpgradeCta"
+        class="mt-3 rounded border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-900"
+      >
+        {{ t("Space is limited through your course properties. To increase your limit, get a") }}
+        <a
+          class="font-semibold text-primary underline"
+          href="/resources/courses/new"
+        >
+          {{ t("pro plan") }}
+        </a>
+        {{
+          t(
+            "and import this course's backup through Course Maintenance to your new paid course, or open a ticket to get your course converted into a pro course once you've acquired this plan.",
+          )
+        }}
+      </p>
     </div>
 
     <BaseChart :data="usageData" />
@@ -453,6 +541,7 @@
     :style="{ width: '28rem' }"
     :title="t('Record audio')"
     header-icon="record-add"
+    :close-label="t('Close')"
   >
     <DocumentAudioRecorder
       :parent-resource-node-id="route.params.node"
@@ -464,9 +553,9 @@
   <!-- AI feedback dialog -->
   <BaseDialogConfirmCancel
     v-model:is-visible="isAiFeedbackDialogVisible"
-    :title="t('Get AI feedback')"
-    :confirm-label="aiFeedbackLoading ? t('In progress') : t('Get AI feedback')"
     :cancel-label="t('Close')"
+    :confirm-label="aiFeedbackLoading ? t('In progress') : t('Get AI feedback')"
+    :title="t('Get AI feedback')"
     @confirm-clicked="runAiFeedback"
     @cancel-clicked="closeAiFeedbackDialog"
   >
@@ -485,8 +574,8 @@
 
         <select
           v-model="aiFeedbackProvider"
-          class="w-full rounded border border-gray-300 p-2 text-sm"
           :disabled="aiFeedbackLoading || aiFeedbackSaving || aiFeedbackProviderOptions.length === 0"
+          class="w-full rounded border border-gray-300 p-2 text-sm"
         >
           <option
             v-for="p in aiFeedbackProviderOptions"
@@ -515,10 +604,10 @@
         <div class="text-sm font-semibold">Prompt</div>
         <textarea
           v-model="aiFeedbackPrompt"
-          class="w-full rounded border border-gray-300 p-2 text-sm"
-          rows="4"
-          placeholder="Write your question for the AI..."
           :disabled="aiFeedbackLoading || aiFeedbackSaving"
+          class="w-full rounded border border-gray-300 p-2 text-sm"
+          placeholder="Write your question for the AI..."
+          rows="4"
         />
       </div>
 
@@ -576,14 +665,14 @@
           required
         />
         <label
-          v-text="t('Name')"
           for="templateTitle"
+          v-text="t('Name')"
         />
       </FloatLabel>
       <small
         v-if="submitted && !templateFormData.title"
-        v-text="t('Title is required')"
         class="p-error"
+        v-text="t('Title is required')"
       />
       <BaseFileUpload
         id="post-file"
@@ -631,11 +720,13 @@ import { isEmpty } from "lodash"
 import { useRoute, useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
 import { computed, nextTick, onMounted, ref, unref, watch } from "vue"
-import { useCidReq } from "../../composables/cidReq"
+import { getCourseContext } from "../../utils/courseContext"
 import { useDatatableList } from "../../composables/datatableList"
 import { useFormatDate } from "../../composables/formatDate"
-import axios from "axios"
 import baseService from "../../services/baseService"
+import documentsService from "../../services/documents"
+import aiService from "../../services/aiService"
+import gradebookService from "../../services/gradebookService"
 import DocumentEntry from "../../components/documents/DocumentEntry.vue"
 import BaseButton from "../../components/basecomponents/BaseButton.vue"
 import BaseToolbar from "../../components/basecomponents/BaseToolbar.vue"
@@ -646,6 +737,7 @@ import BaseDialog from "../../components/basecomponents/BaseDialog.vue"
 import BaseChart from "../../components/basecomponents/BaseChart.vue"
 import DocumentAudioRecorder from "../../components/documents/DocumentAudioRecorder.vue"
 import { useNotification } from "../../composables/notification"
+import { useConfirmation } from "../../composables/useConfirmation"
 import { useSecurityStore } from "../../store/securityStore"
 import prettyBytes from "pretty-bytes"
 import BaseFileUpload from "../../components/basecomponents/BaseFileUpload.vue"
@@ -667,6 +759,7 @@ const courseSettingsStore = useCourseSettings()
 const platformConfigStore = usePlatformConfig()
 const { t, locale } = useI18n()
 const notification = useNotification()
+const { requireConfirmation } = useConfirmation()
 
 const isDownloadingAll = ref(false)
 
@@ -676,16 +769,9 @@ async function downloadAllItems() {
   try {
     const rootNodeId = getDocumentsRootNodeId()
 
-    const response = await axios.post(
-      "/api/documents/download-all",
-      { rootNodeId },
-      {
-        responseType: "blob",
-        params: { cid, sid, gid },
-      },
-    )
+    const blob = await documentsService.downloadAll(rootNodeId, { cid, sid, gid })
 
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(new Blob([blob]))
     const link = document.createElement("a")
     link.href = url
     link.setAttribute("download", "all_documents.zip")
@@ -729,7 +815,7 @@ const hideDownloadIcon = computed(() => {
 })
 
 const { filters, options, onUpdateOptions, deleteItem } = useDatatableList("Documents")
-const { cid, sid, gid } = useCidReq()
+const { cid, sid, gid } = getCourseContext()
 const { isImage, isHtml, isFile } = useFileUtils()
 const { relativeDatetime } = useFormatDate()
 const { isAllowedToEdit } = useIsAllowedToEdit({ tutor: true, coach: true, sessionCoach: true })
@@ -774,6 +860,10 @@ const selectedItems = ref([])
  * Visibility helpers (safe access)
  * -----------------------------------------
  */
+function getDocumentComment(document) {
+  return String(document?.comment || "").trim()
+}
+
 function getPrimaryResourceLink(doc) {
   const links = doc?.resourceLinkListFromEntity
   if (!Array.isArray(links) || links.length === 0) {
@@ -841,9 +931,46 @@ const isCertificateMode = computed(() => {
   return route.query.filetype === "certificate"
 })
 
+const gradebookReturnRoute = computed(() => {
+  const requestedRouteName = String(route.query.returnTo || "")
+  const routeName = ["GradebookList", "GradebookCertificates"].includes(requestedRouteName)
+    ? requestedRouteName
+    : "GradebookList"
+  const query = {
+    cid: unref(cid),
+    sid: unref(sid),
+    gid: Number(route.query.returnGid ?? unref(gid) ?? 0),
+  }
+  const categoryId = Number(route.query.categoryId || 0)
+  if (categoryId > 0) {
+    query.categoryId = categoryId
+  }
+
+  return {
+    name: routeName,
+    params: { node: route.params.node },
+    query,
+  }
+})
+
 const defaultCertificateId = ref(null)
+const defaultCertificateTitle = ref("")
+const certificateAttachedDocumentId = ref(null)
+const certificateTemplateFallback = ref(false)
+const certificateCategoryId = ref(null)
+const certificateCsrfToken = ref("")
+const isSettingDefaultCertificate = ref(false)
 
 const isCurrentTeacher = computed(() => securityStore.isCurrentTeacher && !platformConfigStore.isStudentViewActive)
+const showUseSystemDefaultCertificateButton = computed(() => {
+  return (
+    isCertificateMode.value &&
+    isCurrentTeacher.value &&
+    Number(certificateAttachedDocumentId.value || 0) > 0 &&
+    Boolean(certificateCategoryId.value) &&
+    Boolean(certificateCsrfToken.value)
+  )
+})
 
 const onlyofficePluginEnabled = computed(() => {
   return platformConfigStore.plugins?.onlyoffice?.enabled === true
@@ -851,6 +978,10 @@ const onlyofficePluginEnabled = computed(() => {
 
 const onlyofficeEditorPath = computed(() => {
   return String(platformConfigStore.plugins?.onlyoffice?.editorPath || "/plugin/Onlyoffice/editor.php")
+})
+
+const showOnlyofficeCreateButton = computed(() => {
+  return securityStore.isAuthenticated && onlyofficePluginEnabled.value && Boolean(unref(showNewDocumentButton))
 })
 
 const onlyofficeSupportedExtensions = new Set([
@@ -925,27 +1056,45 @@ function getOnlyofficeButtonTitle() {
 }
 
 function buildOnlyofficeUrl(doc) {
-  const url = new URL(onlyofficeEditorPath.value, window.location.origin)
+  const sp = new URLSearchParams({
+    cid: String(unref(cid) || 0),
+    sid: String(unref(sid) || 0),
+    docId: String(doc.iid),
+    returnUrl: window.location.href,
+  })
 
-  url.searchParams.set("cid", String(unref(cid) || 0))
-  url.searchParams.set("sid", String(unref(sid) || 0))
   const currentGroupId = Number(unref(gid) || 0)
+
   if (currentGroupId > 0) {
-    url.searchParams.set("groupId", String(currentGroupId))
+    sp.set("groupId", String(currentGroupId))
   }
-  url.searchParams.set("docId", String(doc.iid))
-  url.searchParams.set("returnUrl", window.location.href)
 
   if (isOnlyofficeViewOnly(doc) || !canEdit(doc)) {
-    url.searchParams.set("readOnly", "1")
+    sp.set("readOnly", "1")
   }
 
-  return url.toString()
+  return `${onlyofficeEditorPath.value}?${sp.toString()}`
 }
 
 function openWithOnlyoffice(doc) {
   const url = buildOnlyofficeUrl(doc)
   window.open(url, "_blank", "noopener,noreferrer")
+}
+
+function goToNewOnlyofficeDocument() {
+  const sp = new URLSearchParams({
+    cid: String(unref(cid) || 0),
+    sid: String(unref(sid) || 0),
+    gid: String(unref(gid) || 0),
+    returnUrl: window.location.href,
+  })
+
+  const parentResourceNodeId = Number(route.params.node || route.query.node || 0)
+  if (Number.isInteger(parentResourceNodeId) && parentResourceNodeId > 0) {
+    sp.set("parentResourceNodeId", String(parentResourceNodeId))
+  }
+
+  window.location.href = `/plugin/Onlyoffice/create.php?${sp.toString()}`
 }
 
 /**
@@ -975,6 +1124,11 @@ function resetTableStateForFolderChange() {
     ...options.value,
     page: 1,
   }
+
+  store.commit("documents/updateField", {
+    path: "resetList",
+    value: true,
+  })
 
   unselectAll()
 }
@@ -1040,30 +1194,37 @@ const aiDocProcessProviders = ref([])
 
 onMounted(async () => {
   tableLoading.value = true
-  filters.value.loadNode = 1
-  filters.value.filetype = ["file", "folder", "video"]
+
+  if (isCertificateMode.value) {
+    // Certificate templates are intentionally stored outside the normal visible
+    // Documents hierarchy. Gradebook mode must list every certificate document
+    // in the current course/session context instead of only direct children.
+    filters.value.loadNode = 0
+    filters.value.filetype = "certificate"
+    filters.value.gradebook = 1
+  } else {
+    filters.value.loadNode = 1
+    filters.value.filetype = ["file", "folder", "video"]
+  }
 
   let nodeId = route.params.node
   if (isEmpty(nodeId)) {
     nodeId = route.query.node
   }
 
-  await store.dispatch("resourcenode/findResourceNode", { id: `/api/resource_nodes/${nodeId}` })
+  await store.dispatch("resourcenode/findResourceNode", { id: `/api/resource_nodes/${nodeId}`, cid, sid, gid })
 
   options.value.itemsPerPage = resolveDefaultRows(0)
   options.value.page = 1
   triggerTableLoad()
-  void loadDefaultCertificate()
+
+  if (isCertificateMode.value) {
+    void loadCertificateManagement()
+  }
+
   // loadAllFolders() is intentionally deferred: it recursively fetches all
   // course folders and is only needed when the move dialog is opened.
   // openMoveDialog() calls it on demand.
-
-  void courseSettingsStore
-    .loadCourseSettings(cid, sid)
-    .catch((e) => console.error("[AI] loadCourseSettings failed:", e))
-    .finally(() => {
-      void loadAiCapabilities()
-    })
 
   void loadAiCapabilities()
   consumeAiSavedToast()
@@ -1095,7 +1256,7 @@ watch(totalItems, (n) => {
 
 watch(
   () => [route.name, route.params.node, route.query.node, unref(cid), unref(sid), unref(gid)],
-  ([routeName]) => {
+  async ([routeName]) => {
     let nodeId = route.params.node
     if (isEmpty(nodeId)) {
       nodeId = route.query.node
@@ -1108,8 +1269,7 @@ watch(
     resetTableStateForFolderChange()
 
     const finderParams = { id: `/api/resource_nodes/${nodeId}`, cid, sid, gid }
-    store.dispatch("resourcenode/findResourceNode", finderParams)
-
+    await store.dispatch("resourcenode/findResourceNode", finderParams)
     if ("DocumentsList" === routeName) {
       triggerTableLoad()
     }
@@ -1197,10 +1357,10 @@ function showDeleteMultipleDialog() {
 
 async function confirmDeleteItem(itemToDelete) {
   try {
-    const response = await axios.get(`/api/documents/${itemToDelete.iid}/lp-usage`)
+    const data = await documentsService.getLpUsage(itemToDelete.iid)
 
-    if (response.data.usedInLp) {
-      lpListWarning.value = response.data.lpList.map((lp) => ({
+    if (data.usedInLp) {
+      lpListWarning.value = data.lpList.map((lp) => ({
         ...lp,
         documentTitle: itemToDelete.title,
         documentId: itemToDelete.iid,
@@ -1221,7 +1381,7 @@ async function forceDeleteItem() {
     const docIdsToDelete = [...new Set(lpListWarning.value.map((lp) => lp.documentId))]
 
     tableLoading.value = true
-    await Promise.all(docIdsToDelete.map((iid) => axios.delete(`/api/documents/${iid}`)))
+    await Promise.all(docIdsToDelete.map((iid) => documentsService.deleteDocument(iid)))
 
     notification.showSuccessNotification(t("Documents deleted"))
     isDeleteWarningLpDialogVisible.value = false
@@ -1230,7 +1390,7 @@ async function forceDeleteItem() {
     triggerTableLoad()
   } catch (error) {
     console.error("[Documents] Error deleting documents forcibly:", error)
-    notification.showErrorNotification(t("Error deleting document(s)."))
+    notification.showErrorNotification(t("Error deleting document(s)"))
   }
 }
 
@@ -1252,16 +1412,18 @@ async function downloadSelectedItems() {
     return
   }
 
+  if (selectedItems.value.some((item) => item?.filetype === "link")) {
+    notification.showErrorNotification(t("Cloud links cannot be downloaded."))
+
+    return
+  }
+
   isDownloading.value = true
 
   try {
-    const response = await axios.post(
-      "/api/documents/download-selected",
-      { ids: selectedItems.value.map((item) => item.iid) },
-      { responseType: "blob" },
-    )
+    const blob = await documentsService.downloadSelected(selectedItems.value.map((item) => item.iid))
 
-    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const url = window.URL.createObjectURL(new Blob([blob]))
     const link = document.createElement("a")
     link.href = url
     link.setAttribute("download", "selected_documents.zip")
@@ -1285,8 +1447,8 @@ async function deleteMultipleItems() {
   tableLoading.value = true
   for (const item of selectedItems.value) {
     try {
-      const response = await axios.get(`/api/documents/${item.iid}/lp-usage`)
-      if (response.data.usedInLp) {
+      const data = await documentsService.getLpUsage(item.iid)
+      if (data.usedInLp) {
         if (!documentsWithLpMap[item.iid]) {
           documentsWithLpMap[item.iid] = {
             iid: item.iid,
@@ -1294,7 +1456,7 @@ async function deleteMultipleItems() {
             lpList: [],
           }
         }
-        documentsWithLpMap[item.iid].lpList.push(...response.data.lpList)
+        documentsWithLpMap[item.iid].lpList.push(...data.lpList)
       } else {
         itemsWithoutLp.push(item)
       }
@@ -1371,10 +1533,44 @@ function goToNewDocument() {
 }
 
 function goToUploadFile() {
+  const query = { ...route.query }
+
+  // In certificate-manager mode, returnTo belongs to the manager's Back button.
+  // Do not pass it to the generic upload page, which would otherwise leave the
+  // manager immediately after uploading and before a template can be selected.
+  if (isCertificateMode.value) {
+    delete query.returnTo
+  }
+
   router.push({
     name: "DocumentsUploadFile",
+    query,
+  })
+}
+
+function goToNewDrawing() {
+  router.push({
+    name: "DocumentsSvgEditor",
+    params: { node: route.params.node },
     query: route.query,
   })
+}
+
+function getDocumentExtension(doc) {
+  const fileName = String(doc?.resourceNode?.firstResourceFile?.originalName || doc?.title || "")
+    .trim()
+    .toLowerCase()
+  const parts = fileName.split(".")
+
+  return parts.length > 1 ? String(parts.pop() || "").trim() : ""
+}
+
+function isSvgDocument(doc) {
+  const mime = String(doc?.resourceNode?.firstResourceFile?.mimeType || "")
+    .trim()
+    .toLowerCase()
+
+  return mime === "image/svg+xml" || getDocumentExtension(doc) === "svg"
 }
 
 function btnShowInformationOnClick(item) {
@@ -1395,14 +1591,76 @@ function btnChangeVisibilityOnClick(item) {
   const folderParams = route.query
   folderParams.id = item["@id"]
 
-  baseService.put(item["@id"] + `/toggle_visibility?cid=${cid}&sid=${sid}`, {}).then((data) => {
+  baseService.patch(item["@id"] + `/toggle_visibility?cid=${cid}&sid=${sid}`, {}).then((data) => {
     item.resourceLinkListFromEntity = data.resourceLinkListFromEntity
   })
 }
 
+function isEditableTextDocument(item) {
+  const filetype = String(item?.filetype || "")
+    .trim()
+    .toLowerCase()
+
+  if (["certificate", "html"].includes(filetype)) {
+    return true
+  }
+
+  if ("file" !== filetype) {
+    return false
+  }
+
+  const resourceFile = item?.resourceNode?.firstResourceFile
+  if (!resourceFile) {
+    return false
+  }
+
+  const mime = String(resourceFile.mimeType || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase()
+  const extension = getDocumentExtension(item)
+  const binaryExtensions = new Set([
+    "avif",
+    "bmp",
+    "gif",
+    "ico",
+    "jpeg",
+    "jpg",
+    "png",
+    "webp",
+    "mp3",
+    "ogg",
+    "wav",
+    "m4a",
+    "mp4",
+    "m4v",
+    "mov",
+    "webm",
+    "avi",
+    "pdf",
+  ])
+
+  if (
+    isImage(item) ||
+    resourceFile.video ||
+    resourceFile.audio ||
+    mime.startsWith("image/") ||
+    mime.startsWith("video/") ||
+    mime.startsWith("audio/") ||
+    "application/pdf" === mime ||
+    binaryExtensions.has(extension)
+  ) {
+    return false
+  }
+
+  return Boolean(resourceFile.text) || isHtml(item) || mime.startsWith("text/")
+}
+
 function btnEditOnClick(item) {
-  const folderParams = route.query
-  folderParams.id = item["@id"]
+  const folderParams = {
+    ...route.query,
+    id: item["@id"],
+  }
 
   if ("folder" === item.filetype || isEmpty(item.filetype)) {
     router.push({
@@ -1413,10 +1671,32 @@ function btnEditOnClick(item) {
     return
   }
 
-  if ("file" === item.filetype || "certificate" === item.filetype) {
-    folderParams.getFile = true
-    router.push({ name: "DocumentsUpdateFile", params: { id: item["@id"] }, query: folderParams })
+  if ("file" === item.filetype && isSvgDocument(item)) {
+    router.push({
+      name: "DocumentsSvgEditor",
+      params: { node: route.params.node },
+      query: folderParams,
+    })
+    return
   }
+
+  if (isEditableTextDocument(item)) {
+    router.push({
+      name: "DocumentsUpdateFile",
+      params: { id: item["@id"] },
+      query: {
+        ...folderParams,
+        getFile: true,
+      },
+    })
+    return
+  }
+
+  router.push({
+    name: "DocumentsUpdate",
+    params: { id: item["@id"] },
+    query: folderParams,
+  })
 }
 
 function showSlideShowWithFirstImage() {
@@ -1429,12 +1709,7 @@ function showSlideShowWithFirstImage() {
 
 async function showUsageDialog() {
   try {
-    const response = await axios.get(`/api/documents/${cid}/usage`, {
-      headers: { Accept: "application/json" },
-      params: { sid, gid },
-    })
-
-    usageData.value = response.data
+    usageData.value = await documentsService.getUsage(cid, { sid, gid })
   } catch (error) {
     console.error("[Documents] Error fetching documents quota usage:", error)
     usageData.value = {
@@ -1525,20 +1800,18 @@ async function fetchFolders(nodeId = null, parentPath = "") {
         continue
       }
 
-      const response = await axios.get("/api/documents", {
-        params: {
-          loadNode: 1,
-          filetype: ["folder"],
-          "resourceNode.parent": currentNodeId,
-          cid: unref(cid),
-          sid: unref(sid),
-          gid: unref(gid),
-          page: 1,
-          itemsPerPage: 200,
-        },
+      const { items } = await documentsService.listDocuments({
+        loadNode: 1,
+        filetype: ["folder"],
+        "resourceNode.parent": currentNodeId,
+        cid: unref(cid),
+        sid: unref(sid),
+        gid: unref(gid),
+        page: 1,
+        itemsPerPage: 200,
       })
 
-      const members = response.data?.["hydra:member"] || []
+      const members = items || []
 
       members.forEach((folder) => {
         const folderNodeId =
@@ -1598,17 +1871,11 @@ async function moveDocument() {
       return
     }
 
-    await axios.put(
-      `/api/documents/${item.value.iid}/move`,
-      { parentResourceNodeId: parentId },
-      {
-        params: {
-          cid: unref(cid),
-          sid: unref(sid),
-          gid: unref(gid),
-        },
-      },
-    )
+    await documentsService.moveDocument(item.value.iid, parentId, {
+      cid: unref(cid),
+      sid: unref(sid),
+      gid: unref(gid),
+    })
 
     notification.showSuccessNotification(t("Document moved successfully"))
     isMoveDialogVisible.value = false
@@ -1648,11 +1915,7 @@ async function replaceDocument() {
   formData.append("file", selectedReplaceFile.value)
 
   try {
-    await axios.post(`/api/documents/${documentToReplace.value.iid}/replace`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
+    await documentsService.replaceDocument(documentToReplace.value.iid, formData)
 
     notification.showSuccessNotification(t("File replaced"))
     isReplaceDialogVisible.value = false
@@ -1668,30 +1931,112 @@ async function replaceDocument() {
  * CERTIFICATES
  * -----------------------------------------
  */
-async function selectAsDefaultCertificate(certificate) {
+function getGradebookCertificateContextParams() {
+  const params = {
+    cid: Number(unref(cid) || 0),
+    sid: Number(unref(sid) || 0),
+    gid: Number(unref(gid) || 0),
+    node: Number(route.params.node || route.query.node || 0),
+  }
+  const requestedCategoryId = Number(route.query.categoryId || 0)
+  if (requestedCategoryId > 0) {
+    params.categoryId = requestedCategoryId
+  }
+
+  return params
+}
+
+async function loadCertificateManagement() {
   try {
-    const response = await axios.patch(`/gradebook/set_default_certificate/${cid}/${certificate.iid}`)
-    if (response.status === 200) {
-      loadDefaultCertificate()
-      triggerTableLoad()
-      notification.showSuccessNotification(t("Certificate set as default successfully"))
-    }
-  } catch {
-    notification.showErrorNotification(t("Error setting certificate as default"))
+    const data = await gradebookService.getCertificates(getGradebookCertificateContextParams())
+    const template = data?.category?.certificateTemplate || null
+
+    certificateCategoryId.value = Number(data?.category?.id || 0) || null
+    certificateCsrfToken.value = String(data?.csrfToken || "")
+    defaultCertificateId.value = Number(template?.id || 0) || null
+    defaultCertificateTitle.value = String(template?.title || "")
+    certificateAttachedDocumentId.value = Number(template?.attachedDocumentId || 0) || null
+    certificateTemplateFallback.value = Boolean(template?.fallback)
+  } catch (error) {
+    console.error("[Documents] Error loading Gradebook certificate settings:", error)
+    certificateCategoryId.value = null
+    certificateCsrfToken.value = ""
+    defaultCertificateId.value = null
+    defaultCertificateTitle.value = ""
+    certificateAttachedDocumentId.value = null
+    certificateTemplateFallback.value = false
   }
 }
 
-async function loadDefaultCertificate() {
+async function selectAsDefaultCertificate(certificate) {
+  if (
+    !isCertificateMode.value ||
+    isSettingDefaultCertificate.value ||
+    !certificate?.iid ||
+    !certificateCategoryId.value ||
+    !certificateCsrfToken.value
+  ) {
+    return
+  }
+
+  isSettingDefaultCertificate.value = true
+
   try {
-    const response = await axios.get(`/gradebook/default_certificate/${cid}`)
-    defaultCertificateId.value = response.data.certificateId
+    await gradebookService.runCertificateAction(
+      {
+        action: "set_template",
+        categoryId: Number(certificateCategoryId.value),
+        documentId: Number(certificate.iid),
+        submittedCsrfToken: certificateCsrfToken.value,
+      },
+      getGradebookCertificateContextParams(),
+    )
+    await loadCertificateManagement()
+    triggerTableLoad()
+    notification.showSuccessNotification(t("Certificate set as default successfully"))
   } catch (error) {
-    if (error.response?.status === 404) {
-      console.error("[Documents] Default certificate not found.")
-      defaultCertificateId.value = null
-    } else {
-      console.error("[Documents] Error loading the certificate:", error)
-    }
+    console.error("[Documents] Error setting Gradebook certificate template:", error)
+    notification.showErrorNotification(t("Error setting certificate as default"))
+  } finally {
+    isSettingDefaultCertificate.value = false
+  }
+}
+
+function confirmUseSystemDefaultCertificate() {
+  if (!showUseSystemDefaultCertificateButton.value) {
+    return
+  }
+
+  requireConfirmation({
+    message: t("Use the system default certificate instead of the attached certificate?"),
+    accept: useSystemDefaultCertificate,
+  })
+}
+
+async function useSystemDefaultCertificate() {
+  if (!showUseSystemDefaultCertificateButton.value || isSettingDefaultCertificate.value) {
+    return
+  }
+
+  isSettingDefaultCertificate.value = true
+
+  try {
+    await gradebookService.runCertificateAction(
+      {
+        action: "use_system_template",
+        categoryId: Number(certificateCategoryId.value),
+        submittedCsrfToken: certificateCsrfToken.value,
+      },
+      getGradebookCertificateContextParams(),
+    )
+    await loadCertificateManagement()
+    triggerTableLoad()
+    notification.showSuccessNotification(t("Success"))
+  } catch (error) {
+    console.error("[Documents] Error restoring the system Gradebook certificate template:", error)
+    notification.showErrorNotification(t("An error occurred"))
+  } finally {
+    isSettingDefaultCertificate.value = false
   }
 }
 
@@ -1711,8 +2056,8 @@ const currentDocumentId = ref(null)
 
 const isDocumentTemplate = async (documentId) => {
   try {
-    const response = await axios.get(`/template/document-templates/${documentId}/is-template`)
-    return response.data.isTemplate
+    const data = await documentsService.isDocumentTemplate(documentId)
+    return data.isTemplate
   } catch (error) {
     console.error("[Documents] Error verifying template status:", error)
     return false
@@ -1721,12 +2066,12 @@ const isDocumentTemplate = async (documentId) => {
 
 const deleteDocumentTemplate = async (documentId) => {
   try {
-    await axios.post(`/template/document-templates/${documentId}/delete`)
+    await documentsService.deleteDocumentTemplate(documentId)
     triggerTableLoad()
-    notification.showSuccessNotification(t("Template successfully deleted."))
+    notification.showSuccessNotification(t("Template successfully deleted"))
   } catch (error) {
     console.error("[Documents] Error deleting template:", error)
-    notification.showErrorNotification(t("Error deleting the template."))
+    notification.showErrorNotification(t("Error deleting the template"))
   }
 }
 
@@ -1751,7 +2096,7 @@ const submitTemplateForm = async () => {
   submitted.value = true
 
   if (!templateFormData.value.title || !selectedFile.value) {
-    notification.showErrorNotification(t("The title and thumbnail are required."))
+    notification.showErrorNotification(t("The title and thumbnail are required"))
     return
   }
 
@@ -1762,24 +2107,16 @@ const submitTemplateForm = async () => {
     formData.append("refDoc", currentDocumentId.value)
     formData.append("cid", cid)
 
-    const response = await axios.post("/template/document-templates/create", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
+    await documentsService.createDocumentTemplate(formData)
 
-    if (response.status === 200 || response.status === 201) {
-      notification.showSuccessNotification(t("Template created successfully."))
-      templateFormData.value.title = ""
-      selectedFile.value = null
-      showTemplateFormModal.value = false
-      triggerTableLoad()
-    } else {
-      notification.showErrorNotification(t("Error creating the template."))
-    }
+    notification.showSuccessNotification(t("Template created successfully"))
+    templateFormData.value.title = ""
+    selectedFile.value = null
+    showTemplateFormModal.value = false
+    triggerTableLoad()
   } catch (error) {
     console.error("[Documents] Error submitting template form:", error)
-    notification.showErrorNotification(t("Error submitting the form."))
+    notification.showErrorNotification(t("Error submitting the form"))
   }
 }
 
@@ -1857,10 +2194,7 @@ async function loadAiCapabilities() {
   }
 
   try {
-    const { data } = await axios.get("/ai/capabilities", {
-      params: { cid: unref(cid), sid: unref(sid), gid: unref(gid) },
-      headers: { Accept: "application/json" },
-    })
+    const data = await aiService.getCapabilities({ cid: unref(cid), sid: unref(sid), gid: unref(gid) })
 
     console.warn("[AI] capabilities:", data)
 
@@ -1877,8 +2211,8 @@ async function loadAiCapabilities() {
     aiTextProviders.value = []
     if (isCurrentTeacher.value) {
       try {
-        const res = await axios.get("/ai/text_providers", { headers: { Accept: "application/json" } })
-        aiTextProviders.value = normalizeProviders(res?.data?.providers)
+        const res = await aiService.getTextProviders()
+        aiTextProviders.value = normalizeProviders(res?.providers)
       } catch (e) {
         console.warn("[AI][Documents] Failed to load /ai/text_providers, fallback to capabilities:", e?.response || e)
         aiTextProviders.value = normalizeProviders(data?.types?.text)
@@ -2092,9 +2426,7 @@ async function runAiFeedback() {
       ai_provider: aiFeedbackProvider.value,
     }
 
-    const { data } = await axios.post("/ai/document_feedback", payload, {
-      headers: { Accept: "application/json" },
-    })
+    const data = await aiService.getDocumentFeedback(payload)
 
     if (!data?.success) {
       aiFeedbackError.value = String(data?.text || "AI feedback request failed.")
@@ -2139,9 +2471,7 @@ async function saveAiFeedbackToInbox() {
       answer: aiFeedbackAnswer.value,
     }
 
-    const { data } = await axios.post("/ai/document_feedback/save_to_inbox", payload, {
-      headers: { Accept: "application/json" },
-    })
+    const data = await aiService.saveDocumentFeedbackToInbox(payload)
 
     if (!data?.success) {
       aiFeedbackError.value = String(data?.text || "Failed to save the answer to inbox.")
@@ -2161,41 +2491,66 @@ const usageQuotaSummary = computed(() => {
   const q = usageData.value?.quota
   if (!q) return null
 
-  const limiter = String(q.limiter || "unlimited")
+  function formatQuotaMb(value) {
+    const n = Number(value)
 
-  function fmtBytes(v) {
-    if (v === null || v === undefined) return t("Unlimited")
-    const n = Number(v)
-    if (!Number.isFinite(n)) return t("Unlimited")
-    return prettyBytes(Math.max(n, 0))
+    if (!Number.isFinite(n) || n <= 0) {
+      return t("Unlimited")
+    }
+
+    return `${Math.round(n)} MB`
   }
 
-  const courseQuota = fmtBytes(q.courseQuotaBytes)
-  const docsQuota = fmtBytes(q.documentsQuotaBytes)
+  function formatBytesAsMb(value) {
+    if (value === null || value === undefined) {
+      return t("Unlimited")
+    }
 
-  const courseAvail = fmtBytes(q.availableCourseBytes)
-  const docsAvail = fmtBytes(q.availableDocumentsBytes)
+    const n = Number(value)
 
-  const effectiveAvail = fmtBytes(q.availableBytes)
-  const effectivePct = Number(q.availablePercent)
-  const pctLabel = Number.isFinite(effectivePct) ? `${effectivePct}%` : ""
+    if (!Number.isFinite(n)) {
+      return t("Unlimited")
+    }
 
-  let limiterLabel = ""
-  if (limiter === "course") {
-    limiterLabel = `${t("Limiting quota")}: ${t("Course")}`
-  } else if (limiter === "documents") {
-    limiterLabel = `${t("Limiting quota")}: ${t("Documents")}`
-  } else {
-    limiterLabel = `${t("Limiting quota")}: ${t("Unlimited")}`
+    const mb = Math.max(n, 0) / 1048576
+    const rounded = Math.round(mb * 100) / 100
+
+    if (Number.isInteger(rounded)) {
+      return `${rounded} MB`
+    }
+
+    return `${String(rounded)
+      .replace(/\.0+$/, "")
+      .replace(/(\.\d*?)0+$/, "$1")} MB`
   }
 
-  const remainingLabel = `${t("Remaining space")}: ${effectiveAvail}${pctLabel ? ` (${pctLabel})` : ""}`
+  function formatPercent(value) {
+    const n = Number(value)
+
+    if (!Number.isFinite(n)) {
+      return "0%"
+    }
+
+    const rounded = Math.round(n * 100) / 100
+
+    if (Number.isInteger(rounded)) {
+      return `${rounded}%`
+    }
+
+    return `${String(rounded)
+      .replace(/\.0+$/, "")
+      .replace(/(\.\d*?)0+$/, "$1")}%`
+  }
+
+  const usedBytes = Number(q.usedBytes ?? 0)
+  const availableBytes = q.availableBytes
 
   return {
-    limiterLabel,
-    remainingLabel,
-    courseLine: `${courseAvail} / ${courseQuota}`,
-    documentsLine: `${docsAvail} / ${docsQuota}`,
+    limitLabel: formatQuotaMb(q.quotaMb),
+    usedLabel: formatBytesAsMb(usedBytes),
+    availableLabel: formatBytesAsMb(availableBytes),
+    availablePercentLabel: formatPercent(q.availablePercent),
+    showUpgradeCta: Boolean(q.showUpgradeCta),
   }
 })
 
@@ -2221,5 +2576,46 @@ function consumeAiSavedToast() {
     params: route.params,
     query: newQuery,
   })
+}
+
+async function copyToMyFiles(item) {
+  const documentId = item?.iid
+
+  if (!documentId) {
+    notification.showErrorNotification(t("Could not copy the file to My Files"))
+    return
+  }
+
+  try {
+    await baseService.post(`/api/documents/${documentId}/personal_files?cid=${cid}&sid=${sid}&gid=${gid}`)
+
+    notification.showSuccessNotification(t("File copied to My Files"))
+  } catch (error) {
+    console.error("[Documents] Error copying file to My Files:", error)
+    notification.showErrorNotification(t("Could not copy the file to My Files"))
+  }
+}
+
+const canCopyToMyFiles = computed(() => {
+  const allowMyFiles = platformConfigStore.getSetting("platform.allow_my_files")
+  const usersCopyFiles = platformConfigStore.getSetting("document.users_copy_files")
+
+  console.log("[Documents] copy-to-my-files config", {
+    isAuthenticated: securityStore.isAuthenticated,
+    allowMyFiles,
+    usersCopyFiles,
+  })
+
+  return securityStore.isAuthenticated && "true" === String(allowMyFiles) && "true" === String(usersCopyFiles)
+})
+
+function canShowCopyToMyFiles(item) {
+  console.log("[Documents] copy-to-my-files row", {
+    iid: item?.iid,
+    title: item?.title,
+    filetype: item?.filetype,
+  })
+
+  return canCopyToMyFiles.value && "file" === item?.filetype
 }
 </script>

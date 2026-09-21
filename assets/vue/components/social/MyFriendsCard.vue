@@ -119,10 +119,11 @@ import BaseButton from "../basecomponents/BaseButton.vue"
 import { useI18n } from "vue-i18n"
 import { computed, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
-import axios from "axios"
-import { ENTRYPOINT } from "../../config/entrypoint"
 import { usePlatformConfig } from "../../store/platformConfig"
 import { useSecurityStore } from "../../store/securityStore"
+import userService from "../../services/userService"
+import userRelUserService from "../../services/userRelUserService"
+import socialService from "../../services/socialService"
 
 const { t } = useI18n()
 const route = useRoute()
@@ -191,8 +192,7 @@ async function loadTitleUser() {
   }
 
   try {
-    const { data } = await axios.get(`${ENTRYPOINT}users/${userId}`)
-    titleUser.value = data
+    titleUser.value = await userService.findById(userId)
   } catch (error) {
     console.warn("Failed to load wall owner for friends card title.", error)
   }
@@ -287,11 +287,11 @@ async function fetchFriends(forUserId) {
     const currentUserIri = buildUserIri(safeUserId)
 
     const [forward, backward] = await Promise.all([
-      axios.get(`${ENTRYPOINT}user_rel_users`, { params: { user: currentUserIri, relationType: 3 } }),
-      axios.get(`${ENTRYPOINT}user_rel_users`, { params: { friend: currentUserIri, relationType: 3 } }),
+      userRelUserService.findAll({ user: currentUserIri, relationType: 3 }),
+      userRelUserService.findAll({ friend: currentUserIri, relationType: 3 }),
     ])
 
-    const raw = [...(forward.data?.["hydra:member"] || []), ...(backward.data?.["hydra:member"] || [])]
+    const raw = [...(forward.items || []), ...(backward.items || [])]
 
     const seen = new Set()
     const normalized = []
@@ -316,8 +316,7 @@ async function fetchFriends(forUserId) {
     const friendIds = normalized.map((relation) => relation.friend?.id).filter(Boolean)
 
     if (friendIds.length) {
-      const onlineStatusResponse = await axios.post(`/social-network/online-status`, { userIds: friendIds })
-      const onlineStatuses = onlineStatusResponse.data || {}
+      const onlineStatuses = (await socialService.getOnlineStatus(friendIds)) || {}
 
       normalized.forEach((relation) => {
         const friendId = relation.friend?.id

@@ -9,15 +9,17 @@ namespace Chamilo\CoreBundle\Command;
 use Chamilo\CoreBundle\Framework\Container;
 use Chamilo\CoreBundle\Helpers\ScheduledAnnouncementHelper;
 use Chamilo\CoreBundle\Repository\Node\AccessUrlRepository;
+use Chamilo\CoreBundle\State\Announcement\ScheduledCourseAnnouncementProcessor;
 use Database;
 use Doctrine\ORM\EntityManager;
-use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Throwable;
 
 #[AsCommand(
     name: 'app:send-scheduled-announcements',
@@ -28,7 +30,9 @@ class SendScheduledAnnouncementsCommand extends Command
     public function __construct(
         private readonly AccessUrlRepository $accessUrlRepository,
         private readonly ScheduledAnnouncementHelper $scheduledAnnouncementHelper,
-        private readonly EntityManager $em
+        private readonly ScheduledCourseAnnouncementProcessor $scheduledCourseAnnouncementProcessor,
+        private readonly EntityManager $em,
+        private readonly KernelInterface $kernel,
     ) {
         parent::__construct();
     }
@@ -37,6 +41,12 @@ class SendScheduledAnnouncementsCommand extends Command
     {
         $this
             ->addOption('debug', null, InputOption::VALUE_NONE, 'If set, debug messages will be shown.')
+            ->addOption(
+                'also-internal-message',
+                null,
+                InputOption::VALUE_NONE,
+                'If set, an internal message will also be created for each recipient.'
+            )
         ;
     }
 
@@ -44,11 +54,13 @@ class SendScheduledAnnouncementsCommand extends Command
     {
         Database::setManager($this->em);
 
-        $container = $this->getApplication()->getKernel()->getContainer();
+        $container = $this->kernel->getContainer();
         Container::setContainer($container);
 
         $io = new SymfonyStyle($input, $output);
         $debug = (bool) $input->getOption('debug');
+        $alsoInternalMessage = (bool) $input->getOption('also-internal-message');
+
         $urlList = $this->accessUrlRepository->findAll();
 
         if (empty($urlList)) {
@@ -63,19 +75,35 @@ class SendScheduledAnnouncementsCommand extends Command
 
             try {
                 $messagesSent = $this->scheduledAnnouncementHelper->sendPendingMessages($urlId, $debug);
-                $io->writeln("Messages sent: $messagesSent");
+                $io->writeln('Session scheduled announcements sent: '.$messagesSent);
+            } catch (Throwable $throwable) {
+                $io->error(
+                    'Error processing session scheduled announcements for portal #'.$urlId.': '.
+                    $throwable->getMessage(),
+                );
 
-                if ($debug) {
-                    $io->writeln('Debug: Processed portal with ID '.$urlId);
-                }
-            } catch (Exception $e) {
-                $io->error('Error processing portal with ID '.$urlId.': '.$e->getMessage());
+                return Command::FAILURE;
+            }
+
+            try {
+                $courseMessagesSent = $this->scheduledCourseAnnouncementProcessor->sendPendingMessages(
+                    $urlId,
+                    $debug,
+                    $io,
+                    $alsoInternalMessage,
+                );
+                $io->writeln('Course scheduled announcements sent: '.$courseMessagesSent);
+            } catch (Throwable $throwable) {
+                $io->error(
+                    'Error processing course scheduled announcements for portal #'.$urlId.': '.
+                    $throwable->getMessage(),
+                );
 
                 return Command::FAILURE;
             }
         }
 
-        $io->success('All scheduled announcements have been sent.');
+        $io->success('All scheduled announcements have been processed.');
 
         return Command::SUCCESS;
     }

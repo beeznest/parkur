@@ -58,9 +58,9 @@ class AnnouncementManager
         }
         $sessionId = api_get_session_id();
         if (!empty($sessionId)) {
-            $tags[] = '((coaches))';
-            $tags[] = '((general_coach))';
-            $tags[] = '((general_coach_email))';
+            $tags[] = '((tutors))';
+            $tags[] = '((general_tutor))';
+            $tags[] = '((general_tutor_email))';
         }
 
         return $tags;
@@ -149,9 +149,16 @@ class AnnouncementManager
         }
 
         if (!empty($sessionId)) {
-            $data['coaches'] = $coaches;
-            $data['general_coach'] = $generalCoachName;
-            $data['general_coach_email'] = $generalCoachEmail;
+            $data['tutors'] = $coaches;
+            $data['general_tutor'] = $generalCoachName;
+            $data['general_tutor_email'] = $generalCoachEmail;
+
+            // Keep legacy tags working in existing announcement templates.
+            $content = str_replace(
+                ['((coaches))', '((general_coach))', '((general_coach_email))'],
+                [$coaches, $generalCoachName, $generalCoachEmail],
+                $content
+            );
         }
 
         $tags = self::getTags();
@@ -330,9 +337,9 @@ class AnnouncementManager
         $visibility = 1
     ) {
         $dql = "SELECT a
-                FROM ChamiloCourseBundle:CAnnouncement a
-                JOIN ChamiloCourseBundle:CItemProperty ip
-                WITH a.id = ip.ref AND a.cId = ip.course
+                FROM Chamilo\CourseBundle\Entity\CAnnouncement a
+                JOIN Chamilo\CourseBundle\Entity\CItemProperty ip
+                ON a.id = ip.ref AND a.cId = ip.course
                 WHERE
                     ip.tool = 'announcement' AND
                     a.cId = :course AND
@@ -382,9 +389,9 @@ class AnnouncementManager
             (1 === (int) api_get_course_setting('allow_user_edit_announcement') && !api_is_anonymous())
         ) {
             $dql = "SELECT a, ip
-                    FROM ChamiloCourseBundle:CAnnouncement a
-                    JOIN ChamiloCourseBundle:CItemProperty ip
-                    WITH a.id = ip.ref AND a.cId = ip.course
+                    FROM Chamilo\CourseBundle\Entity\CAnnouncement a
+                    JOIN Chamilo\CourseBundle\Entity\CItemProperty ip
+                    ON a.id = ip.ref AND a.cId = ip.course
                     WHERE
                         a.id = :announcement AND
                         ip.tool = 'announcement' AND
@@ -407,9 +414,9 @@ class AnnouncementManager
                 }
 
                 $dql = "SELECT a, ip
-                        FROM ChamiloCourseBundle:CAnnouncement a
-                        JOIN ChamiloCourseBundle:CItemProperty ip
-                        WITH a.id = ip.ref AND a.cId = ip.course
+                        FROM Chamilo\CourseBundle\Entity\CAnnouncement a
+                        JOIN Chamilo\CourseBundle\Entity\CItemProperty ip
+                        ON a.id = ip.ref AND a.cId = ip.course
                         WHERE
                             a.id = :announcement AND
                             ip.tool='announcement' AND
@@ -424,9 +431,9 @@ class AnnouncementManager
                         ORDER BY a.displayOrder DESC";
             } else {
                 $dql = "SELECT a, ip
-                        FROM ChamiloCourseBundle:CAnnouncement a
-                        JOIN ChamiloCourseBundle:CItemProperty ip
-                        WITH a.id = ip.ref AND a.cId = ip.course
+                        FROM Chamilo\CourseBundle\Entity\CAnnouncement a
+                        JOIN Chamilo\CourseBundle\Entity\CItemProperty ip
+                        ON a.id = ip.ref AND a.cId = ip.course
                         WHERE
                             a.id = :announcement AND
                             ip.tool = 'announcement' AND
@@ -931,23 +938,56 @@ class AnnouncementManager
         $sessionList = SessionManager::get_session_by_course(api_get_course_int_id());
 
         $courseEntity = api_get_course_entity();
-        $sessionEntity = api_get_session_entity();
         $groupEntity = api_get_group_entity();
 
-        if (!empty($sessionList)) {
-            foreach ($sessionList as $sessionInfo) {
-                $sessionId = $sessionInfo['id'];
-                $userList = CourseManager::get_user_list_from_course_code(
-                    $courseCode,
-                    $sessionId
-                );
+        if (empty($sessionList)) {
+            return;
+        }
 
-                if (!empty($userList)) {
-                    foreach ($userList as $user) {
-                        $user = api_get_user_entity($user);
-                        $announcement->addUserLink($user, $courseEntity, $sessionEntity, $groupEntity);
-                    }
+        foreach ($sessionList as $sessionInfo) {
+            $sessionId = (int) ($sessionInfo['id'] ?? 0);
+            if ($sessionId <= 0) {
+                continue;
+            }
+
+            $sessionEntity = api_get_session_entity($sessionId);
+            if (null === $sessionEntity) {
+                continue;
+            }
+
+            $userList = CourseManager::get_user_list_from_course_code(
+                $courseCode,
+                $sessionId
+            );
+
+            if (empty($userList)) {
+                continue;
+            }
+
+            foreach ($userList as $userData) {
+                $userId = 0;
+
+                if (is_array($userData)) {
+                    $userId = (int) ($userData['user_id'] ?? $userData['id'] ?? 0);
+                } else {
+                    $userId = (int) $userData;
                 }
+
+                if ($userId <= 0) {
+                    continue;
+                }
+
+                $userEntity = api_get_user_entity($userId);
+                if (null === $userEntity) {
+                    continue;
+                }
+
+                $announcement->addUserLink(
+                    $userEntity,
+                    $courseEntity,
+                    $sessionEntity,
+                    $groupEntity
+                );
             }
         }
     }

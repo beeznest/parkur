@@ -36,12 +36,7 @@ $totalItems = $plugin->getCatalogSubscriptionCourseList(
 $pagesCount = $totalItems > 0 ? (int) ceil($totalItems / $pageSize) : 1;
 
 // Keep a safe back target.
-if (api_is_platform_admin()) {
-    $defaultBackUrl = api_get_path(WEB_PLUGIN_PATH).'BuyCourses/src/subscriptions_courses.php';
-} else {
-    $defaultBackUrl = api_get_path(WEB_PLUGIN_PATH).'BuyCourses/index.php';
-}
-
+$defaultBackUrl = api_get_path(WEB_PLUGIN_PATH).'BuyCourses/index.php';
 $backUrl = $defaultBackUrl;
 
 // View.
@@ -56,8 +51,8 @@ if (api_is_platform_admin()) {
     ];
 } else {
     $interbreadcrumb[] = [
-        'url' => 'course_panel.php',
-        'name' => get_lang('TabsDashboard'),
+        'url' => $defaultBackUrl,
+        'name' => get_lang('Shop'),
     ];
 }
 
@@ -91,6 +86,9 @@ $tpl->assign('pagination_current_page', $currentPage);
 $tpl->assign('pagination_pages_count', $pagesCount);
 $tpl->assign('pagination_total_items', (int) $totalItems);
 $tpl->assign('pagination_base_path', 'subscription_course_catalog.php');
+
+$tpl->assign('admin_empty_catalog_action_url', api_is_platform_admin() ? api_get_path(WEB_PLUGIN_PATH).'BuyCourses/src/subscriptions_courses.php' : '');
+$tpl->assign('admin_empty_catalog_action_label', api_is_platform_admin() ? $plugin->get_lang('EnableSubscription') : '');
 
 $content = $tpl->fetch('BuyCourses/view/subscription_catalog.tpl');
 

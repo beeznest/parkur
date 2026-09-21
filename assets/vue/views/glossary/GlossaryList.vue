@@ -123,7 +123,7 @@ import { RESOURCE_LINK_PUBLISHED } from "../../constants/entity/resourcelink"
 import BaseInputText from "../../components/basecomponents/BaseInputText.vue"
 import GlossaryTermList from "../../components/glossary/GlossaryTermList.vue"
 import GlossaryTermTable from "../../components/glossary/GlossaryTermTable.vue"
-import { useCidReq } from "../../composables/cidReq"
+import { getCourseContext } from "../../utils/courseContext"
 import glossaryService from "../../services/glossaryService"
 import { useNotification } from "../../composables/notification"
 import BaseDialogDelete from "../../components/basecomponents/BaseDialogDelete.vue"
@@ -137,6 +137,7 @@ import { storeToRefs } from "pinia"
 import { usePlatformConfig } from "../../store/platformConfig"
 import { useCourseSettings } from "../../store/courseSettingStore"
 import SectionHeader from "../../components/layout/SectionHeader.vue"
+import { useStudentViewRefresh } from "../../composables/useStudentViewRefresh"
 
 const route = useRoute()
 const router = useRouter()
@@ -178,39 +179,20 @@ const canEditGlossary = computed(() => {
   return basePermission && !platform.isStudentViewActive
 })
 
-async function loadCourseSettingsIfPossible() {
-  const courseId = course.value?.id
-  const sessionId = session.value?.id
-
-  if (!courseId) {
-    return
-  }
-
-  try {
-    await courseSettingsStore.loadCourseSettings(courseId, sessionId)
-  } catch (err) {
-    console.error("[Glossary] loadCourseSettings FAILED:", err)
-  }
-}
-
 onMounted(async () => {
   isLoading.value = true
 
-  await loadCourseSettingsIfPossible()
   await fetchGlossaries()
 })
 
 watch(
   () => [course.value?.id, session.value?.id],
   async () => {
-    await loadCourseSettingsIfPossible()
+    await fetchGlossaries()
   },
 )
 
-watch(
-  () => platform.isStudentViewActive,
-  () => fetchGlossaries(),
-)
+useStudentViewRefresh(fetchGlossaries)
 
 const debouncedSearch = debounce(() => {
   searchBoxTouched.value = true
@@ -305,6 +287,8 @@ async function exportToDocuments() {
   const postData = {
     parentResourceNodeId: parentResourceNodeId.value,
     resourceLinkList: resourceLinkList.value,
+    sid: route.query.sid,
+    cid: route.query.cid,
   }
 
   try {
@@ -316,7 +300,7 @@ async function exportToDocuments() {
   }
 }
 
-const { cid, sid } = useCidReq()
+const { cid, sid } = getCourseContext()
 
 async function fetchGlossaries() {
   const params = {

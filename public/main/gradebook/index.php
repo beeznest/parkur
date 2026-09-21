@@ -1048,11 +1048,27 @@ if (isset($first_time) && 1 == $first_time && api_is_allowed_to_edit(null, true)
                     ];
                 }
 
-                $table = $gradebookTable->return_table();
+                $hideGradebookTableForLearners = !$isAllow
+                    && 'true' === api_get_setting('gradebook.gradebook_hide_table')
+                    && 'export_table' !== $action;
+
+                $table = '';
+
+                if (!$hideGradebookTableForLearners) {
+                    $table = $gradebookTable->return_table();
+                }
 
                 $graph = '';
                 if ($allowGraph && empty($model)) {
                     $graph = $gradebookTable->getGraph();
+                }
+
+                if ($hideGradebookTableForLearners) {
+                    echo Display::return_message(
+                        get_lang('The gradebook table is hidden.'),
+                        'normal',
+                        false
+                    );
                 }
 
                 if ('export_table' === $action) {
@@ -1088,7 +1104,54 @@ if (isset($first_time) && 1 == $first_time && api_is_allowed_to_edit(null, true)
 
 api_set_in_gradebook();
 
-$contents = ob_get_contents();
+$gradingElectronicContent = '';
+$gradingElectronicPluginFile = api_get_path(SYS_PLUGIN_PATH).'GradingElectronic/src/GradingElectronicPlugin.php';
+
+if (is_file($gradingElectronicPluginFile)) {
+    require_once $gradingElectronicPluginFile;
+
+    if (class_exists('GradingElectronicPlugin', false)) {
+        try {
+            $gradingElectronicPlugin = GradingElectronicPlugin::create();
+            $canRenderGradingElectronic = $gradingElectronicPlugin->isEnabled()
+                && (
+                    (isset($is_platform_admin) && $is_platform_admin)
+                    || (isset($is_course_admin) && $is_course_admin)
+                    || (function_exists('api_is_allowed_to_edit') && api_is_allowed_to_edit(null, true))
+                );
+
+            if ($canRenderGradingElectronic && method_exists($gradingElectronicPlugin, 'renderGradebookExport')) {
+                if (
+                    method_exists($gradingElectronicPlugin, 'isDownloadRequest')
+                    && $gradingElectronicPlugin->isDownloadRequest()
+                    && method_exists($gradingElectronicPlugin, 'downloadFromRequest')
+                ) {
+                    $gradingElectronicPlugin->downloadFromRequest();
+                }
+
+                if (
+                    method_exists($gradingElectronicPlugin, 'isGenerateRequest')
+                    && $gradingElectronicPlugin->isGenerateRequest()
+                    && method_exists($gradingElectronicPlugin, 'generateFromRequest')
+                ) {
+                    $gradingElectronicContent = '<div class="grading-electronic-generation-result" data-grading-electronic-generation-result="1">'
+                        .$gradingElectronicPlugin->generateFromRequest().
+                        '</div>';
+                } else {
+                    $gradingElectronicContent = $gradingElectronicPlugin->renderGradebookExport(true);
+                }
+            }
+        } catch (Throwable $exception) {
+            error_log('GradingElectronic render error: '.$exception->getMessage());
+            $gradingElectronicContent = Display::return_message(
+                'GradingElectronic error: '.$exception->getMessage(),
+                'error'
+            );
+        }
+    }
+}
+
+$contents = $gradingElectronicContent.ob_get_contents();
 
 ob_end_clean();
 Event::event_access_tool(TOOL_GRADEBOOK);

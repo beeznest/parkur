@@ -21,7 +21,7 @@ use Chamilo\CoreBundle\Helpers\CidReqHelper;
 use Chamilo\CoreBundle\Repository\ResourceLinkRepository;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Chamilo\CourseBundle\Entity\CDocument;
-use Chamilo\CourseBundle\Entity\CGroup;
+use Chamilo\CourseBundle\Repository\CDocumentRepository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -59,7 +59,7 @@ final class DocumentCollectionStateProvider implements ProviderInterface
      * @param array<string, mixed> $uriVariables
      * @param array<string, mixed> $context
      *
-     * @return array<CDocument>|CDocument|null
+     * @return iterable<CDocument>|CDocument|null
      */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): array|object|null
     {
@@ -125,10 +125,14 @@ final class DocumentCollectionStateProvider implements ProviderInterface
         // Normalize & unique
         $requestedFiletypes = array_values(array_unique(array_filter(array_map('strval', $filetypes))));
 
-        // Compatibility: treat "html" as a subtype of "file"
+        // Compatibility: treat "html" and cloud links as subtypes of "file".
         $effectiveFiletypes = $requestedFiletypes;
-        if (\in_array('file', $effectiveFiletypes, true) && !\in_array('html', $effectiveFiletypes, true)) {
-            $effectiveFiletypes[] = 'html';
+        if (\in_array('file', $effectiveFiletypes, true)) {
+            foreach (['html', 'link'] as $fileSubtype) {
+                if (!\in_array($fileSubtype, $effectiveFiletypes, true)) {
+                    $effectiveFiletypes[] = $fileSubtype;
+                }
+            }
         }
 
         // System folder subtypes
@@ -310,29 +314,119 @@ final class DocumentCollectionStateProvider implements ProviderInterface
 
                     $parentLinkIds = array_values(array_unique($parentLinkIds));
 
-                    if (!empty($parentLinkIds)) {
-                        // If contextual parent links exist, prioritize rl.parent.
-                        // The rn.parent fallback must only include items without contextual hierarchy (rl.parent IS NULL),
-                        // otherwise moved items might appear in old folders due to rn.parent not changing.
-                        $qb
-                            ->andWhere(
-                                $qb->expr()->orX(
-                                    'IDENTITY(rl.parent) IN (:parentLinkIds)',
-                                    $qb->expr()->andX(
-                                        'IDENTITY(rn.parent) = :parentNodeId',
-                                        'rl.parent IS NULL'
-                                    )
-                                )
+                    $primaryHierarchyCondition = !empty($parentLinkIds)
+                        ? $qb->expr()->orX(
+                            'IDENTITY(rl.parent) IN (:parentLinkIds)',
+                            $qb->expr()->andX(
+                                'IDENTITY(rn.parent) = :parentNodeId',
+                                'rl.parent IS NULL'
                             )
-                            ->setParameter('parentLinkIds', $parentLinkIds)
-                            ->setParameter('parentNodeId', $parentNodeId)
-                        ;
-                    } else {
-                        // No parent link resolved -> fallback to legacy tree
-                        $qb
-                            ->andWhere('IDENTITY(rn.parent) = :parentNodeId')
-                            ->setParameter('parentNodeId', $parentNodeId)
-                        ;
+                        )
+                        : $qb->expr()->eq('IDENTITY(rn.parent)', ':parentNodeId');
+
+                    $rootHierarchyCondition = $primaryHierarchyCondition;
+                    $courseRoot = $course?->getResourceNode();
+
+                    // Compatibility: Learning Path documents are intentionally stored under a dedicated
+                    // Documents resource root, while the modern Documents UI browses the course resource
+                    // node directly. Expose only the Learning paths folder alongside the normal root items.
+                    // Its DRAFT ResourceLink still keeps it hidden from learners.
+                    if (
+                        $course
+                        && $courseRoot instanceof ResourceNode
+                        && $courseRoot->getId() === $folderNode->getId()
+                    ) {
+                        /** @var CDocumentRepository $documentRepository */
+                        $documentRepository = $this->entityManager->getRepository(CDocument::class);
+                        $documentsRoot = $documentRepository->getCourseDocumentsRootNode($course);
+
+                        if (
+                            $documentsRoot instanceof ResourceNode
+                            && $documentsRoot->getId() !== $folderNode->getId()
+                        ) {
+                            $documentsRootLinkIds = [];
+                            $documentsRootLink = $linkRepo->findParentLinkForContext(
+                                $documentsRoot,
+                                $course,
+                                $session,
+                                $group,
+                                null,
+                                null
+                            );
+                            if (null !== $documentsRootLink) {
+                                $documentsRootLinkIds[] = (int) $documentsRootLink->getId();
+                            }
+
+                            if ($session && $includeBaseContent) {
+                                $baseDocumentsRootLink = $linkRepo->findParentLinkForContext(
+                                    $documentsRoot,
+                                    $course,
+                                    null,
+                                    $group,
+                                    null,
+                                    null
+                                );
+                                if (null !== $baseDocumentsRootLink) {
+                                    $documentsRootLinkIds[] = (int) $baseDocumentsRootLink->getId();
+                                }
+                            }
+
+                            $documentsRootLinkIds = array_values(array_unique($documentsRootLinkIds));
+                            $learningPathHierarchy = $qb->expr()->andX(
+                                'IDENTITY(rn.parent) = :documentsRootNodeId',
+                                'rl.parent IS NULL'
+                            );
+
+                            if (!empty($documentsRootLinkIds)) {
+                                $learningPathHierarchy = $qb->expr()->orX(
+                                    'IDENTITY(rl.parent) IN (:documentsRootLinkIds)',
+                                    $learningPathHierarchy
+                                );
+                                $qb->setParameter(
+                                    'documentsRootLinkIds',
+                                    $documentsRootLinkIds,
+                                    ArrayParameterType::INTEGER
+                                );
+                            }
+
+                            $learningPathFolderTitles = array_values(array_unique(array_filter([
+                                'learning_path',
+                                'Learning paths',
+                                'Learning path',
+                                get_lang('Learning paths'),
+                                get_lang('Learning path'),
+                            ])));
+
+                            $learningPathRootCondition = $qb->expr()->andX(
+                                $learningPathHierarchy,
+                                'd.filetype = :learningPathFolderType',
+                                $qb->expr()->in('d.title', ':learningPathFolderTitles')
+                            );
+
+                            $rootHierarchyCondition = $qb->expr()->orX(
+                                $primaryHierarchyCondition,
+                                $learningPathRootCondition
+                            );
+
+                            $qb
+                                ->setParameter('documentsRootNodeId', $documentsRoot->getId())
+                                ->setParameter('learningPathFolderType', 'folder')
+                                ->setParameter(
+                                    'learningPathFolderTitles',
+                                    $learningPathFolderTitles,
+                                    ArrayParameterType::STRING
+                                )
+                            ;
+                        }
+                    }
+
+                    $qb
+                        ->andWhere($rootHierarchyCondition)
+                        ->setParameter('parentNodeId', $parentNodeId)
+                    ;
+
+                    if (!empty($parentLinkIds)) {
+                        $qb->setParameter('parentLinkIds', $parentLinkIds, ArrayParameterType::INTEGER);
                     }
                 } else {
                     // Context root
@@ -492,6 +586,8 @@ final class DocumentCollectionStateProvider implements ProviderInterface
 
         $results = $fetchQb->getQuery()->getResult();
 
+        $this->translateSystemFolderTitles($results);
+
         // Restore the sort order from the cached IID list (SQL IN has no guaranteed order).
         $posMap = array_flip($iids);
         usort(
@@ -505,6 +601,39 @@ final class DocumentCollectionStateProvider implements ProviderInterface
             $itemsPerPage,
             $cached['total']
         );
+    }
+
+    /**
+     * Translate canonical system folder titles for display without changing persisted values.
+     *
+     * @param array<int, mixed> $documents
+     */
+    private function translateSystemFolderTitles(array $documents): void
+    {
+        foreach ($documents as $document) {
+            if (!$document instanceof CDocument) {
+                continue;
+            }
+
+            if ('folder' !== $document->getFiletype()) {
+                continue;
+            }
+
+            if ('learning_path' !== $document->getTitle()) {
+                continue;
+            }
+
+            $translatedTitle = get_lang('Learning paths');
+
+            $document->setTitle($translatedTitle);
+
+            $resourceNode = $document->getResourceNode();
+            if (null === $resourceNode) {
+                continue;
+            }
+
+            $resourceNode->setTitle($translatedTitle);
+        }
     }
 
     /**

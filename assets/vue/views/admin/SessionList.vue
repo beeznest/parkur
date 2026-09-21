@@ -311,7 +311,6 @@ const keyword = ref("")
 const categoryFilter = ref("")
 const selectedItems = ref([])
 const categories = ref([])
-const csrfToken = ref("")
 const showCountUsers = ref(false)
 const hideSearch = ref(false)
 const allowCopyWithContent = ref(false)
@@ -407,7 +406,6 @@ async function load() {
 
     items.value = data.items
     total.value = data.total
-    csrfToken.value = data.csrfToken || ""
     showCountUsers.value = data.showCountUsers || false
     hideSearch.value = data.hideSearch || false
     allowCopyWithContent.value = data.allowCopyWithContent || false
@@ -455,17 +453,13 @@ async function onRowReorder(event) {
   try {
     const formData = new URLSearchParams()
     formData.set("action", "reorder")
-    formData.set("_token", csrfToken.value)
     orderData.forEach((entry, i) => {
       formData.append(`order[${i}][id]`, String(entry.id))
       formData.append(`order[${i}][position]`, String(entry.position))
     })
 
-    await fetch("/admin/session-list-data-action", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString(),
-    })
+    // URLSearchParams body makes axios send application/x-www-form-urlencoded.
+    await baseService.post("/admin/session-list-data-action", formData)
   } catch (e) {
     console.error("Error saving session order:", e)
   }
@@ -482,9 +476,7 @@ async function onSearch() {
 }
 
 function defaultSortForTab(tab) {
-  return tab === "custom"
-    ? { field: "displayStartDate", order: -1 }
-    : { field: "title", order: 1 }
+  return tab === "custom" ? { field: "displayStartDate", order: -1 } : { field: "title", order: 1 }
 }
 
 async function switchTab(tab) {
@@ -512,14 +504,10 @@ function confirmDelete(ids) {
       try {
         const formData = new URLSearchParams()
         formData.set("action", "delete")
-        formData.set("_token", csrfToken.value)
         ids.forEach((id) => formData.append("sessionIds[]", String(id)))
 
-        await fetch("/admin/session-list-data-action", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString(),
-        })
+        // URLSearchParams body makes axios send application/x-www-form-urlencoded.
+        await baseService.post("/admin/session-list-data-action", formData)
 
         selectedItems.value = []
         await load()
@@ -546,14 +534,10 @@ async function performCopy(ids, action = "copy") {
   try {
     const formData = new URLSearchParams()
     formData.set("action", action)
-    formData.set("_token", csrfToken.value)
     ids.forEach((id) => formData.append("sessionIds[]", String(id)))
 
-    await fetch("/admin/session-list-data-action", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString(),
-    })
+    // URLSearchParams body makes axios send application/x-www-form-urlencoded.
+    await baseService.post("/admin/session-list-data-action", formData)
 
     selectedItems.value = []
     await load()
@@ -574,27 +558,32 @@ async function submitExportForm(ids, action) {
   try {
     const formData = new URLSearchParams()
     formData.set("action", action)
-    formData.set("_token", csrfToken.value)
     ids.forEach((id) => formData.append("sessionIds[]", String(id)))
 
-    const response = await fetch("/admin/session-list-data-action", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString(),
+    // URLSearchParams body makes axios send application/x-www-form-urlencoded.
+    // validateStatus lets us inspect error bodies (JSON) without axios throwing.
+    const response = await baseService.postRaw("/admin/session-list-data-action", formData, {
+      responseType: "blob",
+      validateStatus: () => true,
     })
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => null)
-      alert(data?.error || t("No data to export"))
+    if (response.status < 200 || response.status >= 300) {
+      let errorMessage = ""
+      try {
+        errorMessage = JSON.parse(await response.data.text())?.error
+      } catch {
+        errorMessage = ""
+      }
+      alert(errorMessage || t("No data to export"))
       return
     }
 
     // File download — extract filename from Content-Disposition header
-    const disposition = response.headers.get("Content-Disposition") || ""
+    const disposition = response.headers["content-disposition"] || ""
     const match = disposition.match(/filename="?([^";\n]+)"?/)
     const filename = match ? match[1] : "export"
 
-    const blob = await response.blob()
+    const blob = response.data
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -618,7 +607,6 @@ async function handleLegacyAction() {
     return false
   }
 
-  // Wait for first load so we have a CSRF token
   await load()
 
   const ids = String(idChecked)
@@ -643,14 +631,10 @@ async function confirmDeleteDirect(ids) {
   try {
     const formData = new URLSearchParams()
     formData.set("action", "delete")
-    formData.set("_token", csrfToken.value)
     ids.forEach((id) => formData.append("sessionIds[]", String(id)))
 
-    await fetch("/admin/session-list-data-action", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData.toString(),
-    })
+    // URLSearchParams body makes axios send application/x-www-form-urlencoded.
+    await baseService.post("/admin/session-list-data-action", formData)
 
     selectedItems.value = []
     await load()

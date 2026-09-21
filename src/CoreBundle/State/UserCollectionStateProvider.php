@@ -10,11 +10,13 @@ use ApiPlatform\Doctrine\Orm\Extension\FilterExtension;
 use ApiPlatform\Doctrine\Orm\Extension\OrderExtension;
 use ApiPlatform\Doctrine\Orm\Extension\PaginationExtension;
 use ApiPlatform\Doctrine\Orm\Extension\QueryResultCollectionExtensionInterface;
-use ApiPlatform\Doctrine\Orm\State\CollectionProvider;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGenerator;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
+use Chamilo\CoreBundle\Entity\CourseRelUser;
+use Chamilo\CoreBundle\Entity\Session;
+use Chamilo\CoreBundle\Entity\SessionRelCourseRelUser;
 use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CoreBundle\Entity\UserRelUser;
 use Chamilo\CoreBundle\Helpers\UserHelper;
@@ -22,6 +24,7 @@ use Chamilo\CoreBundle\Repository\Node\UserRepository;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Doctrine\DBAL\Types\Types;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * State provider for GET /api/users (collection).
@@ -44,7 +47,10 @@ final class UserCollectionStateProvider implements ProviderInterface
     private array $extensions;
 
     public function __construct(
-        private readonly CollectionProvider $collectionProvider,
+        #[Autowire(service: 'api_platform.doctrine.orm.state.collection_provider')]
+        private readonly ProviderInterface $collectionProvider,
+        #[Autowire(service: 'api_platform.doctrine.orm.state.item_provider')]
+        private readonly ProviderInterface $itemProvider,
         private readonly UserRepository $userRepository,
         private readonly UserHelper $userHelper,
         private readonly Security $security,
@@ -56,10 +62,16 @@ final class UserCollectionStateProvider implements ProviderInterface
         $this->extensions = [$filterExtension, $orderExtension, $paginationExtension];
     }
 
+    /**
+     * @param array<string, mixed> $uriVariables
+     * @param array<string, mixed> $context
+     *
+     * @return iterable<User>|User|null
+     */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): array|object|null
     {
         if (!$operation instanceof GetCollection) {
-            return $this->collectionProvider->provide($operation, $uriVariables, $context);
+            return $this->itemProvider->provide($operation, $uriVariables, $context);
         }
 
         $currentUser = $this->userHelper->getCurrent();
@@ -145,6 +157,11 @@ final class UserCollectionStateProvider implements ProviderInterface
                 ->setParameter('courseCoachStatus', Session::COURSE_COACH, Types::INTEGER)
             ;
         }
+
+        // Unprivileged callers receive the "user:read:public" group (no email), so
+        // the email search filter must not run for them: over the scoped set it is an
+        // enumeration oracle. Drop it before the FilterExtension reads the filters.
+        unset($context['filters']['email']);
 
         $queryNameGenerator = new QueryNameGenerator();
         $items = [];

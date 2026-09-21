@@ -1,39 +1,82 @@
 <template>
-  <div v-if="item && canEditItem">
-    <DocumentsForm
-      v-model="item"
-      @submit="updateItemWithFormData"
-    >
-      <EditLinks
-        v-model="item"
-        :show-share-with-user="false"
-        :show-status="false"
-        links-type="users"
+  <div
+    v-if="item && canEditItem"
+    class="mx-auto w-full max-w-4xl px-4 pb-8"
+  >
+    <div class="mb-4 flex items-center">
+      <BaseButton
+        :label="t('Back')"
+        icon="back"
+        type="primary"
+        @click="handleBack"
       />
-    </DocumentsForm>
+    </div>
+
+    <div class="rounded-lg border border-gray-25 bg-white p-4 shadow-sm sm:p-6">
+      <DocumentsForm
+        v-model="item"
+        @submit="updateAndReturnToList"
+      >
+        <div class="mt-4">
+          <EditLinks
+            v-model="item"
+            :show-share-with-user="false"
+            :show-status="false"
+            links-type="users"
+          />
+        </div>
+      </DocumentsForm>
+    </div>
+
     <Loading :visible="isLoading" />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted } from "vue"
+import { useI18n } from "vue-i18n"
+import { useRoute, useRouter } from "vue-router"
+import BaseButton from "../../components/basecomponents/BaseButton.vue"
 import DocumentsForm from "../../components/documents/Form.vue"
 import Loading from "../../components/Loading.vue"
 import EditLinks from "../../components/resource_links/EditLinks.vue"
 import { useDatatableUpdate } from "../../composables/datatableUpdate"
 import { useSecurityStore } from "../../store/securityStore"
-import { useRoute } from "vue-router"
 import { useIsAllowedToEdit } from "../../composables/userPermissions"
 
 const securityStore = useSecurityStore()
 const route = useRoute()
+const router = useRouter()
+const { t } = useI18n()
 const { isAllowedToEdit } = useIsAllowedToEdit({ tutor: true, coach: true, sessionCoach: true })
 const isCurrentTeacher = computed(() => securityStore.isCurrentTeacher || isAllowedToEdit.value)
 const { item, retrieve, updateItemWithFormData, isLoading } = useDatatableUpdate("Documents")
 
-const canEditItem = computed(() => {
-  console.log("item.value ::: ", item.value)
+const learningPathId = computed(() => Number(route.query.lp_id || 0))
+const isLearningPathContext = computed(
+  () => "learnpath" === String(route.query.origin || "").toLowerCase() && learningPathId.value > 0,
+)
 
+function buildLearningPathBuilderRoute() {
+  const query = { ...route.query }
+  delete query.action
+  delete query.create
+  delete query.content
+  delete query.lpItemId
+  delete query.id
+  delete query.filetype
+
+  return {
+    name: "LpBuilder",
+    params: {
+      node: Number(route.query.node || route.params.node || 0),
+      lpId: learningPathId.value,
+    },
+    query,
+  }
+}
+
+const canEditItem = computed(() => {
   const resourceLink = item.value?.resourceLinkListFromEntity?.[0]
   const sidFromResourceLink = resourceLink?.session?.["@id"]
   return (
@@ -41,6 +84,105 @@ const canEditItem = computed(() => {
     isCurrentTeacher.value
   )
 })
+
+function normalizeResourceNodeId(value) {
+  if (null === value || undefined === value) {
+    return null
+  }
+
+  if ("number" === typeof value) {
+    return value
+  }
+
+  if ("string" === typeof value) {
+    const iriMatch = value.match(/\/api\/resource_nodes\/(\d+)/)
+
+    if (iriMatch) {
+      return Number(iriMatch[1])
+    }
+
+    if (/^\d+$/.test(value)) {
+      return Number(value)
+    }
+
+    return null
+  }
+
+  if ("object" === typeof value) {
+    return normalizeResourceNodeId(value.id || value["@id"])
+  }
+
+  return null
+}
+
+function getContainingNodeId(documentItem) {
+  const parentNodeId = normalizeResourceNodeId(documentItem?.resourceNode?.parent)
+
+  if (parentNodeId) {
+    return parentNodeId
+  }
+
+  const routeNodeId = normalizeResourceNodeId(route.params.node || route.query.node)
+
+  if (routeNodeId) {
+    return routeNodeId
+  }
+
+  return null
+}
+
+async function handleBack() {
+  if (isLearningPathContext.value) {
+    await router.push(buildLearningPathBuilderRoute())
+    return
+  }
+
+  const containingNodeId = getContainingNodeId(item.value)
+  if (!containingNodeId) {
+    router.back()
+    return
+  }
+
+  await router.push({
+    name: "DocumentsList",
+    params: {
+      node: containingNodeId,
+    },
+    query: {
+      cid: route.query.cid,
+      sid: route.query.sid,
+      gid: route.query.gid,
+    },
+  })
+}
+
+async function updateAndReturnToList(payload) {
+  await updateItemWithFormData(payload)
+
+  if (isLearningPathContext.value) {
+    await router.push(buildLearningPathBuilderRoute())
+    return
+  }
+
+  const containingNodeId = getContainingNodeId(payload)
+
+  if (!containingNodeId) {
+    router.back()
+    return
+  }
+
+  await router.push({
+    name: "DocumentsList",
+    params: {
+      node: containingNodeId,
+    },
+    query: {
+      cid: route.query.cid,
+      sid: route.query.sid,
+      gid: route.query.gid,
+    },
+  })
+}
 
 onMounted(async () => {
   await retrieve()

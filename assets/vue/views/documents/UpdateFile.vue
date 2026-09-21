@@ -15,23 +15,42 @@
         <DocumentsForm
           ref="updateForm"
           :errors="violations"
-          :search-enabled="isSearchEnabled"
+          :search-enabled="isSearchEnabled && !isCertificateDocument"
           :values="item"
           @submit="onSendFormData"
         >
-          <BaseCheckbox
+          <div
             v-if="isCurrentTeacher"
-            id="ai-assisted-flag"
-            v-model="aiAssistedFlag"
-            label="AI-assisted"
-            name="ai_assited"
-          />
+            class="mb-3 flex items-center gap-2"
+          >
+            <BaseCheckbox
+              id="ai-assisted-flag"
+              v-model="aiAssistedFlag"
+              :label="$t('AI-assisted')"
+              name="ai_assisted"
+            />
 
-          <EditLinks
-            v-model="item"
-            :show-share-with-user="false"
-            links-type="users"
-          />
+            <span
+              class="mdi mdi-information-outline cursor-help text-primary"
+              role="img"
+              tabindex="0"
+              :aria-label="$t('Information about AI-assisted documents')"
+              :title="
+                $t(
+                  'Marks this document as AI-assisted. Use it when the content was created or significantly modified with AI tools.',
+                )
+              "
+            />
+          </div>
+
+          <div class="mt-4">
+            <EditLinks
+              v-model="item"
+              :show-share-with-user="false"
+              :show-status="false"
+              links-type="users"
+            />
+          </div>
         </DocumentsForm>
 
         <Panel
@@ -86,6 +105,7 @@ import { useIsAllowedToEdit } from "../../composables/userPermissions"
 import { useDocumentUpdate } from "../../composables/useDocumentUpdate"
 import { useCertificateTags } from "../../composables/useCertificateTags"
 import { useDocumentTemplates } from "../../composables/useDocumentTemplates"
+import { looksLikeHtmlContent } from "../../composables/fileUtils"
 import DocumentsForm from "../../components/documents/FormNewDocument.vue"
 import Loading from "../../components/Loading.vue"
 import Toolbar from "../../components/Toolbar.vue"
@@ -103,6 +123,7 @@ const { isAllowedToEdit } = useIsAllowedToEdit({ tutor: true, coach: true, sessi
 const {
   item,
   isLoading,
+  updated,
   violations,
   retrieve,
   onSendFormData: dispatchSendFormData,
@@ -111,11 +132,82 @@ const {
 
 const updateForm = ref(null)
 const aiAssistedFlag = ref(false)
+const hasReturnedToLearningPath = ref(false)
+
+const learningPathId = computed(() => Number(route.query.lp_id || 0))
+const isLearningPathContext = computed(
+  () => "learnpath" === String(route.query.origin || "").toLowerCase() && learningPathId.value > 0,
+)
+
+function buildLearningPathBuilderRoute() {
+  const query = { ...route.query }
+  delete query.action
+  delete query.create
+  delete query.content
+  delete query.lpItemId
+  delete query.id
+  delete query.filetype
+
+  return {
+    name: "LpBuilder",
+    params: {
+      node: Number(route.query.node || route.params.node || 0),
+      lpId: learningPathId.value,
+    },
+    query,
+  }
+}
 
 const isSearchEnabled = computed(() => "false" !== platformConfigStore.getSetting("search.search_enabled"))
 
 const allowedFiletypes = ["file", "certificate", "video"]
 const filetype = allowedFiletypes.includes(route.query.filetype) ? route.query.filetype : "file"
+const isCertificateDocument = computed(() =>
+  "certificate" === String(item.value?.filetype || filetype).trim().toLowerCase(),
+)
+
+const isEditableTextDocument = computed(() => {
+  const document = item.value
+  const documentFiletype = String(document?.filetype || filetype)
+    .trim()
+    .toLowerCase()
+
+  if (["certificate", "html"].includes(documentFiletype)) {
+    return true
+  }
+
+  if ("file" !== documentFiletype) {
+    return false
+  }
+
+  const resourceFile = document?.resourceNode?.firstResourceFile
+  if (!resourceFile) {
+    return false
+  }
+
+  const mime = String(resourceFile.mimeType || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase()
+  const originalName = String(resourceFile.originalName || resourceFile.title || document?.title || "")
+    .trim()
+    .toLowerCase()
+  const extension = originalName.includes(".") ? originalName.split(".").pop() : ""
+
+  if (mime.includes("text/html") || mime.includes("application/xhtml") || ["html", "htm", "xhtml"].includes(extension)) {
+    return true
+  }
+
+  if (resourceFile.image || resourceFile.video || resourceFile.audio) {
+    return false
+  }
+
+  if (mime.startsWith("image/") || mime.startsWith("video/") || mime.startsWith("audio/")) {
+    return false
+  }
+
+  return looksLikeHtmlContent(document?.contentFile)
+})
 
 const { certificateTags, insertCertificateTag, copyAllCertificateTags } = useCertificateTags(item)
 const { templates, fetchTemplates, addTemplateToEditor } = useDocumentTemplates(item, updateForm)
@@ -136,12 +228,43 @@ const canEditItem = computed(() => {
 watch(
   item,
   (val) => {
-    if (!val || typeof val !== "object") return
+    if (!val || typeof val !== "object" || 0 === Object.keys(val).length) return
+
+    if (!isEditableTextDocument.value) {
+      const query = { ...route.query }
+      delete query.getFile
+
+      router.replace({
+        name: "DocumentsUpdate",
+        params: { node: route.params.node },
+        query,
+      })
+      return
+    }
+
+    if ("certificate" === String(val.filetype || filetype).trim().toLowerCase()) {
+      val.indexDocumentContent = false
+      val.searchFieldValues = {}
+    }
+
     const raw = val.ai_assisted_raw ?? val.ai_assisted
     aiAssistedFlag.value = raw === true || raw === 1 || raw === "1"
   },
   { immediate: true },
 )
+
+watch(updated, (val) => {
+  if (!val) {
+    return
+  }
+
+  updateForm.value?.clearEditorDrafts?.()
+
+  if (isLearningPathContext.value && !hasReturnedToLearningPath.value) {
+    hasReturnedToLearningPath.value = true
+    router.push(buildLearningPathBuilderRoute())
+  }
+})
 
 onMounted(() => {
   fetchTemplates()
@@ -153,7 +276,11 @@ onMounted(() => {
 })
 
 function handleBack() {
-  router.back()
+  if (isLearningPathContext.value) {
+    return router.push(buildLearningPathBuilderRoute())
+  }
+
+  return router.back()
 }
 
 function normalizeBoolean(value) {
@@ -175,6 +302,11 @@ function normalizeAiAssistedState() {
 }
 
 function onSendFormData() {
+  if (isCertificateDocument.value) {
+    item.value.indexDocumentContent = false
+    item.value.searchFieldValues = {}
+  }
+
   normalizeAiAssistedState()
   dispatchSendFormData(updateForm.value)
 }

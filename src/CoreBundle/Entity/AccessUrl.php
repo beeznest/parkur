@@ -6,9 +6,16 @@ declare(strict_types=1);
 
 namespace Chamilo\CoreBundle\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use Chamilo\CoreBundle\Controller\Api\UserAccessUrlsController;
 use Chamilo\CoreBundle\Entity\Listener\AccessUrlListener;
 use Chamilo\CoreBundle\Entity\Listener\ResourceListener;
@@ -24,31 +31,45 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
+    operations: [
+        new Get(),
+        new GetCollection(),
+        new Post(
+            security: "is_granted('ROLE_GLOBAL_ADMIN')",
+            securityPostDenormalize: "is_granted('CREATE', object)"
+        ),
+        new Put(security: "is_granted('ROLE_GLOBAL_ADMIN') and is_granted('EDIT', object)"),
+        new Patch(security: "is_granted('ROLE_GLOBAL_ADMIN') and is_granted('EDIT', object)"),
+        new Delete(security: "is_granted('ROLE_GLOBAL_ADMIN') and is_granted('DELETE', object)"),
+    ],
     normalizationContext: [
         'groups' => ['access_url:read'],
     ],
     denormalizationContext: [
         'groups' => ['access_url:write', 'course_category:write'],
     ],
-    security: "is_granted('ROLE_ADMIN')"
+    security: "is_granted('ROLE_ADMIN')",
+    paginationEnabled: false,
 )]
+#[ApiFilter(OrderFilter::class, properties: ['url', 'description'])]
 #[ORM\Table(name: 'access_url')]
 #[Gedmo\Tree(type: 'nested')]
 #[ORM\Entity(repositoryClass: AccessUrlRepository::class)]
 #[ORM\EntityListeners([AccessUrlListener::class, ResourceListener::class])]
 #[ApiResource(
     uriTemplate: '/users/{id}/access_urls',
+    shortName: 'UserAccessUrl',
     operations: [new GetCollection(controller: UserAccessUrlsController::class)],
     uriVariables: [
         'id' => new Link(description: 'User identifier'),
     ],
     normalizationContext: ['groups' => ['user_access_url:read']],
     paginationEnabled: false,
-    security: "is_granted('ROLE_ADMIN')",
+    security: "is_granted('ROLE_ADMIN') or (is_granted('ROLE_USER') and request.attributes.get('id') == user.getId())",
 )]
 class AccessUrl extends AbstractResource implements ResourceInterface, Stringable
 {
-    public const DEFAULT_ACCESS_URL = 'http://localhost/';
+    public const string DEFAULT_ACCESS_URL = 'http://localhost/';
     #[ORM\Column(name: 'id', type: 'integer')]
     #[ORM\Id]
     #[ORM\GeneratedValue]

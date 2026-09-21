@@ -1060,8 +1060,6 @@ class SocialManager extends UserManager
             ];
         }
 
-        error_log('$userInfo ->'.print_r($userInfo['language'], true));
-
         if (isset($options['language']) && false === $options['language']) {
             $userInfo['language'] = '';
         }
@@ -1208,7 +1206,7 @@ class SocialManager extends UserManager
         );
 
         $socialWallPlaceholder = isset($_GET['u']) ? get_lang('Write something on your friend\'s wall') : get_lang(
-            'Social wallWhatAreYouThinkingAbout'
+            'What are you thinking about?'
         );
 
         $form->addTextarea(
@@ -1913,19 +1911,21 @@ class SocialManager extends UserManager
                 'content' => get_lang('Profile'),
             ],
         ];
-        $allowJustification = Container::getPluginHelper()->isPluginEnabled('Justification');
+        $justificationPlugin = Justification::create();
+        $allowJustification = $justificationPlugin->isEnabled();
         if ($allowJustification) {
-            $plugin = Justification::create();
+            $plugin = $justificationPlugin;
             $headers[] = [
                 'url' => api_get_path(WEB_CODE_PATH).'auth/justification.php',
                 'content' => $plugin->get_lang('Justification'),
             ];
         }
 
-        $allowPauseTraining = Container::getPluginHelper()->isPluginEnabled('PauseTraining');
+        $pauseTrainingPlugin = PauseTraining::create();
+        $allowPauseTraining = $pauseTrainingPlugin->isEnabled();
         $allowEdit = 'true' === api_get_plugin_setting('PauseTraining', 'allow_users_to_edit_pause_formation');
         if ($allowPauseTraining && $allowEdit) {
-            $plugin = PauseTraining::create();
+            $plugin = $pauseTrainingPlugin;
             $headers[] = [
                 'url' => api_get_path(WEB_CODE_PATH).'auth/PauseTraining.php',
                 'content' => get_lang('Pause training'),

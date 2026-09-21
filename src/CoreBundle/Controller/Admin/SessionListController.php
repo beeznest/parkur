@@ -8,28 +8,36 @@ namespace Chamilo\CoreBundle\Controller\Admin;
 
 use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\SessionRelUser;
+use Chamilo\CoreBundle\Event\AbstractEvent;
+use Chamilo\CoreBundle\Event\Events;
+use Chamilo\CoreBundle\Event\SessionDeletedEvent;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use DateTime;
 use DateTimeZone;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use RuntimeException;
 use SessionManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\ExpressionLanguage\Expression;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 
 #[IsGranted(new Expression('is_granted("ROLE_ADMIN") or is_granted("ROLE_SESSION_MANAGER")'))]
 #[Route('/admin/session-list-data')]
 class SessionListController extends AbstractController
 {
-    private const ALLOWED_SORT_FIELDS = [
+    private const array ALLOWED_SORT_FIELDS = [
         'title' => 's.title',
         'categoryName' => 'sc.title',
         'displayStartDate' => 's.displayStartDate',
@@ -40,7 +48,7 @@ class SessionListController extends AbstractController
         'status' => 's.status',
     ];
 
-    private const VISIBILITY_LABELS = [
+    private const array VISIBILITY_LABELS = [
         Session::READ_ONLY => 'Read only',
         Session::VISIBLE => 'Visible',
         Session::INVISIBLE => 'Invisible',
@@ -48,7 +56,7 @@ class SessionListController extends AbstractController
         Session::LIST_ONLY => 'List only',
     ];
 
-    private const STATUS_LABELS = [
+    private const array STATUS_LABELS = [
         Session::STATUS_PLANNED => 'Planned',
         Session::STATUS_PROGRESS => 'In progress',
         Session::STATUS_FINISHED => 'Finished',
@@ -56,7 +64,7 @@ class SessionListController extends AbstractController
         Session::STATUS_UNKNOWN => 'Unknown',
     ];
 
-    private const ALLOWED_LIST_TYPES = [
+    private const array ALLOWED_LIST_TYPES = [
         'all',
         'active',
         'close',
@@ -66,8 +74,8 @@ class SessionListController extends AbstractController
 
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly SettingsManager $settingsManager,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {}
 
     private function resolvePlatformTimezone(): DateTimeZone
@@ -76,7 +84,7 @@ class SessionListController extends AbstractController
 
         try {
             return new DateTimeZone('' !== $tz ? $tz : 'UTC');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return new DateTimeZone('UTC');
         }
     }
@@ -93,8 +101,8 @@ class SessionListController extends AbstractController
     #[Route('', name: 'admin_session_list_data', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
-        $page = max(1, (int) $request->query->get('page', 1));
-        $limit = max(1, min(200, (int) $request->query->get('limit', 20)));
+        $page = max(1, (int) $request->query->get('page', '1'));
+        $limit = max(1, min(200, (int) $request->query->get('limit', '20')));
         $keyword = trim((string) $request->query->get('keyword', ''));
         $categoryFilter = $request->query->get('category');
 
@@ -253,21 +261,14 @@ class SessionListController extends AbstractController
             'viewer' => [
                 'isPlatformAdmin' => $isPlatformAdmin,
             ],
-            'csrfToken' => $this->csrfTokenManager->getToken('session_list_action')->getValue(),
         ]);
     }
 
     #[Route('-action', name: 'admin_session_list_action', methods: ['POST'])]
-    public function action(Request $request): JsonResponse
+    public function action(Request $request): Response
     {
         $action = (string) $request->request->get('action', '');
         $sessionIds = $request->request->all('sessionIds');
-        $token = (string) $request->request->get('_token', '');
-
-        if (!$this->isCsrfTokenValid('session_list_action', $token)) {
-            return $this->json(['error' => 'Invalid CSRF token.'], 403);
-        }
-
         $isPlatformAdmin = $this->isGranted('ROLE_ADMIN');
 
         // Reorder doesn't use sessionIds — handle it before the check
@@ -312,6 +313,17 @@ class SessionListController extends AbstractController
                 }
 
                 $sessions = $this->em->getRepository(Session::class)->findBy(['id' => $sessionIds]);
+
+                // Listeners drop what references these sessions while they still
+                // exist, and they may flush -- so announce every one of them
+                // before scheduling any removal.
+                foreach ($sessions as $session) {
+                    $this->eventDispatcher->dispatch(
+                        new SessionDeletedEvent(['session' => $session], AbstractEvent::TYPE_PRE),
+                        Events::SESSION_DELETED
+                    );
+                }
+
                 foreach ($sessions as $session) {
                     $this->em->remove($session);
                 }
@@ -377,14 +389,16 @@ class SessionListController extends AbstractController
                 }
 
                 try {
-                    // This method sends headers and calls exit() on success
-                    SessionManager::exportSessionsAsZip($sessionIds);
-                } catch (RuntimeException) {
-                    return $this->json(['error' => 'No data to export.'], 400);
+                    $zipPath = SessionManager::exportSessionsAsZip($sessionIds);
+                } catch (RuntimeException $e) {
+                    return $this->json(['error' => $e->getMessage()], 400);
                 }
 
-                // Fallback — should not be reached
-                return $this->json(['error' => 'No data to export.'], 400);
+                $response = new BinaryFileResponse($zipPath);
+                $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, 'sessions_courses_reports.zip');
+                $response->deleteFileAfterSend(true);
+
+                return $response;
 
             default:
                 return $this->json(['error' => 'Unknown action.'], 400);
@@ -458,7 +472,7 @@ class SessionListController extends AbstractController
             // Replication: only sessions configured for repetition with <= 1 child
             'replication' => $qb->andWhere('s.daysToNewRepetition IS NOT NULL')
                 ->andWhere('s.parentId IS NULL')
-                ->leftJoin(Session::class, 'child', 'WITH', 'child.parentId = s.id')
+                ->leftJoin(Session::class, 'child', Join::ON, 'child.parentId = s.id')
                 ->groupBy('s.id')
                 ->addGroupBy('sc.id')
                 ->having('COUNT(child.id) <= 1'),

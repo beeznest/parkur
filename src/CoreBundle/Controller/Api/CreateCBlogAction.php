@@ -10,6 +10,7 @@ use Chamilo\CoreBundle\Entity\Course;
 use Chamilo\CoreBundle\Entity\ResourceLink;
 use Chamilo\CoreBundle\Entity\Session;
 use Chamilo\CoreBundle\Entity\User;
+use Chamilo\CoreBundle\Helpers\CidReqHelper;
 use Chamilo\CourseBundle\Entity\CBlog;
 use Chamilo\CourseBundle\Repository\CBlogRepository;
 use Chamilo\CourseBundle\Repository\CShortcutRepository;
@@ -27,6 +28,7 @@ class CreateCBlogAction extends BaseResourceFileAction
         CBlogRepository $repo,
         EntityManager $em,
         CShortcutRepository $shortcutRepository,
+        CidReqHelper $cidReqHelper,
         Security $security
     ): CBlog {
         $data = json_decode($request->getContent(), true) ?: [];
@@ -49,7 +51,7 @@ class CreateCBlogAction extends BaseResourceFileAction
         // makes it impossible for the body to target a foreign course (IDOR):
         // the body is only allowed to carry the link visibility.
         $resourceLinkList = $this->buildResourceLinkListFromContext(
-            $request,
+            $cidReqHelper,
             $resourceLinkList,
             ResourceLink::VISIBILITY_DRAFT
         );

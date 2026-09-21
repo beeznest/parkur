@@ -3,18 +3,20 @@
     class="grid gap-3 md:grid-cols-4 items-end"
     @submit.prevent="apply"
   >
-    <div v-if="allowTitle">
-      <BaseInputText
-        id="search_by_title"
-        v-model="model.title"
-        :label="t('Title')"
+    <div class="space-y-3">
+      <div v-if="allowTitle">
+        <BaseInputText
+          id="search_by_title"
+          v-model="model.title"
+          :label="t('Title')"
+        />
+      </div>
+
+      <CourseCategorySelect
+        v-model="model.categories"
+        action="catalogue"
       />
     </div>
-
-    <CourseCategorySelect
-      v-model="model.categories"
-      action="catalogue"
-    />
 
     <template
       v-for="f in fields"
@@ -240,7 +242,7 @@
 </template>
 
 <script setup>
-import { reactive } from "vue"
+import { reactive, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Dropdown from "primevue/dropdown"
 import MultiSelect from "primevue/multiselect"
@@ -290,6 +292,8 @@ const TYPE = {
 const props = defineProps({
   fields: { type: Array, default: () => [] },
   allowTitle: { type: Boolean, default: true },
+  initialTitle: { type: String, default: "" },
+  initialCategories: { type: Array, default: () => [] },
 })
 const emit = defineEmits(["apply", "clear"])
 
@@ -323,13 +327,28 @@ const level1 = (f) => (f.options || []).filter((o) => Number(o.parent) === 0)
 const level2 = (f, parentId) => (f.options || []).filter((o) => String(o.parent) === String(parentId))
 const level3 = (f, parentId) => (f.options || []).filter((o) => String(o.parent) === String(parentId))
 
+function syncInitialValues() {
+  model.title = props.initialTitle || ""
+  model.categories = Array.isArray(props.initialCategories) ? [...props.initialCategories] : []
+}
+
+watch(
+  () => [props.initialTitle, props.initialCategories],
+  () => {
+    syncInitialValues()
+  },
+  { immediate: true, deep: true },
+)
+
 function onDoubleChange(f) {
   model.extra[`${f.variable}_second`] = ""
 }
+
 function onTripleL1Change(f) {
   model.extra[`${f.variable}_second`] = ""
   model.extra[`${f.variable}_third`] = ""
 }
+
 function onTripleL2Change(f) {
   model.extra[`${f.variable}_third`] = ""
 }
@@ -360,7 +379,7 @@ function apply() {
     }
 
     if (isCheckbox(fieldInfo)) {
-      if (value === true) {
+      if (true === value) {
         value = "1"
       } else {
         key = undefined

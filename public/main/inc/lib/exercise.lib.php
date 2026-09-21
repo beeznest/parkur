@@ -84,7 +84,7 @@ class ExerciseLib
         if (MEDIA_QUESTION === $answerType) {
             $mediaHtml = $objQuestionTmp->selectDescription();
             if (!empty($mediaHtml)) {
-                echo '<div class="media-content wysiwyg">'. $mediaHtml .'</div>';
+                echo '<div class="media-content tiny-content">'. $mediaHtml .'</div>';
             }
             return 0;
         }
@@ -92,7 +92,7 @@ class ExerciseLib
         if (PAGE_BREAK === $answerType) {
             $description = $objQuestionTmp->selectDescription();
             if (!$only_questions && !empty($description)) {
-                echo '<div class="page-break-content wysiwyg">'
+                echo '<div class="page-break-content tiny-content">'
                     . $description .
                     '</div>';
             }
@@ -134,7 +134,7 @@ class ExerciseLib
                 if (!empty($questionDescription) && READING_COMPREHENSION != $answerType) {
                     echo Display::div(
                         $questionDescription,
-                        ['class' => 'question_description wysiwyg']
+                        ['class' => 'question_description tiny-content']
                     );
                 }
             }
@@ -1670,6 +1670,14 @@ HTML;
             }
             if ($freeze) {
                 $relPath = api_get_path(WEB_CODE_PATH);
+                $hotspotCidReqQueryParams = json_encode(
+                    api_get_cidreq_params(
+                        api_get_course_int_id(),
+                        api_get_session_id(),
+                        api_get_group_id()
+                    ),
+                    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+                );
                 echo "
         <div class=\"w-100\">
                 $answerList
@@ -1686,7 +1694,8 @@ HTML;
                 exeId: 0,
                 selector: '#hotspot-preview-$questionId',
                 for: 'preview',
-                relPath: '$relPath'
+                relPath: '$relPath',
+                cidReqQueryParams: $hotspotCidReqQueryParams
             });
         </script>
     ";
@@ -1714,6 +1723,14 @@ HOTSPOT;
             }
 
             $relPath = api_get_path(WEB_CODE_PATH);
+            $hotspotCidReqQueryParams = json_encode(
+                api_get_cidreq_params(
+                    api_get_course_int_id(),
+                    api_get_session_id(),
+                    api_get_group_id()
+                ),
+                JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+            );
             $s .= "<div>
            <div class=\"hotspot-image bg-gray-10 border border-gray-25 bg-center bg-no-repeat bg-contain\"></div>
             <script>
@@ -1724,7 +1741,8 @@ HOTSPOT;
                         exeId: 0,
                         selector: '#question_div_' + $questionId + ' .hotspot-image',
                         for: 'user',
-                        relPath: '$relPath'
+                        relPath: '$relPath',
+                        cidReqQueryParams: $hotspotCidReqQueryParams
                     });
                 });
             </script>
@@ -2161,7 +2179,7 @@ HOTSPOT;
             SELECT DISTINCT ttte.*, if(tr.exe_id,1, 0) as revised
             FROM $TBL_TRACK_EXERCISES ttte
             LEFT JOIN $tblTrackAttemptQualify tr
-            ON (ttte.exe_id = tr.exe_id) AND tr.author > 0
+            ON (ttte.exe_id = tr.exe_id) AND tr.author > 0 AND tr.final = 1
             WHERE
                 c_id = $courseId AND
                 exe_exo_id = $exercise_id
@@ -2927,7 +2945,7 @@ HOTSPOT;
         $sql = "
             SELECT DISTINCT t.exe_id
             FROM $trackTable t
-            INNER JOIN $qualifyTable q ON (t.exe_id = q.exe_id AND q.author > 0)
+            INNER JOIN $qualifyTable q ON (t.exe_id = q.exe_id AND q.author > 0 AND q.final = 1)
             WHERE
                 t.c_id = $courseId AND
                 t.exe_exo_id = $exerciseId
@@ -3394,7 +3412,8 @@ EOT;
         $check_publication_dates = false,
         $search = '',
         $search_all_sessions = false,
-        $active = 2
+        $active = 2,
+        bool $includeDeleted = false
     ) {
         $course_id = api_get_course_int_id();
         if (!empty($course_info) && !empty($course_info['real_id'])) {
@@ -3413,9 +3432,19 @@ EOT;
 
         $repo = Container::getQuizRepository();
 
-        return $repo->findAllByCourse($course, $session, (string) $search, $active)
+        return $repo
+            ->findAllByCourse(
+                $course,
+                $session,
+                (string) $search,
+                $active,
+                true,
+                null,
+                $includeDeleted
+            )
             ->getQuery()
-            ->getResult();
+            ->getResult()
+            ;
     }
 
     /**
@@ -5075,13 +5104,15 @@ EOT;
                     true
                 );
             } else {
-                $pluginEvaluation = QuestionOptionsEvaluationPlugin::create();
-                if ('true' === $pluginEvaluation->get(QuestionOptionsEvaluationPlugin::SETTING_ENABLE)) {
-                    $formula = $pluginEvaluation->getFormulaForExercise($objExercise->getId());
+                if (class_exists(QuestionOptionsEvaluationPlugin::class)) {
+                    $pluginEvaluation = QuestionOptionsEvaluationPlugin::create();
+                    if ($pluginEvaluation->isEnabled()) {
+                        $formula = $pluginEvaluation->getFormulaForExercise($objExercise->getId());
 
-                    if (!empty($formula)) {
-                        $total_score = $pluginEvaluation->getResultWithFormula($exeId, $formula);
-                        $total_weight = $pluginEvaluation->getMaxScore();
+                        if (!empty($formula)) {
+                            $total_score = $pluginEvaluation->getResultWithFormula($exeId, $formula);
+                            $total_weight = $pluginEvaluation->getMaxScore();
+                        }
                     }
                 }
 
@@ -5315,7 +5346,7 @@ EOT;
     {
         $em = Database::getManager();
 
-        $dql = 'SELECT DISTINCT u.id FROM ChamiloCoreBundle:TrackEExercise te JOIN te.user u WHERE te.quiz = :id AND te.course = :cId';
+        $dql = 'SELECT DISTINCT u.id FROM Chamilo\CoreBundle\Entity\TrackEExercise te JOIN te.user u WHERE te.quiz = :id AND te.course = :cId';
         $dql .= api_get_session_condition($sessionId, true, false, 'te.session');
 
         $result = $em
@@ -5861,20 +5892,62 @@ EOT;
      */
     public static function getAdditionalTeacherActions($exerciseId, $iconSize = ICON_SIZE_SMALL)
     {
-        $additionalActions = api_get_setting('exercise.exercise_additional_teacher_modify_actions', true) ?: [];
+        $additionalActions = self::normalizeAdditionalTeacherActions(
+            api_get_setting('exercise.exercise_additional_teacher_modify_actions', true)
+        );
         $actions = [];
 
-        if (is_array($additionalActions)) {
-            foreach ($additionalActions as $additionalAction) {
-                $actions[] = call_user_func(
-                    $additionalAction,
-                    $exerciseId,
-                    $iconSize
-                );
+        foreach ($additionalActions as $additionalAction) {
+            if (!is_callable($additionalAction)) {
+                continue;
+            }
+
+            $action = call_user_func(
+                $additionalAction,
+                $exerciseId,
+                $iconSize
+            );
+
+            if (!empty($action)) {
+                $actions[] = $action;
             }
         }
 
         return implode(PHP_EOL, $actions);
+    }
+
+    private static function normalizeAdditionalTeacherActions($additionalActions): array
+    {
+        if (empty($additionalActions)) {
+            return [];
+        }
+
+        if (is_array($additionalActions)) {
+            return array_values($additionalActions);
+        }
+
+        if (!is_string($additionalActions)) {
+            return [];
+        }
+
+        $decoded = json_decode($additionalActions, true);
+        if (JSON_ERROR_NONE === json_last_error() && is_array($decoded)) {
+            return array_values($decoded);
+        }
+
+        $unserialized = @unserialize($additionalActions, ['allowed_classes' => false]);
+        if (is_array($unserialized)) {
+            return array_values($unserialized);
+        }
+
+        return array_values(
+            array_filter(
+                array_map(
+                    'trim',
+                    preg_split('/\s*,\s*/', $additionalActions) ?: []
+                )
+            )
+        );
     }
 
     /**
@@ -5896,7 +5969,7 @@ EOT;
 
         $result = $em
             ->createQuery('
-                SELECT COUNT(ea) FROM ChamiloCoreBundle:TrackEAttempt ea
+                SELECT COUNT(ea) FROM Chamilo\CoreBundle\Entity\TrackEAttempt ea
                 WHERE ea.userId = :user AND ea.cId = :course AND ea.sessionId = :session
                     AND ea.tms > :time
             ')
@@ -5955,9 +6028,9 @@ EOT;
 
         $countAll = $em
             ->createQuery('SELECT COUNT(qq)
-                FROM ChamiloCourseBundle:CQuizQuestion qq
-                INNER JOIN ChamiloCourseBundle:CQuizRelQuestion qrq
-                   WITH qq.iid = qrq.question
+                FROM Chamilo\CourseBundle\Entity\CQuizQuestion qq
+                INNER JOIN Chamilo\CourseBundle\Entity\CQuizRelQuestion qrq
+                   ON qq.iid = qrq.question
                 WHERE qrq.quiz = :id'
             )
             ->setParameter('id', $exercise->getIid())
@@ -5965,9 +6038,9 @@ EOT;
 
         $countOfAllowed = $em
             ->createQuery('SELECT COUNT(qq)
-                FROM ChamiloCourseBundle:CQuizQuestion qq
-                INNER JOIN ChamiloCourseBundle:CQuizRelQuestion qrq
-                   WITH qq.iid = qrq.question
+                FROM Chamilo\CourseBundle\Entity\CQuizQuestion qq
+                INNER JOIN Chamilo\CourseBundle\Entity\CQuizRelQuestion qrq
+                   ON qq.iid = qrq.question
                 WHERE qrq.quiz = :id AND qq.type IN (:types)'
             )
             ->setParameters(
@@ -6057,7 +6130,7 @@ EOT;
 
         return $em
             ->createQuery('SELECT cq.title
-                FROM ChamiloCourseBundle:CQuiz cq
+                FROM Chamilo\CourseBundle\Entity\CQuiz cq
                 WHERE cq.iid = :iid'
             )
             ->setParameter('iid', $exerciseId)
@@ -6110,11 +6183,13 @@ EOT;
         $totalScore = 0;
         $totalWeight = 0;
 
-        $pluginEvaluation = QuestionOptionsEvaluationPlugin::create();
-
-        $formula = 'true' === $pluginEvaluation->get(QuestionOptionsEvaluationPlugin::SETTING_ENABLE)
-            ? $pluginEvaluation->getFormulaForExercise($exerciseId)
-            : 0;
+        $formula = 0;
+        if (class_exists(QuestionOptionsEvaluationPlugin::class)) {
+            $pluginEvaluation = QuestionOptionsEvaluationPlugin::create();
+            if ($pluginEvaluation->isEnabled()) {
+                $formula = $pluginEvaluation->getFormulaForExercise($exerciseId);
+            }
+        }
 
         if (empty($formula)) {
             foreach ($questionList as $questionId) {
@@ -7206,4 +7281,103 @@ EOT;
 
         $exerciseStatInfo['data_tracking'] = $newTracking;
     }
+
+
+    private static function getCourseResourceNodeId(int $courseId): int
+    {
+        if ($courseId <= 0) {
+            return 0;
+        }
+
+        $course = Container::getEntityManager()->getRepository(CourseEntity::class)->find($courseId);
+        if (!$course instanceof CourseEntity) {
+            return 0;
+        }
+
+        $resourceNode = $course->getResourceNode();
+
+        return null !== $resourceNode ? (int) $resourceNode->getId() : 0;
+    }
+
+    /**
+     * Build the modern Vue create URL for an exercise when a legacy integration
+     * still needs to create a test without showing legacy exercise UI.
+     */
+    public static function buildVueCreateUrl(
+        array $extraParams = [],
+        ?int $courseId = null,
+        ?int $sessionId = null,
+        ?int $groupId = null
+    ): ?string {
+        $courseId = $courseId ?? (int) api_get_course_int_id();
+        if ($courseId <= 0) {
+            return null;
+        }
+
+        $nodeId = self::getCourseResourceNodeId($courseId);
+        if ($nodeId <= 0) {
+            return null;
+        }
+
+        $sessionId = $sessionId ?? (int) api_get_session_id();
+        $groupId = $groupId ?? (int) api_get_group_id();
+        $params = [
+            'cid' => $courseId,
+            'sid' => max(0, $sessionId),
+            'gid' => max(0, $groupId),
+        ];
+
+        foreach ($extraParams as $key => $value) {
+            if (null === $value || '' === (string) $value) {
+                continue;
+            }
+            $params[$key] = $value;
+        }
+
+        return rtrim(api_get_path(WEB_PATH), '/').'/resources/exercise/'.$nodeId.'/create?'.http_build_query($params);
+    }
+
+    /**
+     * Build the modern Vue overview URL for an exercise when a legacy integration
+     * still needs to point to a test.
+     */
+    public static function buildVueOverviewUrl(
+        int $exerciseId,
+        array $extraParams = [],
+        ?int $courseId = null,
+        ?int $sessionId = null,
+        ?int $groupId = null
+    ): ?string {
+        if ($exerciseId <= 0) {
+            return null;
+        }
+
+        $courseId = $courseId ?? (int) api_get_course_int_id();
+        if ($courseId <= 0) {
+            return null;
+        }
+
+        $nodeId = self::getCourseResourceNodeId($courseId);
+        if ($nodeId <= 0) {
+            return null;
+        }
+
+        $sessionId = $sessionId ?? (int) api_get_session_id();
+        $groupId = $groupId ?? (int) api_get_group_id();
+        $params = [
+            'cid' => $courseId,
+            'sid' => max(0, $sessionId),
+            'gid' => max(0, $groupId),
+        ];
+
+        foreach ($extraParams as $key => $value) {
+            if (null === $value || '' === (string) $value) {
+                continue;
+            }
+            $params[$key] = $value;
+        }
+
+        return rtrim(api_get_path(WEB_PATH), '/').'/resources/exercise/'.$nodeId.'/'.$exerciseId.'/overview?'.http_build_query($params);
+    }
+
 }

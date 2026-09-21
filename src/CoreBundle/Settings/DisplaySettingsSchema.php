@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Validator\Constraints\Json;
 
 use const JSON_PRETTY_PRINT;
 use const JSON_UNESCAPED_SLASHES;
@@ -45,9 +46,6 @@ class DisplaySettingsSchema extends AbstractSettingsSchema
         $builder->setDefaults(
             [
                 'enable_help_link' => 'true',
-                'show_administrator_data' => 'true',
-                'show_tutor_data' => 'true',
-                'show_teacher_data' => 'true',
                 'showonline' => 'world',
                 'time_limit_whosonline' => '30',
                 'show_email_addresses' => 'false',
@@ -57,9 +55,7 @@ class DisplaySettingsSchema extends AbstractSettingsSchema
                 'display_categories_on_homepage' => 'false',
                 'show_closed_courses' => 'false',
                 'accessibility_font_resize' => 'false',
-                'show_admin_toolbar' => 'do_not_show',
                 'show_hot_courses' => 'true',
-                'hide_home_top_when_connected' => 'false',
                 'hide_logout_button' => 'false',
                 'hide_social_media_links' => 'false',
                 'gravatar_enabled' => 'false',
@@ -87,9 +83,6 @@ class DisplaySettingsSchema extends AbstractSettingsSchema
     {
         $builder
             ->add('enable_help_link', YesNoType::class)
-            ->add('show_administrator_data', YesNoType::class)
-            ->add('show_tutor_data', YesNoType::class)
-            ->add('show_teacher_data', YesNoType::class)
             ->add(
                 'showonline',
                 ChoiceType::class,
@@ -109,20 +102,7 @@ class DisplaySettingsSchema extends AbstractSettingsSchema
             ->add('display_categories_on_homepage', YesNoType::class)
             ->add('show_closed_courses', YesNoType::class)
             ->add('accessibility_font_resize', YesNoType::class)
-            ->add(
-                'show_admin_toolbar',
-                ChoiceType::class,
-                [
-                    'choices' => [
-                        'Do not show' => 'do_not_show',
-                        'Show to admins only' => 'show_to_admin',
-                        'Show to admins and teachers' => 'show_to_admin_and_teachers',
-                        'Show to all users' => 'show_to_all',
-                    ],
-                ]
-            )
             ->add('show_hot_courses', YesNoType::class)
-            ->add('hide_home_top_when_connected', YesNoType::class)
             ->add('hide_logout_button', YesNoType::class)
             ->add('hide_social_media_links', YesNoType::class)
             ->add('gravatar_enabled', YesNoType::class)
@@ -140,7 +120,9 @@ class DisplaySettingsSchema extends AbstractSettingsSchema
             )
             ->add('order_user_list_by_official_code', YesNoType::class)
             ->add('pdf_logo_header')
-            ->add('show_tabs', TextareaType::class)
+            ->add('show_tabs', TextareaType::class, [
+                'constraints' => [new Json()],
+            ])
             ->add('show_tabs_per_role', TextareaType::class)
             ->add('hide_main_navigation_menu', YesNoType::class)
             ->add('hide_complete_name_in_whoisonline', YesNoType::class)

@@ -1,20 +1,23 @@
 import makeService from "./api"
-import { ENTRYPOINT } from "../config/entrypoint"
+import baseService from "./baseService"
 
-const legalExtensions = {
+const languageExtensions = {
   async findAllAvailable() {
-    const url = new URL(`${ENTRYPOINT}languages`)
-    url.searchParams.append("available", "true")
     try {
-      const response = await fetch(url.toString())
-      if (!response.ok) {
-        throw new Error("Network response was not ok")
-      }
-      return await response.json()
+      return await baseService.get("/api/languages", { available: true })
     } catch (error) {
       console.error("Error fetching available languages:", error)
       throw error
     }
   },
+
+  /**
+   * Searches languages by isocode (includes unavailable ones).
+   * @param {string} isocode
+   * @returns {Promise<{totalItems, items}>}
+   */
+  async searchByIsocode(isocode) {
+    return baseService.getCollection("/api/languages", { isocode })
+  },
 }
-export default makeService("languages", legalExtensions)
+export default makeService("languages", languageExtensions)
