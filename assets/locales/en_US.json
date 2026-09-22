@@ -1,28 +1,17 @@
 {
-    "Calculation mode": "Calculation mode",
-    "Weighted average": "Weighted average",
-    "Points sum": "Points sum",
-    "Each item weight is treated as its maximum points; the grade is the sum of points, not normalized.": "Each item weight is treated as its maximum points; the grade is the sum of points, not normalized.",
-    "The grade is the weighted average of items, normalized by the sum of weights.": "The grade is the weighted average of items, normalized by the sum of weights.",
-    "Forum thread": "Forum thread",
-    "Points for one message": "Points for one message",
-    "Points for two or more messages": "Points for two or more messages",
     "Agenda": "Agenda",
     "Documents": "Documents",
     "Groups": "Groups",
     "Sign in": "Sign in",
     "My courses": "My courses",
-    "Shop": "Shop",
     "Start recording": "Start recording",
     "Stop recording": "Stop recording",
     "Home": "Home",
     "Title": "Title",
     "Content": "Content",
     "Invitees": "Invitees",
-    "Invitee": "Invitee",
     "Are you sure you want to delete this item?": "Are you sure you want to delete this item?",
     "Search": "Search",
-    "Searching": "Searching",
     "User list": "User list",
     "All users": "All users",
     "Deleted users": "Deleted users",
@@ -130,7 +119,6 @@
     "Edit profile": "Edit profile",
     "Clear filter results": "Clear filter results",
     "Teachers": "Teachers",
-    "Teacher": "Teacher",
     "Category": "Category",
     "Language": "Language",
     "Go to the course": "Go to the course",
@@ -227,7 +215,6 @@
     "Not writable": "Not writable",
     "Error": "Error",
     "has not been found in that directory": "has not been found in that directory",
-    "The installer has no login of its own, so an upgrade must be authorised on the server. Create an empty file named {0} in the project root, next to .env, then continue.": "The installer has no login of its own, so an upgrade must be authorised on the server. Create an empty file named {0} in the project root, next to .env, then continue.",
     "Previous": "Previous",
     "Upgrade Chamilo LMS version": "Upgrade Chamilo LMS version",
     "For more details {0}": "For more details {0}",
@@ -261,7 +248,6 @@
     "Chamilo URL": "Chamilo URL",
     "Path": "Path",
     "Administrator": "Administrator",
-    "Superior (n+1)": "Superior (n+1)",
     "Administrator login": "Administrator login",
     "Administrator password": "Administrator password",
     "You may want to change this": "You may want to change this",
@@ -346,7 +332,6 @@
     "{0} updated": "{0} updated",
     "Course sessions": "Course sessions",
     "Learners": "Learners",
-    "Learner": "Learner",
     "Progress": "Progress",
     "Diagnosis": "Diagnosis",
     "Add user": "Add user",
@@ -375,7 +360,6 @@
     "Create course packages for a certain time with training sessions": "Create course packages for a certain time with training sessions",
     "Sessions management": "Sessions management",
     "Tracking": "Tracking",
-    "Analytics": "Analytics",
     "View reports, statistics and tracking data": "View reports, statistics and tracking data",
     "Manage the skills of your users, through courses and badges": "Manage the skills of your users, through courses and badges",
     "Personal data protection": "Personal data protection",
@@ -975,7 +959,6 @@
     "Course sent to": "Course sent to",
     "User created": "User created",
     "Could not create user": "Could not create user",
-    "A user with this username already exists": "A user with this username already exists",
     "Ended": "Ended",
     "Extend one week": "Extend one week",
     "Could not load data": "Could not load data",
@@ -1253,7 +1236,6 @@
     "Assign authentication sources to users": "Assign authentication sources to users",
     "Back to user assignment page": "Back to user assignment page",
     "Authentication sources assigned successfully": "Authentication sources assigned successfully",
-    "No authentication method is selected. This removes every authentication method for the selected user(s) on this URL, which may prevent them from logging in. Continue?": "No authentication method is selected. This removes every authentication method for the selected user(s) on this URL, which may prevent them from logging in. Continue?",
     "Tip: choose “— Just upload —” to store without sending to anyone.": "Tip: choose “— Just upload —” to store without sending to anyone.",
     "Please select at least one recipient (“— Just upload —” or any user)": "Please select at least one recipient (“— Just upload —” or any user)",
     "Sharing": "Sharing",
@@ -1321,7 +1303,6 @@
     "Upload SVG logo to platform header": "Upload SVG logo to platform header",
     "Upload PNG logo to platform header ({0})": "Upload PNG logo to platform header ({0})",
     "Preferred: SVG. PNG recommended width: {0}px.": "Preferred: SVG. PNG recommended width: {0}px.",
-    "PNG recommended width: {0}px.": "PNG recommended width: {0}px.",
     "Upload PNG logo for e-mails (~{0}px width)": "Upload PNG logo for e-mails (~{0}px width)",
     "Header PNG must be ≤ {0}px.": "Header PNG must be ≤ {0}px.",
     "Require specific file format": "Require specific file format",
@@ -1334,7 +1315,6 @@
     "Copy all": "Copy all",
     "Click to insert": "Click to insert",
     "Preferred: SVG. PNG max size: {0}px.": "Preferred: SVG. PNG max size: {0}px.",
-    "PNG max size: {0}px.": "PNG max size: {0}px.",
     "View badge": "View badge",
     "{0} min": "{0} min",
     "Duration in minutes": "Duration in minutes",
@@ -1436,12 +1416,6 @@
     "Assignment": "Assignment",
     "Allowed file formats: {0}": "Allowed file formats: {0}",
     "File type not allowed. Allowed extensions: {0}": "File type not allowed. Allowed extensions: {0}",
-    "File manager": "File manager",
-    "Select a file to insert into the editor.": "Select a file to insert into the editor.",
-    "Images": "Images",
-    "Media": "Media",
-    "Files": "Files",
-    "Folder": "Folder",
     "Folder name": "Folder name",
     "Rename folder": "Rename folder",
     "New name": "New name",
@@ -1590,7 +1564,6 @@
     "Select a session": "Select a session",
     "Read-only view": "Read-only view",
     "Personal agenda": "Personal agenda",
-    "Group agenda": "Group agenda",
     "Events list": "Events list",
     "Personal": "Personal",
     "Weeks are displayed from 1 to 52": "Weeks are displayed from 1 to 52",
@@ -1895,15 +1868,22 @@
     "Video generated successfully, but saving is disabled because the provider returned a URL.": "Video generated successfully, but saving is disabled because the provider returned a URL.",
     "The file was saved, but its URL could not be resolved.": "The file was saved, but its URL could not be resolved.",
     "Items": "Items",
+    "Invitee": "Invitee",
+    "Searching": "Searching",
+    "Teacher": "Teacher",
+    "Superior (n+1)": "Superior (n+1)",
+    "Learner": "Learner",
+    "A user with this username already exists": "A user with this username already exists",
+    "File manager": "File manager",
+    "Select a file to insert into the editor.": "Select a file to insert into the editor.",
+    "Images": "Images",
+    "Media": "Media",
+    "Files": "Files",
+    "Folder": "Folder",
     "Newest first": "Newest first",
     "Oldest first": "Oldest first",
-<<<<<<< HEAD
-    "Title A\u2013Z": "Title A\u2013Z",
-    "Title Z\u2013A": "Title Z\u2013A",
-=======
     "Title A–Z": "Title A–Z",
     "Title Z–A": "Title Z–A",
->>>>>>> origin/3.0
     "Projects": "Projects",
     "Continue": "Continue",
     "Import options": "Import options",
@@ -2079,11 +2059,6 @@
     "Reference": "Reference",
     "Amount": "Amount",
     "Receipt": "Receipt",
-<<<<<<< HEAD
-=======
-    "Invoice": "Invoice",
-    "Request invoice": "Request invoice",
->>>>>>> origin/3.0
     "Unable to load your services right now.": "Unable to load your services right now.",
     "Auto billing enabled": "Auto billing enabled",
     "Auto billing suspended": "Auto billing suspended",
@@ -2410,11 +2385,7 @@
     "Current": "Current",
     "No auth source": "No auth source",
     "Maximum number of subscriptions allowed. Leave at 0 to not limit it.": "Maximum number of subscriptions allowed. Leave at 0 to not limit it.",
-<<<<<<< HEAD
-    "<strong>Welcome<\/strong> to the Chamilo Course authoring tool.<br \/>Create your courses step-by-step. The table of contents will appear to the left.": "<strong>Welcome<\/strong> to the Chamilo Course authoring tool.<br \/>Create your courses step-by-step. The table of contents will appear to the left.",
-=======
     "<strong>Welcome</strong> to the Chamilo Course authoring tool.<br />Create your courses step-by-step. The table of contents will appear to the left.": "<strong>Welcome</strong> to the Chamilo Course authoring tool.<br />Create your courses step-by-step. The table of contents will appear to the left.",
->>>>>>> origin/3.0
     "To start, give a title to your course": "To start, give a title to your course",
     "Learning path name": "Learning path name",
     "Accumulate SCORM session time": "Accumulate SCORM session time",
@@ -2458,11 +2429,7 @@
     "Create a new forum": "Create a new forum",
     "Save section": "Save section",
     "Edit the current forum": "Edit the current forum",
-<<<<<<< HEAD
-    "Add\/edit prerequisites": "Add\/edit prerequisites",
-=======
     "Add/edit prerequisites": "Add/edit prerequisites",
->>>>>>> origin/3.0
     "minimum": "minimum",
     "maximum": "maximum",
     "none": "none",
@@ -2780,11 +2747,7 @@
     "More information": "More information",
     "Move post": "Move post",
     "Move to thread": "Move to thread",
-<<<<<<< HEAD
-    "Multiple access URL \/ Branding": "Multiple access URL \/ Branding",
-=======
     "Multiple access URL / Branding": "Multiple access URL / Branding",
->>>>>>> origin/3.0
     "Multiply questions": "Multiply questions",
     "Must be in ALL the selected categories": "Must be in ALL the selected categories",
     "My tasks": "My tasks",
@@ -2964,11 +2927,7 @@
     "Send invitation": "Send invitation",
     "Send mail": "Send mail",
     "Send notification at a specific date": "Send notification at a specific date",
-<<<<<<< HEAD
-    "Send this announcement by email to selected groups\/users": "Send this announcement by email to selected groups\/users",
-=======
     "Send this announcement by email to selected groups/users": "Send this announcement by email to selected groups/users",
->>>>>>> origin/3.0
     "Send to users in all sessions of this course": "Send to users in all sessions of this course",
     "Show all attempts": "Show all attempts",
     "Show debug": "Show debug",
@@ -3055,11 +3014,7 @@
     "Thematic plan": "Thematic plan",
     "There are no announcements.": "There are no announcements.",
     "There is no attendance sheet in this course": "There is no attendance sheet in this course",
-<<<<<<< HEAD
-    "There is no date\/time registered yet": "There is no date\/time registered yet",
-=======
     "There is no date/time registered yet": "There is no date/time registered yet",
->>>>>>> origin/3.0
     "There is no thematic advance": "There is no thematic advance",
     "There is no thematic plan for now": "There is no thematic plan for now",
     "There is no thematic section": "There is no thematic section",
@@ -3098,12 +3053,9 @@
     "Trusted public key": "Trusted public key",
     "Trusted signing key": "Trusted signing key",
     "Try and find some friends": "Try and find some friends",
-<<<<<<< HEAD
     "Type APPLY UPDATE FILES to confirm": "Type APPLY UPDATE FILES to confirm",
     "Type RUN DATABASE MIGRATIONS to confirm database migrations": "Type RUN DATABASE MIGRATIONS to confirm database migrations",
     "Type RUN POST UPDATE ACTIONS to confirm": "Type RUN POST UPDATE ACTIONS to confirm",
-=======
->>>>>>> origin/3.0
     "Unable to cancel renewal right now.": "Unable to cancel renewal right now.",
     "Unable to restore renewal right now.": "Unable to restore renewal right now.",
     "Undo": "Undo",
@@ -3121,11 +3073,7 @@
     "Use [[Page]] or [[Page|Visible text]] to create internal Wiki links.": "Use [[Page]] or [[Page{'|'}Visible text]] to create internal Wiki links.",
     "Use a spacebar or arrow keys to navigate": "Use a spacebar or arrow keys to navigate",
     "Use the crop tool to select a 1:1 region. Recommended size: 120x120 pixels.": "Use the crop tool to select a 1:1 region. Recommended size: 120x120 pixels.",
-<<<<<<< HEAD
-    "Use the staging directory generated by the previous step. The backend only accepts directories inside var\/update\/staging.": "Use the staging directory generated by the previous step. The backend only accepts directories inside var\/update\/staging.",
-=======
     "Use the staging directory generated by the previous step. The backend only accepts directories inside var/update/staging.": "Use the staging directory generated by the previous step. The backend only accepts directories inside var/update/staging.",
->>>>>>> origin/3.0
     "Use this link to simulate the future Chamilo.org update notice during development tests.": "Use this link to simulate the future Chamilo.org update notice during development tests.",
     "Use this only for local development tests. Production updates must use the server configured key.": "Use this only for local development tests. Production updates must use the server configured key.",
     "User contributions": "User contributions",
@@ -3160,11 +3108,7 @@
     "Words count per page": "Words count per page",
     "Yarn build": "Yarn build",
     "Yarn install": "Yarn install",
-<<<<<<< HEAD
-    "You are modifying logos for the default visual theme \u201cchamilo\u201d. Consider creating\/using a custom visual theme to avoid overriding defaults.": "You are modifying logos for the default visual theme \u201cchamilo\u201d. Consider creating\/using a custom visual theme to avoid overriding defaults.",
-=======
     "You are modifying logos for the default visual theme “chamilo”. Consider creating/using a custom visual theme to avoid overriding defaults.": "You are modifying logos for the default visual theme “chamilo”. Consider creating/using a custom visual theme to avoid overriding defaults.",
->>>>>>> origin/3.0
     "You are not allowed to see this page. Either your connection has expired or you are trying to access a page for which you do not have the sufficient privileges.": "You are not allowed to see this page. Either your connection has expired or you are trying to access a page for which you do not have the sufficient privileges.",
     "You are viewing a historical version of this page": "You are viewing a historical version of this page",
     "You can attach one or more files to this reply.": "You can attach one or more files to this reply.",
@@ -3180,11 +3124,7 @@
     "and": "and",
     "by": "by",
     "do not publish": "do not publish",
-<<<<<<< HEAD
-    "e.g. \/index.php": "e.g. \/index.php",
-=======
     "e.g. /index.php": "e.g. /index.php",
->>>>>>> origin/3.0
     "e.g. 3 columns layout": "e.g. 3 columns layout",
     "required": "required",
     "Page {0} of {1}": "Page {0} of {1}",
@@ -3194,10 +3134,24 @@
     "Press enter to select": "Press enter to select",
     "Press enter to remove": "Press enter to remove",
     "No elements found. Consider changing the search query.": "No elements found. Consider changing the search query.",
-<<<<<<< HEAD
-    "List is empty.": "List is empty."
-=======
     "List is empty.": "List is empty.",
+    "Calculation mode": "Calculation mode",
+    "Weighted average": "Weighted average",
+    "Points sum": "Points sum",
+    "Each item weight is treated as its maximum points; the grade is the sum of points, not normalized.": "Each item weight is treated as its maximum points; the grade is the sum of points, not normalized.",
+    "The grade is the weighted average of items, normalized by the sum of weights.": "The grade is the weighted average of items, normalized by the sum of weights.",
+    "Forum thread": "Forum thread",
+    "Points for one message": "Points for one message",
+    "Points for two or more messages": "Points for two or more messages",
+    "Shop": "Shop",
+    "The installer has no login of its own, so an upgrade must be authorised on the server. Create an empty file named {0} in the project root, next to .env, then continue.": "The installer has no login of its own, so an upgrade must be authorised on the server. Create an empty file named {0} in the project root, next to .env, then continue.",
+    "Analytics": "Analytics",
+    "No authentication method is selected. This removes every authentication method for the selected user(s) on this URL, which may prevent them from logging in. Continue?": "No authentication method is selected. This removes every authentication method for the selected user(s) on this URL, which may prevent them from logging in. Continue?",
+    "PNG recommended width: {0}px.": "PNG recommended width: {0}px.",
+    "PNG max size: {0}px.": "PNG max size: {0}px.",
+    "Group agenda": "Group agenda",
+    "Invoice": "Invoice",
+    "Request invoice": "Request invoice",
     "-1 = All questions will be selected.": "-1 = All questions will be selected.",
     "Add destination": "Add destination",
     "Add this test to the assessment tool": "Add this test to the assessment tool",
@@ -4303,5 +4257,4 @@
     "Contacts count": "Contacts count",
     "Sessions by date": "Sessions by date",
     "This records the migrations your database already carries, and leaves the newer ones pending so the update can execute them. Your data is not modified.": "This records the migrations your database already carries, and leaves the newer ones pending so the update can execute them. Your data is not modified."
->>>>>>> origin/3.0
 }
