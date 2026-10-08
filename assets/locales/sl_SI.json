@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Število poslanih sporočil",
     "Contacts count": "Število kontaktov",
     "Sessions by date": "Seje po datumu",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "To označi vsako migracijo, ki jo prinaša ta različica, kot že izvedeno. To storite samo na platformi, ki je posodobljena in nikoli ni zabeležila svoje zgodovine."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "To označi vsako migracijo, ki jo prinaša ta različica, kot že izvedeno. To storite samo na platformi, ki je posodobljena in nikoli ni zabeležila svoje zgodovine.",
+    "Course tracking details": "Podrobnosti sledenja tečaja",
+    "Learner details in course": "Podrobnosti o tečajniku znotraj tečaja"
 }

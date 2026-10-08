@@ -4256,5 +4256,7 @@
     "Number of messages sent": "পাঠানো বার্তার সংখ্যা",
     "Contacts count": "যোগাযোগের সংখ্যা",
     "Sessions by date": "তারিখভিত্তিক সেশন",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "এটি এই সংস্করণে পাঠানো প্রতিটি মাইগ্রেশনকে ইতিমধ্যে সম্পাদিত হিসেবে চিহ্নিত করে। শুধুমাত্র এমন প্ল্যাটফর্মে করুন যা আপ টু ডেট এবং কখনও তার ইতিহাস রেকর্ড করেনি।"
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "এটি এই সংস্করণে পাঠানো প্রতিটি মাইগ্রেশনকে ইতিমধ্যে সম্পাদিত হিসেবে চিহ্নিত করে। শুধুমাত্র এমন প্ল্যাটফর্মে করুন যা আপ টু ডেট এবং কখনও তার ইতিহাস রেকর্ড করেনি।",
+    "Course tracking details": "কোর্স ট্র্যাকিং বিস্তারিত",
+    "Learner details in course": "কোর্সে শিক্ষার্থীর বিবরণ"
 }

@@ -4257,5 +4257,7 @@
     "Contacts count": "Nombre de contacts",
     "Sessions by date": "Sessions par dates",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ceci marque toutes les migrations livrées par cette version comme déjà exécutées. Ne le faites que sur une plateforme à jour qui n'a jamais enregistré son historique.",
-    "Survey published. Created: {0}. Updated: {1}. Messages sent: {2}.": "Enquête publiée. Créées : {0}. Mises à jour : {1}. Messages envoyés : {2}."
+    "Survey published. Created: {0}. Updated: {1}. Messages sent: {2}.": "Enquête publiée. Créées : {0}. Mises à jour : {1}. Messages envoyés : {2}.",
+    "Course tracking details": "Détails du suivi du cours",
+    "Learner details in course": "Détails de l'apprenant dans le cours"
 }

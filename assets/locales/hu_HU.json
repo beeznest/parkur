@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Küldött üzenetek száma",
     "Contacts count": "Kapcsolatok száma",
     "Sessions by date": "Ülések dátum szerint",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ez minden, ebben a verzióban szállított migrációt már végrehajtottként jelöl. Csak olyan platformon tegye ezt, amely naprakész, és soha nem rögzítette a történetét."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ez minden, ebben a verzióban szállított migrációt már végrehajtottként jelöl. Csak olyan platformon tegye ezt, amely naprakész, és soha nem rögzítette a történetét.",
+    "Course tracking details": "Kurzuskövetés részletei",
+    "Learner details in course": "A kurzus tanulóinak adatai"
 }

@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Количество отправленных сообщений",
     "Contacts count": "Количество контактов",
     "Sessions by date": "Сессии по дате",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Это помечает все миграции этой версии как уже выполненные. Делайте это только на актуальной платформе, которая никогда не записывала свою историю."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Это помечает все миграции этой версии как уже выполненные. Делайте это только на актуальной платформе, которая никогда не записывала свою историю.",
+    "Course tracking details": "Детали отслеживания курса",
+    "Learner details in course": "Подробности об учащемся на курсе"
 }

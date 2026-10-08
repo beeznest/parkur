@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Nombre de messatges enviats",
     "Contacts count": "Nombre de contactes",
     "Sessions by date": "Sessions per data",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Aquò marca cada migracion liurada per aquesta version coma ja executada. Fasètz aquò solament sus una plataforma a jorn que n'a jamai enregistrat son istòria."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Aquò marca cada migracion liurada per aquesta version coma ja executada. Fasètz aquò solament sus una plataforma a jorn que n'a jamai enregistrat son istòria.",
+    "Course tracking details": "Detalhs del seguiment del cors",
+    "Learner details in course": "Detalhs de l'aprenent dins lo cors"
 }

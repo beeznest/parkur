@@ -4256,5 +4256,7 @@
     "Number of messages sent": "पठाइएका सन्देशहरूको संख्या",
     "Contacts count": "सम्पर्कहरूको संख्या",
     "Sessions by date": "मितिका अनुसार सत्रहरू",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "यसले यस संस्करणले पठाएका सबै माइग्रेसनलाई पहिले नै कार्यान्वयन भइसकेको भनी चिन्ह लगाउँछ। यो केवल अद्यावधिक भएको र कहिल्यै इतिहास रेकर्ड नगरेको प्लेटफर्ममा मात्र गर्नुहोस्।"
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "यसले यस संस्करणले पठाएका सबै माइग्रेसनलाई पहिले नै कार्यान्वयन भइसकेको भनी चिन्ह लगाउँछ। यो केवल अद्यावधिक भएको र कहिल्यै इतिहास रेकर्ड नगरेको प्लेटफर्ममा मात्र गर्नुहोस्।",
+    "Course tracking details": "कोर्स ट्र्याकिङ विवरणहरू",
+    "Learner details in course": "कोर्समा सिकारू विवरण"
 }

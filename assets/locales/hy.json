@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Ուղարկված հաղորդագրությունների քանակ",
     "Contacts count": "Կոնտակտների քանակ",
     "Sessions by date": "Սեանսներ ըստ ամսաթվի",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Սա նշում է այս տարբերակի բոլոր միգրացիաները որպես արդեն կատարված։ Արեք սա միայն այն հարթակում, որը արդի է և երբեք չի գրանցել իր պատմությունը։"
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Սա նշում է այս տարբերակի բոլոր միգրացիաները որպես արդեն կատարված։ Արեք սա միայն այն հարթակում, որը արդի է և երբեք չի գրանցել իր պատմությունը։",
+    "Course tracking details": "Դասընթացի հետևման մանրամասներ",
+    "Learner details in course": "Աշակերտի մանրամասներ դասընթացում"
 }

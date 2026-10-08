@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Alınan mesaj sayısı",
     "Contacts count": "E-posta adresinizi değiştirmek için şifrenizi onaylamanız gerekiyor",
     "Sessions by date": "Tarihe göre oturumlar",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Bu, bu sürümle gelen her geçişi zaten yürütülmüş olarak işaretler. Bunu yalnızca güncel olan ve geçmişini hiç kaydetmemiş bir platformda yapın."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Bu, bu sürümle gelen her geçişi zaten yürütülmüş olarak işaretler. Bunu yalnızca güncel olan ve geçmişini hiç kaydetmemiş bir platformda yapın.",
+    "Course tracking details": "Ders izleme ayrıntıları",
+    "Learner details in course": "Kursta öğrenci detayları"
 }

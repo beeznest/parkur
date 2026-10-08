@@ -4256,5 +4256,7 @@
     "Number of messages sent": "د لیږل شویو پیغامونو شمېر",
     "Contacts count": "د اړیکو شمېر",
     "Sessions by date": "د نیټې له مخې غونډې",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "دا هر مهاجرت چې د دې نسخه لخوا لیږل شوی دمخه اجرا شوی په توګه نښه کوي. یوازې دا په هغه پلیټ فارم کې وکړئ چې تازه دی او هیڅکله یې خپل تاریخ ثبت نه کړی."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "دا هر مهاجرت چې د دې نسخه لخوا لیږل شوی دمخه اجرا شوی په توګه نښه کوي. یوازې دا په هغه پلیټ فارم کې وکړئ چې تازه دی او هیڅکله یې خپل تاریخ ثبت نه کړی.",
+    "Course tracking details": "د کورس تعقیب تفصیلات",
+    "Learner details in course": "د زده کوونکي تفصيلات په کورس کې"
 }

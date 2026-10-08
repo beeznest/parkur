@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Numar di messadis mandâts",
     "Contacts count": "Contator contats",
     "Sessions by date": "Sesions par date",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Chest al segne ogni migrazion furnide di cheste version come za eseguide. Fâs lu dome suntune plateforme inzornade che no à mai regjistrât la sô storie."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Chest al segne ogni migrazion furnide di cheste version come za eseguide. Fâs lu dome suntune plateforme inzornade che no à mai regjistrât la sô storie.",
+    "Course tracking details": "Detais dal segnament dal cors",
+    "Learner details in course": "Détails dal aprendizant tal cors"
 }

@@ -4256,5 +4256,7 @@
     "Number of messages sent": "מספר ההודעות שנשלחו",
     "Contacts count": "מספר אנשי קשר",
     "Sessions by date": "מפגשים לפי תאריך",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "פעולה זו מסמנת כל מיגרציה שסופקה בגרסה זו כאילו כבר בוצעה. עשו זאת רק בפלטפורמה מעודכנת שמעולם לא תיעדה את ההיסטוריה שלה."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "פעולה זו מסמנת כל מיגרציה שסופקה בגרסה זו כאילו כבר בוצעה. עשו זאת רק בפלטפורמה מעודכנת שמעולם לא תיעדה את ההיסטוריה שלה.",
+    "Course tracking details": "פרטי מעקב הקורס",
+    "Learner details in course": "פרטי לומד בקורס"
 }

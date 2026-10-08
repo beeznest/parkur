@@ -4253,5 +4253,7 @@
     "Number of messages sent": "ပေးပို့ထားသော မက်ဆေ့ချ်အရေအတွက်",
     "Contacts count": "ဆက်သွယ်ရန်အရေအတွက်",
     "Sessions by date": "ရက်စွဲအလိုက် အစည်းအဝေးများ",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "ဤလုပ်ဆောင်ချက်သည် ဤဗားရှင်းမှ ပေးပို့သော ရွှေ့ပြောင်းမှုအားလုံးကို လုပ်ပြီးသားအဖြစ် မှတ်သားသည်။ နောက်ဆုံးပေါ်ဖြစ်ပြီး သမိုင်းမှတ်တမ်း မရှိဖူးသော ပလက်ဖောင်းတွင်သာ လုပ်ပါ။"
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "ဤလုပ်ဆောင်ချက်သည် ဤဗားရှင်းမှ ပေးပို့သော ရွှေ့ပြောင်းမှုအားလုံးကို လုပ်ပြီးသားအဖြစ် မှတ်သားသည်။ နောက်ဆုံးပေါ်ဖြစ်ပြီး သမိုင်းမှတ်တမ်း မရှိဖူးသော ပလက်ဖောင်းတွင်သာ လုပ်ပါ။",
+    "Course tracking details": "သင်တန်း ခြေရာခံမှု အသေးစိတ်များ",
+    "Learner details in course": "သင်တန်းတွင် သင်ယူသူအသေးစိတ်"
 }

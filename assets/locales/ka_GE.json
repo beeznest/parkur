@@ -4256,5 +4256,7 @@
     "Number of messages sent": "გაგზავნილი შეტყობინებების რაოდენობა",
     "Contacts count": "კონტაქტების რაოდენობა",
     "Sessions by date": "სესიები თარიღის მიხედვით",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "ეს აღნიშნავს ამ ვერსიით მოწოდებულ ყველა მიგრაციას, როგორც უკვე შესრულებულს. გააკეთეთ ეს მხოლოდ პლატფორმაზე, რომელიც განახლებულია და არასდროს ჩაუწერია თავისი ისტორია."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "ეს აღნიშნავს ამ ვერსიით მოწოდებულ ყველა მიგრაციას, როგორც უკვე შესრულებულს. გააკეთეთ ეს მხოლოდ პლატფორმაზე, რომელიც განახლებულია და არასდროს ჩაუწერია თავისი ისტორია.",
+    "Course tracking details": "კურსის თვალყურის დეტალები",
+    "Learner details in course": "მსწავლელის დეტალები კურსში"
 }

@@ -4256,5 +4256,7 @@
     "Number of messages sent": "จำนวนข้อความที่ส่ง",
     "Contacts count": "จำนวนผู้ติดต่อ",
     "Sessions by date": "เซสชันตามวันที่",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "การดำเนินการนี้จะทำเครื่องหมายว่าการโยกย้ายทั้งหมดที่มาพร้อมเวอร์ชันนี้ได้ดำเนินการแล้ว ทำเฉพาะบนแพลตฟอร์มที่เป็นปัจจุบันและไม่เคยบันทึกประวัติไว้"
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "การดำเนินการนี้จะทำเครื่องหมายว่าการโยกย้ายทั้งหมดที่มาพร้อมเวอร์ชันนี้ได้ดำเนินการแล้ว ทำเฉพาะบนแพลตฟอร์มที่เป็นปัจจุบันและไม่เคยบันทึกประวัติไว้",
+    "Course tracking details": "รายละเอียดการติดตามหลักสูตร",
+    "Learner details in course": "รายละเอียดผู้เรียนในคอร์ส"
 }

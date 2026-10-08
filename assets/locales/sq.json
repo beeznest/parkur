@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Numri i mesazheve të dërguara",
     "Contacts count": "Numri i kontakteve",
     "Sessions by date": "Sesionet sipas datës",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Kjo shënon çdo migrim të përfshirë në këtë version si tashmë të ekzekutuar. Bëjeni këtë vetëm në një platformë që është e përditësuar dhe nuk ka regjistruar kurrë historikun e saj."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Kjo shënon çdo migrim të përfshirë në këtë version si tashmë të ekzekutuar. Bëjeni këtë vetëm në një platformë që është e përditësuar dhe nuk ka regjistruar kurrë historikun e saj.",
+    "Course tracking details": "Detajet e ndjekjes së kursit",
+    "Learner details in course": "Detajet e nxënësit në kurs"
 }

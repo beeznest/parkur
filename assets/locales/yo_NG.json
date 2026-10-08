@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Nọ́mbà ìfiwéra tí a rán",
     "Contacts count": "Iye awọn olubasọrọ",
     "Sessions by date": "Àwùjọ ìpàdé lọ́jọ́",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Èyí samisi gbogbo ìkópadà tí ẹ̀yà yìí gbé jáde gẹ́gẹ́ bíi èyí tí a ti ṣe tẹ́lẹ̀. Ṣe èyí nìkan lórí pẹpẹ tí ó ti wà ní ìgbàlódé tí kò sì tíì kọ ìtàn rẹ̀ sílẹ̀."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Èyí samisi gbogbo ìkópadà tí ẹ̀yà yìí gbé jáde gẹ́gẹ́ bíi èyí tí a ti ṣe tẹ́lẹ̀. Ṣe èyí nìkan lórí pẹpẹ tí ó ti wà ní ìgbàlódé tí kò sì tíì kọ ìtàn rẹ̀ sílẹ̀.",
+    "Course tracking details": "Àwọn àlàyé ìtọpa ẹ̀kọ́",
+    "Learner details in course": "Àwòkúnfẹ̀ akẹ́kọ̀ọ́ nínú ẹ̀kọ́"
 }

@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Tal av sendum boðum",
     "Contacts count": "Tal av sambondum",
     "Sessions by date": "Sessiónir eftir dag",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Hetta merkir allar flytingar, ið fylgja við hesi útgávu, sum longu framdar. Ger hetta bert á einum palli, ið er dagførdur og ongantíð hevur skrásett sína søgu."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Hetta merkir allar flytingar, ið fylgja við hesi útgávu, sum longu framdar. Ger hetta bert á einum palli, ið er dagførdur og ongantíð hevur skrásett sína søgu.",
+    "Course tracking details": "Nágreiniligar upplýsingar um námskeið",
+    "Learner details in course": "Lærlingapartar í kursi"
 }

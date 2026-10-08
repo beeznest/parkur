@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Број на испратени пораки",
     "Contacts count": "Број на контакти",
     "Sessions by date": "Сесии по датум",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ова ги означува сите миграции испорачани со оваа верзија како веќе извршени. Направете го ова само на платформа што е ажурирана и никогаш не ја запишала својата историја."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ова ги означува сите миграции испорачани со оваа верзија како веќе извршени. Направете го ова само на платформа што е ажурирана и никогаш не ја запишала својата историја.",
+    "Course tracking details": "Детали за следење на курсот",
+    "Learner details in course": "Детали за ученикот во курсот"
 }

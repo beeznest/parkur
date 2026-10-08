@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Númberu de mensaxes enviáes",
     "Contacts count": "Númberu de contactos",
     "Sessions by date": "Sesiones por fecha",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Esto marca toles migraciones unviaes por esta versión como yá executaes. Fai esto namás nuna plataforma que tea actualizada y que nunca rexistrara'l so historial."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Esto marca toles migraciones unviaes por esta versión como yá executaes. Fai esto namás nuna plataforma que tea actualizada y que nunca rexistrara'l so historial.",
+    "Course tracking details": "Detalles del seguimientu del cursu",
+    "Learner details in course": "Detalles del alumnu nel cursu"
 }

@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Số tin nhắn đã gửi",
     "Contacts count": "Số lượng liên hệ",
     "Sessions by date": "Phiên theo ngày",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Thao tác này đánh dấu mọi migration đi kèm phiên bản này là đã thực thi. Chỉ làm vậy trên nền tảng đã cập nhật và chưa từng ghi lịch sử."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Thao tác này đánh dấu mọi migration đi kèm phiên bản này là đã thực thi. Chỉ làm vậy trên nền tảng đã cập nhật và chưa từng ghi lịch sử.",
+    "Course tracking details": "Chi tiết theo dõi khóa học",
+    "Learner details in course": "Chi tiết học viên trong khóa học"
 }

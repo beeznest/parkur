@@ -4256,5 +4256,7 @@
     "Number of messages sent": "보낸 메시지 수",
     "Contacts count": "연락처 수",
     "Sessions by date": "날짜별 세션",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "이 작업은 이 버전에 포함된 모든 마이그레이션을 이미 실행된 것으로 표시합니다. 최신 상태이며 이력을 한 번도 기록하지 않은 플랫폼에서만 수행하세요."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "이 작업은 이 버전에 포함된 모든 마이그레이션을 이미 실행된 것으로 표시합니다. 최신 상태이며 이력을 한 번도 기록하지 않은 플랫폼에서만 수행하세요.",
+    "Course tracking details": "강의 추적 상세 정보",
+    "Learner details in course": "코스 내 학습자 상세 정보"
 }

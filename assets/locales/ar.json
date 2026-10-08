@@ -4256,5 +4256,7 @@
     "Number of messages sent": "عدد الرسائل المرسلة",
     "Contacts count": "عدد جهات الاتصال",
     "Sessions by date": "الدورات وفقا للتاريخ",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "يؤشر هذا كل ترحيل مُضمَّن في هذا الإصدار على أنه نُفِّذ بالفعل. افعل ذلك فقط على منصة محدَّثة ولم تسجّل تاريخها قط."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "يؤشر هذا كل ترحيل مُضمَّن في هذا الإصدار على أنه نُفِّذ بالفعل. افعل ذلك فقط على منصة محدَّثة ولم تسجّل تاريخها قط.",
+    "Course tracking details": "تفاصيل تتبع الدورة",
+    "Learner details in course": "تفاصيل المتعلم في المقرر"
 }

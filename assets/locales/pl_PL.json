@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Liczba wysłanych wiadomości",
     "Contacts count": "Liczba kontaktów",
     "Sessions by date": "Sesje według daty",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "To oznacza każdą migrację dostarczoną w tej wersji jako już wykonaną. Wykonaj to tylko na platformie, która jest aktualna i nigdy nie zapisała swojej historii."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "To oznacza każdą migrację dostarczoną w tej wersji jako już wykonaną. Wykonaj to tylko na platformie, która jest aktualna i nigdy nie zapisała swojej historii.",
+    "Course tracking details": "Szczegóły śledzenia kursu",
+    "Learner details in course": "Szczegóły studenta w kursie"
 }

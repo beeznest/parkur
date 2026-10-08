@@ -4256,5 +4256,7 @@
     "Number of messages sent": "已發送訊息數量",
     "Contacts count": "聯絡人數量",
     "Sessions by date": "按日期的課程",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "這會將此版本隨附的所有遷移標記為已執行。僅在已是最新且從未記錄過歷史的平台上執行此操作。"
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "這會將此版本隨附的所有遷移標記為已執行。僅在已是最新且從未記錄過歷史的平台上執行此操作。",
+    "Course tracking details": "課程追蹤詳情",
+    "Learner details in course": "課程學員詳細資料"
 }

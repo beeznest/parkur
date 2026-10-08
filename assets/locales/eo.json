@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Nombro de senditaj mesaĝoj",
     "Contacts count": "Nombro de kontaktuloj",
     "Sessions by date": "Sesioj laŭ dato",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Tio markas ĉiun migrigon liveritan de ĉi tiu versio kiel jam plenumitan. Faru tion nur sur platformo kiu estas ĝisdata kaj neniam registris sian historion."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Tio markas ĉiun migrigon liveritan de ĉi tiu versio kiel jam plenumitan. Faru tion nur sur platformo kiu estas ĝisdata kaj neniam registris sian historion.",
+    "Course tracking details": "Kursaj sekvaj detaloj",
+    "Learner details in course": "Detaloj de lernanto en kurso"
 }

@@ -4256,5 +4256,7 @@
     "Number of messages sent": "Nosūtīto vēstuļu skaits",
     "Contacts count": "Kontaktu skaits",
     "Sessions by date": "Sesijas pēc datuma",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Tas atzīmē visas šīs versijas piegādātās migrācijas kā jau izpildītas. Dariet to tikai platformā, kas ir atjaunināta un nekad nav reģistrējusi savu vēsturi."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Tas atzīmē visas šīs versijas piegādātās migrācijas kā jau izpildītas. Dariet to tikai platformā, kas ir atjaunināta un nekad nav reģistrējusi savu vēsturi.",
+    "Course tracking details": "Kursa izsekošanas detaļas",
+    "Learner details in course": "Informācija par kursantiem kursā"
 }

@@ -4253,5 +4253,7 @@
     "Number of messages sent": "ຈຳນວນຂໍ້ຄວາມທີ່ສົ່ງ",
     "Contacts count": "ຈຳນວນລາຍຊື່ຜູ້ຕິດຕໍ່",
     "Sessions by date": "ຊ່ວງເວລາຮຽນຕາມວັນທີ",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "ນີ້ຈະໝາຍວ່າການເຄື່ອນຍ້າຍທຸກລາຍການທີ່ສົ່ງມາກັບເວີຊັນນີ້ໄດ້ຖືກປະຕິບັດແລ້ວ. ເຮັດສິ່ງນີ້ພຽງແຕ່ໃນແພລດຟອມທີ່ອັບເດດແລ້ວ ແລະບໍ່ເຄີຍບັນທຶກປະຫວັດຂອງມັນ."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "ນີ້ຈະໝາຍວ່າການເຄື່ອນຍ້າຍທຸກລາຍການທີ່ສົ່ງມາກັບເວີຊັນນີ້ໄດ້ຖືກປະຕິບັດແລ້ວ. ເຮັດສິ່ງນີ້ພຽງແຕ່ໃນແພລດຟອມທີ່ອັບເດດແລ້ວ ແລະບໍ່ເຄີຍບັນທຶກປະຫວັດຂອງມັນ.",
+    "Course tracking details": "ລາຍລະອຽດການຕິດຕາມຫຼັກສູດ",
+    "Learner details in course": "ລາຍລະອຽດຜູ້ຮຽນໃນລາຍວິຊາ"
 }
