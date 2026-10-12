@@ -942,7 +942,7 @@ final readonly class ExerciseConfigurationProcessor implements ProcessorInterfac
             ],
             'categoryOptions' => $this->getCategoryOptions($course),
             'languageOptions' => $this->getResourceLanguageOptions(),
-            'skillOptions' => $this->getSkillOptions(),
+            'skillOptions' => $this->getSkillOptions($quiz),
             'extraFieldDefinitions' => $this->getExtraFieldDefinitions(),
             'extraNotificationOptions' => [],
             'feedbackOptions' => $this->getFeedbackOptions($quiz),
@@ -1106,17 +1106,32 @@ final readonly class ExerciseConfigurationProcessor implements ProcessorInterfac
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function getSkillOptions(): array
+    private function getSkillOptions(?CQuiz $quiz): array
     {
-        $skills = $this->entityManager->createQueryBuilder()
+        $selectedSkillIds = $quiz instanceof CQuiz ? $this->getSelectedSkillIds($quiz) : [];
+
+        $qb = $this->entityManager->createQueryBuilder()
             ->select('skill')
             ->from(Skill::class, 'skill')
             ->andWhere('skill.status = :status')
             ->setParameter('status', Skill::STATUS_ENABLED, Types::INTEGER)
             ->orderBy('skill.title', 'ASC')
-            ->getQuery()
-            ->getResult()
         ;
+
+        if ([] === $selectedSkillIds) {
+            $qb
+                ->andWhere('skill.acquirable = :acquirable')
+                ->setParameter('acquirable', true)
+            ;
+        } else {
+            $qb
+                ->andWhere('(skill.acquirable = :acquirable OR skill.id IN (:selectedSkillIds))')
+                ->setParameter('acquirable', true)
+                ->setParameter('selectedSkillIds', $selectedSkillIds, ArrayParameterType::INTEGER)
+            ;
+        }
+
+        $skills = $qb->getQuery()->getResult();
 
         $items = [];
         foreach ($skills as $skill) {
@@ -1186,17 +1201,24 @@ final readonly class ExerciseConfigurationProcessor implements ProcessorInterfac
             static fn (int $value): bool => $value > 0
         )));
 
-        $this->entityManager->createQueryBuilder()
-            ->delete(SkillRelItem::class, 'relation')
-            ->andWhere('relation.itemType = :itemType')
-            ->andWhere('relation.itemId = :itemId')
-            ->setParameter('itemType', self::SKILL_ITEM_TYPE_EXERCISE, Types::INTEGER)
-            ->setParameter('itemId', $exerciseId, Types::INTEGER)
-            ->getQuery()
-            ->execute()
-        ;
+        $existingRelations = $this->entityManager->getRepository(SkillRelItem::class)->findBy([
+            'itemType' => self::SKILL_ITEM_TYPE_EXERCISE,
+            'itemId' => $exerciseId,
+        ]);
+        $existingSkillIds = [];
+        foreach ($existingRelations as $existingRelation) {
+            if (!$existingRelation instanceof SkillRelItem || null === $existingRelation->getSkill()->getId()) {
+                continue;
+            }
+
+            $existingSkillIds[(int) $existingRelation->getSkill()->getId()] = true;
+        }
 
         if ([] === $skillIds) {
+            foreach ($existingRelations as $existingRelation) {
+                $this->entityManager->remove($existingRelation);
+            }
+
             return;
         }
 
@@ -1210,6 +1232,19 @@ final readonly class ExerciseConfigurationProcessor implements ProcessorInterfac
             ->getQuery()
             ->getResult()
         ;
+
+        foreach ($skills as $skill) {
+            if (!$skill instanceof Skill || null === $skill->getId()) {
+                continue;
+            }
+            if (!$skill->isAcquirable() && !isset($existingSkillIds[(int) $skill->getId()])) {
+                throw new BadRequestHttpException('A non-acquirable skill cannot be attached to an exercise.');
+            }
+        }
+
+        foreach ($existingRelations as $existingRelation) {
+            $this->entityManager->remove($existingRelation);
+        }
 
         $userId = $this->getCurrentUserId();
         foreach ($skills as $skill) {

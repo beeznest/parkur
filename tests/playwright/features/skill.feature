@@ -108,6 +108,24 @@ Feature: Skills
     And wait for the page to be loaded
     Then I should not see an error
 
+  Scenario: Structural skill is not available for manual assignment
+    Given I am a platform administrator
+    And I am on "main/skills/skill_create.php"
+    And wait very long for the page to be loaded
+    When I fill in the following:
+      | title | skillcat |
+      | short_code | scat |
+      | description | Structural skill category |
+    And I uncheck "acquirable"
+    And I press "submit"
+    And wait for the page to be loaded
+    Then I should see "skillcat"
+    And I am on "/skill/assign/1"
+    And I wait for the page to be loaded
+    When I click the "[name='skillId']" element
+    Then I should not see "skillcat"
+    And I should not see an error
+
   # Manual skill assignment/removal is handled by the Vue + API Platform flow.
   # Skill creation/editing is still legacy and remains covered above until that
   # separate part of the Skills tool is migrated.

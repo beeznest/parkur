@@ -20,7 +20,7 @@ $interbreadcrumb[] = ['url' => 'skill_list.php', 'name' => get_lang('Manage skil
 
 /* Process data */
 $skillParentId = isset($_GET['parent']) ? intval($_GET['parent']) : 0;
-$formDefaultValues = [];
+$formDefaultValues = ['acquirable' => 1];
 
 $objSkill = new SkillModel();
 if ($skillParentId > 0) {
@@ -29,6 +29,7 @@ if ($skillParentId > 0) {
     $formDefaultValues = [
         'parent_id' => $skillParentInfo['id'],
         'gradebook_id' => [],
+        'acquirable' => 1,
     ];
 
     foreach ($skillParentInfo['gradebooks'] as $gradebook) {
