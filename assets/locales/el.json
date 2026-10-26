@@ -4258,5 +4258,8 @@
     "Sessions by date": "Συνεδρίες ανά ημερομηνία",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Αυτό επισημαίνει κάθε μετεγκατάσταση που περιλαμβάνεται σε αυτή την έκδοση ως ήδη εκτελεσμένη. Κάντε το μόνο σε πλατφόρμα που είναι ενημερωμένη και δεν έχει καταγράψει ποτέ το ιστορικό της.",
     "Course tracking details": "Λεπτομέρειες παρακολούθησης μαθήματος",
-    "Learner details in course": "Λεπτομέρειες εκπαιδευόμενου στο μάθημα"
+    "Learner details in course": "Λεπτομέρειες εκπαιδευόμενου στο μάθημα",
+    "Delete message": "Διαγραφή μηνύματος",
+    "Message Sent": "Αυτό το μήνυμα έχει σταλεί στο",
+    "Are you sure you want to delete the selected message?": "Είστε σίγουρος/η ότι θέλετε να διαγράψετε τα επιλεγμένα μηνύματα;"
 }

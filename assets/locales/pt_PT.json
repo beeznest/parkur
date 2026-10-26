@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sessões por data",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Isto marca todas as migrações incluídas nesta versão como já executadas. Faça-o apenas numa plataforma atualizada que nunca tenha registado o seu histórico.",
     "Course tracking details": "Detalhes de acompanhamento do curso",
-    "Learner details in course": "Detalhes do aluno no curso"
+    "Learner details in course": "Detalhes do aluno no curso",
+    "Delete message": "Eliminar mensagem",
+    "Message Sent": "Mensagem enviada",
+    "Are you sure you want to delete the selected message?": "Tem a certeza que deseja eliminar a mensagem seleccionada?"
 }

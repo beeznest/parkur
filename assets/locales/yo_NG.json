@@ -4258,5 +4258,8 @@
     "Sessions by date": "Àwùjọ ìpàdé lọ́jọ́",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Èyí samisi gbogbo ìkópadà tí ẹ̀yà yìí gbé jáde gẹ́gẹ́ bíi èyí tí a ti ṣe tẹ́lẹ̀. Ṣe èyí nìkan lórí pẹpẹ tí ó ti wà ní ìgbàlódé tí kò sì tíì kọ ìtàn rẹ̀ sílẹ̀.",
     "Course tracking details": "Àwọn àlàyé ìtọpa ẹ̀kọ́",
-    "Learner details in course": "Àwòkúnfẹ̀ akẹ́kọ̀ọ́ nínú ẹ̀kọ́"
+    "Learner details in course": "Àwòkúnfẹ̀ akẹ́kọ̀ọ́ nínú ẹ̀kọ́",
+    "Delete message": "Paarẹ ifiranṣẹ",
+    "Message Sent": "Ifiranṣẹ ti a fi ránṣẹ",
+    "Are you sure you want to delete the selected message?": "Ṣe o da ṣinṣin pe o fẹ pa ifiranṣẹ ti a yan?"
 }

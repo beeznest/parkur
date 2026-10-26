@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sesije po datumu",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ovo označava svaku migraciju isporučenu s ovom verzijom kao već izvršenu. Učinite to samo na platformi koja je ažurna i nikada nije zabilježila svoju povijest.",
     "Course tracking details": "Detalji praćenja tečaja",
-    "Learner details in course": "Detalji studenta vezano za kolegij"
+    "Learner details in course": "Detalji studenta vezano za kolegij",
+    "Delete message": "Obriši poruku",
+    "Message Sent": "Poruka poslana",
+    "Are you sure you want to delete the selected message?": "Jeste li sigurni da želite obrisati odabranu poruku?"
 }

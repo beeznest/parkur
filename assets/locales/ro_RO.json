@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sesiuni pe dată",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Aceasta marchează fiecare migrare livrată de această versiune ca deja executată. Faceți acest lucru doar pe o platformă actualizată care nu și-a înregistrat niciodată istoricul.",
     "Course tracking details": "Detalii urmărire curs",
-    "Learner details in course": "Detaliile studentului in acest curs"
+    "Learner details in course": "Detaliile studentului in acest curs",
+    "Delete message": "Ștergeți mesajul",
+    "Message Sent": "Mesaj trimis",
+    "Are you sure you want to delete the selected message?": "Sunteți sigur că doriți să ștergeți acest mesaj?"
 }

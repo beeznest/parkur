@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sesionet sipas datës",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Kjo shënon çdo migrim të përfshirë në këtë version si tashmë të ekzekutuar. Bëjeni këtë vetëm në një platformë që është e përditësuar dhe nuk ka regjistruar kurrë historikun e saj.",
     "Course tracking details": "Detajet e ndjekjes së kursit",
-    "Learner details in course": "Detajet e nxënësit në kurs"
+    "Learner details in course": "Detajet e nxënësit në kurs",
+    "Delete message": "Fshije mesazhin",
+    "Message Sent": "Mesazh i dërguar",
+    "Are you sure you want to delete the selected message?": "A jeni të sigurt që dëshironi të fshini mesazhin e zgjedhur?"
 }

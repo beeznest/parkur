@@ -4258,5 +4258,8 @@
     "Sessions by date": "日ごとのセッション",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "この操作は、このバージョンで提供されたすべてのマイグレーションを実行済みとしてマークします。最新で、履歴が一度も記録されていないプラットフォームでのみ実行してください。",
     "Course tracking details": "コース追跡の詳細",
-    "Learner details in course": "コース内の学習者詳細"
+    "Learner details in course": "コース内の学習者詳細",
+    "Delete message": "メッセージ削除",
+    "Message Sent": "送信済みメッセージ",
+    "Are you sure you want to delete the selected message?": "選択したメッセージを削除してもよろしいですか？"
 }

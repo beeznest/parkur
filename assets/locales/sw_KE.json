@@ -4258,5 +4258,8 @@
     "Sessions by date": "Mikao kwa tarehe",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Hii huashiria kila uhamishaji ulioletwa na toleo hili kama uliotekelezwa tayari. Fanya hivi tu kwenye jukwaa lililo sasishwa na ambalo halijawahi kurekodi historia yake.",
     "Course tracking details": "Maelezo ya ufuatiliaji wa kozi",
-    "Learner details in course": "Maelezo ya mwanafunzi katika kozi"
+    "Learner details in course": "Maelezo ya mwanafunzi katika kozi",
+    "Delete message": "Futa ujumbe",
+    "Message Sent": "Ujumbe Umetumwa",
+    "Are you sure you want to delete the selected message?": "Je, una uhakika unataka kufuta ujumbe uliochaguliwa?"
 }

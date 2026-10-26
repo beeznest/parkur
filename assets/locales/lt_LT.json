@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sesijos pagal datą",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Tai pažymi visas šios versijos migracijas kaip jau įvykdytas. Darykite tai tik platformoje, kuri yra atnaujinta ir niekada neregistravo savo istorijos.",
     "Course tracking details": "Kurso stebėjimo detalės",
-    "Learner details in course": "Studento detalės kurse"
+    "Learner details in course": "Studento detalės kurse",
+    "Delete message": "Ištrinti pranešimą",
+    "Message Sent": "Pranešimas išsiųstas",
+    "Are you sure you want to delete the selected message?": "Ar tikrai norite ištrinti pažymėtą pranešimą?"
 }

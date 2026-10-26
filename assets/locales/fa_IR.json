@@ -4258,5 +4258,8 @@
     "Sessions by date": "جلسات بر اساس تاریخ",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "این کار همه مهاجرت‌های ارائه‌شده در این نسخه را به‌عنوان اجراشده علامت می‌زند. این کار را فقط روی بستری انجام دهید که به‌روز است و هرگز تاریخچه خود را ثبت نکرده است.",
     "Course tracking details": "جزئیات پیگیری دوره",
-    "Learner details in course": "جزئیات یادگیرنده در دوره"
+    "Learner details in course": "جزئیات یادگیرنده در دوره",
+    "Delete message": "حذف پیام",
+    "Message Sent": "پیام ارسال شد",
+    "Are you sure you want to delete the selected message?": "آیا مطمئن هستید که قصد پاک کردن پیام ها را دارید؟"
 }

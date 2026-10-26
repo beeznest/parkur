@@ -4234,5 +4234,8 @@
     "Number of messages sent": "Numru ta' messa\u0121\u0121i mibg\u0127uta",
     "Contacts count": "Numru ta' kuntatti",
     "Sessions by date": "Sessjonijiet skont id-data",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Dan jimmarka kull migrazzjoni mibg\u0127uta minn din il-ver\u017cjoni b\u0127ala di\u0121\u00e0 e\u017cegwita. Ag\u0127mel dan biss fuq pjattaforma li hija a\u0121\u0121ornata u qatt ma rre\u0121istrat l-istorja tag\u0127ha."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Dan jimmarka kull migrazzjoni mibg\u0127uta minn din il-ver\u017cjoni b\u0127ala di\u0121\u00e0 e\u017cegwita. Ag\u0127mel dan biss fuq pjattaforma li hija a\u0121\u0121ornata u qatt ma rre\u0121istrat l-istorja tag\u0127ha.",
+    "Delete message": "Delete message",
+    "Message Sent": "Message Sent",
+    "Are you sure you want to delete the selected message?": "Are you sure you want to delete the selected message?"
 }

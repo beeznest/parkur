@@ -4259,5 +4259,8 @@
     "This records the migrations your database already carries, and leaves the newer ones pending so the update can execute them. Your data is not modified.": "This records the migrations your database already carries, and leaves the newer ones pending so the update can execute them. Your data is not modified.",
     "Survey published. Created: {0}. Updated: {1}. Messages sent: {2}.": "Survey published. Created: {0}. Updated: {1}. Messages sent: {2}.",
     "Course tracking details": "Course tracking details",
-    "Learner details in course": "Learner details in course"
+    "Learner details in course": "Learner details in course",
+    "Delete message": "Delete message",
+    "Message Sent": "Message Sent",
+    "Are you sure you want to delete the selected message?": "Are you sure you want to delete the selected message?"
 }

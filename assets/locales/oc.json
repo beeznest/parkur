@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sessions per data",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Aquò marca cada migracion liurada per aquesta version coma ja executada. Fasètz aquò solament sus una plataforma a jorn que n'a jamai enregistrat son istòria.",
     "Course tracking details": "Detalhs del seguiment del cors",
-    "Learner details in course": "Detalhs de l'aprenent dins lo cors"
+    "Learner details in course": "Detalhs de l'aprenent dins lo cors",
+    "Delete message": "Effacer lo messatge",
+    "Message Sent": "Messatge mandat",
+    "Are you sure you want to delete the selected message?": "Sètz segur que vollez effacer lo messatge seleccionat ?"
 }

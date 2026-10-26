@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sessioner efter dato",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Dette markerer alle migreringer, der følger med denne version, som allerede udført. Gør kun dette på en platform, der er opdateret og aldrig har registreret sin historik.",
     "Course tracking details": "Kursusopfølgningsdetaljer",
-    "Learner details in course": "Detaljer om brugeren i relation til kursussiden"
+    "Learner details in course": "Detaljer om brugeren i relation til kursussiden",
+    "Delete message": "Slet besked",
+    "Message Sent": "Besked sendt",
+    "Are you sure you want to delete the selected message?": "Er du sikker på, at du vil slette den valgte besked?"
 }

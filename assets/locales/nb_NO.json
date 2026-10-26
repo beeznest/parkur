@@ -4254,5 +4254,8 @@
     "Number of messages sent": "Antall meldinger sendt",
     "Contacts count": "Antall kontakter",
     "Sessions by date": "\u00d8kter etter dato",
-    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Dette merker hver migrering som f\u00f8lger med denne versjonen som allerede utf\u00f8rt. Gj\u00f8r dette bare p\u00e5 en plattform som er oppdatert og aldri har registrert historikken sin."
+    "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Dette merker hver migrering som f\u00f8lger med denne versjonen som allerede utf\u00f8rt. Gj\u00f8r dette bare p\u00e5 en plattform som er oppdatert og aldri har registrert historikken sin.",
+    "Delete message": "Delete message",
+    "Message Sent": "Message Sent",
+    "Are you sure you want to delete the selected message?": "Are you sure you want to delete the selected message?"
 }

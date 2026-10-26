@@ -4258,5 +4258,8 @@
     "Sessions by date": "Seje po datumu",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "To označi vsako migracijo, ki jo prinaša ta različica, kot že izvedeno. To storite samo na platformi, ki je posodobljena in nikoli ni zabeležila svoje zgodovine.",
     "Course tracking details": "Podrobnosti sledenja tečaja",
-    "Learner details in course": "Podrobnosti o tečajniku znotraj tečaja"
+    "Learner details in course": "Podrobnosti o tečajniku znotraj tečaja",
+    "Delete message": "Odstrani sporočilo",
+    "Message Sent": "Sporočilo je bilo poslano",
+    "Are you sure you want to delete the selected message?": "Ste prepričani, da želite odstraniti izbrana sporočila?"
 }

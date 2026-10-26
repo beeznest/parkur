@@ -4258,5 +4258,8 @@
     "Sessions by date": "তারিখভিত্তিক সেশন",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "এটি এই সংস্করণে পাঠানো প্রতিটি মাইগ্রেশনকে ইতিমধ্যে সম্পাদিত হিসেবে চিহ্নিত করে। শুধুমাত্র এমন প্ল্যাটফর্মে করুন যা আপ টু ডেট এবং কখনও তার ইতিহাস রেকর্ড করেনি।",
     "Course tracking details": "কোর্স ট্র্যাকিং বিস্তারিত",
-    "Learner details in course": "কোর্সে শিক্ষার্থীর বিবরণ"
+    "Learner details in course": "কোর্সে শিক্ষার্থীর বিবরণ",
+    "Delete message": "বার্তা মুছুন",
+    "Message Sent": "পাঠিত বার্তা",
+    "Are you sure you want to delete the selected message?": "আপনি কি নিশ্চিত যে নির্বাচিত বার্তাটি মুছে ফেলতে চান?"
 }

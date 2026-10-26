@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sessies op datum",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Dit markeert elke migratie die bij deze versie hoort als al uitgevoerd. Doe dit alleen op een platform dat up-to-date is en nooit zijn geschiedenis heeft vastgelegd.",
     "Course tracking details": "Cursusvolgdetails",
-    "Learner details in course": "Details van de cursist in deze cursus"
+    "Learner details in course": "Details van de cursist in deze cursus",
+    "Delete message": "Verwijder bericht",
+    "Message Sent": "Bericht verstuurd",
+    "Are you sure you want to delete the selected message?": "Ben je zeker dat je het geselecteerde bericht wil verwijderen?"
 }

@@ -4258,5 +4258,8 @@
     "Sessions by date": "தேதியின்படி அமர்வுகள்",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "இந்தப் பதிப்பால் வழங்கப்பட்ட ஒவ்வொரு இடப்பெயர்வையும் ஏற்கனவே செயல்படுத்தப்பட்டதாக இது குறிக்கிறது. புதுப்பித்த நிலையில் உள்ள மற்றும் அதன் வரலாற்றை ஒருபோதும் பதிவு செய்யாத தளத்தில் மட்டுமே இதைச் செய்யுங்கள்.",
     "Course tracking details": "பாடநெறி கண்காணிப்பு விவரங்கள்",
-    "Learner details in course": "பாடத்தில் கற்றவரின் விவரங்கள்"
+    "Learner details in course": "பாடத்தில் கற்றவரின் விவரங்கள்",
+    "Delete message": "செய்தியை நீக்கு",
+    "Message Sent": "செய்தி அனுப்பப்பட்டது",
+    "Are you sure you want to delete the selected message?": "தேர்ந்தெடுக்கப்பட்ட செய்தியை நீக்க விரும்புகிறீர்களா?"
 }

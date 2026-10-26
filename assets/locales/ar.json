@@ -4258,5 +4258,8 @@
     "Sessions by date": "الدورات وفقا للتاريخ",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "يؤشر هذا كل ترحيل مُضمَّن في هذا الإصدار على أنه نُفِّذ بالفعل. افعل ذلك فقط على منصة محدَّثة ولم تسجّل تاريخها قط.",
     "Course tracking details": "تفاصيل تتبع الدورة",
-    "Learner details in course": "تفاصيل المتعلم في المقرر"
+    "Learner details in course": "تفاصيل المتعلم في المقرر",
+    "Delete message": "امسح الرسالة",
+    "Message Sent": "الرسائل المرسلة",
+    "Are you sure you want to delete the selected message?": "هل انت متأكد بانك تريد حذف الرسائل المحددة؟"
 }

@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sessioner per datum",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Detta markerar varje migrering som medföljer den här versionen som redan utförd. Gör detta endast på en plattform som är uppdaterad och aldrig har registrerat sin historik.",
     "Course tracking details": "Kursuppföljningsdetaljer",
-    "Learner details in course": "Elevdetaljer i kurs"
+    "Learner details in course": "Elevdetaljer i kurs",
+    "Delete message": "Ta bort meddelande",
+    "Message Sent": "Meddelande skickat",
+    "Are you sure you want to delete the selected message?": "Är du säker på att du vill radera markerat meddelande?"
 }

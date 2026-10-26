@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sesi mengikut tarikh",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ini menandakan setiap migrasi yang dihantar oleh versi ini sebagai sudah dilaksanakan. Hanya lakukan ini pada platform yang terkini dan tidak pernah merekodkan sejarahnya.",
     "Course tracking details": "Butiran penjejakan kursus",
-    "Learner details in course": "Butiran pelajar dalam kursus"
+    "Learner details in course": "Butiran pelajar dalam kursus",
+    "Delete message": "Padam mesej",
+    "Message Sent": "Mesej Dihantar",
+    "Are you sure you want to delete the selected message?": "Adakah anda pasti mahu memadam mesej terpilih?"
 }

@@ -4258,5 +4258,8 @@
     "Sessions by date": "Seisiúin de réir dáta",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Marcálann sé seo gach imirce a sheol an leagan seo mar a forghníomhaíodh cheana. Ná déan é seo ach ar ardán atá cothrom le dáta agus nár thaifead a stair riamh.",
     "Course tracking details": "Sonraí rianaithe an chúrsa",
-    "Learner details in course": "Sonraí foghlaimeora sa chúrsa"
+    "Learner details in course": "Sonraí foghlaimeora sa chúrsa",
+    "Delete message": "Scrios teachtaireacht",
+    "Message Sent": "Teachtaireacht Seolta",
+    "Are you sure you want to delete the selected message?": "An bhfuil tú cinnte gur mhaith leat an teachtaireacht roghnaithe a scriosadh?"
 }

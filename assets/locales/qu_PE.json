@@ -4258,5 +4258,8 @@
     "Sessions by date": "P'unchawmanta sesionkuna",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Kayqa kay versiónpa apachimunqan llapa migraciónkunata ña rurasqañam nispa unanchan. Kaytaqa ruyaylla kunan pacha kachkaq, mana hayk'aqpas historialninta qillqasqa plataforma nisqallapi.",
     "Course tracking details": "Yachachina qatipaypa imaymana",
-    "Learner details in course": "Yachaqe yachachinapi ancha willan"
+    "Learner details in course": "Yachaqe yachachinapi ancha willan",
+    "Delete message": "Pichay willanata",
+    "Message Sent": "Willana apachisqa",
+    "Are you sure you want to delete the selected message?": "Cheqaychu kashanki kay willanata pichanaykipaq ?"
 }

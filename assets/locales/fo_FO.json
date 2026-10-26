@@ -4258,5 +4258,8 @@
     "Sessions by date": "Sessiónir eftir dag",
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Hetta merkir allar flytingar, ið fylgja við hesi útgávu, sum longu framdar. Ger hetta bert á einum palli, ið er dagførdur og ongantíð hevur skrásett sína søgu.",
     "Course tracking details": "Nágreiniligar upplýsingar um námskeið",
-    "Learner details in course": "Lærlingapartar í kursi"
+    "Learner details in course": "Lærlingapartar í kursi",
+    "Delete message": "Strika hesi boðini",
+    "Message Sent": "Boð sent",
+    "Are you sure you want to delete the selected message?": "Er tú vís í at sletta valda boðini?"
 }

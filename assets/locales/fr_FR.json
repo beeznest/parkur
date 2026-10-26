@@ -4259,5 +4259,8 @@
     "This marks every migration shipped by this version as already executed. Only do this on a platform that is up to date and has never recorded its history.": "Ceci marque toutes les migrations livrées par cette version comme déjà exécutées. Ne le faites que sur une plateforme à jour qui n'a jamais enregistré son historique.",
     "Survey published. Created: {0}. Updated: {1}. Messages sent: {2}.": "Enquête publiée. Créées : {0}. Mises à jour : {1}. Messages envoyés : {2}.",
     "Course tracking details": "Détails du suivi du cours",
-    "Learner details in course": "Détails de l'apprenant dans le cours"
+    "Learner details in course": "Détails de l'apprenant dans le cours",
+    "Delete message": "Supprimer le message",
+    "Message Sent": "Message envoyé",
+    "Are you sure you want to delete the selected message?": "Êtes-vous certain de vouloir supprimer le message sélectionné ?"
 }
