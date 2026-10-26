@@ -1328,6 +1328,7 @@ final readonly class GlobalReportingSectionQueryService
                 $canManageLearner,
             );
             $courseDetailSections = $this->getLearnerCourseDetailSections(
+                $context,
                 $userId,
                 (int) $courseRow['id'],
                 (int) $courseRow['sessionId'],
@@ -2350,6 +2351,7 @@ final readonly class GlobalReportingSectionQueryService
      * @return array<int, array<string, mixed>>
      */
     private function getLearnerCourseDetailSections(
+        GlobalReportingContext $context,
         int $userId,
         int $courseId,
         int $sessionId,
@@ -2375,6 +2377,7 @@ final readonly class GlobalReportingSectionQueryService
         }
         unset($learningPath);
 
+        $skills = $this->skillDetailRows($userId, $courseId, $sessionId);
         $tests = $this->exerciseDetailRows($userId, $courseId, $sessionId);
         $assignments = $this->assignmentDetailRows($userId, $courseId, $sessionId);
 
@@ -2386,7 +2389,9 @@ final readonly class GlobalReportingSectionQueryService
                     ['key' => 'title', 'label' => 'Skill', 'type' => 'text'],
                     ['key' => 'acquiredAt', 'label' => 'Acquired at', 'type' => 'datetime'],
                 ],
-                'items' => $this->skillDetailRows($userId, $courseId, $sessionId),
+                'items' => $skills,
+                // As the legacy course report, the course's skills are also placed in the skill tree
+                'tree' => $this->getLearnerSkillTree($context, $skills),
                 'emptyText' => 'No acquired skill',
             ],
             [
