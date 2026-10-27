@@ -3732,3 +3732,56 @@ When(
   },
 )
 
+
+// Not ported — new, for specialCase2TutorWorkflow.feature. Several legacy
+// pages a tutor navigates to (myStudents.php, the "send legal agreement"
+// action, the diagnostic-finalization message link) are only reachable with
+// the LEARNER's real numeric id in the URL/query string — never "67" or any
+// other literal, which is only ever true by coincidence of one specific
+// historical seed run (same reasoning as lastFriendUserId/
+// lastCreatedAttendanceId elsewhere in this file). Resolved once via
+// find_users and remembered module-scoped, same "USER_ID" placeholder-
+// substitution pattern "I am on the attendance page ..." already uses for
+// ATTENDANCE_ID.
+let lastResolvedUserId: string | null = null
+
+When("I resolve the user id for {string}", async ({ page }, username: string) => {
+  const response = await page.request.get(
+    `/main/inc/ajax/message.ajax.php?a=find_users&q=${encodeURIComponent(username)}&page_limit=10`,
+  )
+  const { items } = await response.json()
+  const id = items?.[0]?.id
+  if (!id) {
+    throw new Error(`find_users returned no match for username "${username}"`)
+  }
+  lastResolvedUserId = String(id)
+})
+
+Given("I am on {string} with the resolved user id", async ({ page }, pathTemplate: string) => {
+  if (!lastResolvedUserId) {
+    throw new Error('No user id resolved — run "I resolve the user id for ..." right before this.')
+  }
+  await gotoReliably(page, pathTemplate.replace("USER_ID", lastResolvedUserId))
+})
+
+// Not ported — new, for toolLp.feature's "Prerequisites" field on a learning
+// path's Settings page (LpForm.vue, `BaseSelect id="lp-prerequisite"`).
+// NOT the same widget as the "I select ... from ..." step above: that step's
+// own header comment documents PrimeVue's <Select> as a progressive
+// enhancement over a real, CSS-hidden native <select> (true for the legacy
+// /admin/settings/* pages, where selectOption() works directly) — but a
+// BaseSelect rendered entirely by the Vue SPA has no such backing element at
+// all. Confirmed live via the real failure: `#lp-prerequisite` resolved to
+// `<span role="combobox" id="lp-prerequisite">`, and
+// `locator.selectOption()` threw "Element is not a <select> element" outright
+// rather than timing out. Same open-overlay-then-click-the-option shape as
+// the multiselect step above, single-select PrimeVue `Select` instead of
+// `MultiSelect` (`.p-select-overlay`/`[role="option"]`, confirmed live).
+When("I select the dropdown option {string} in {string}", async ({ page }, optionText: string, fieldId: string) => {
+  const field = page.locator(`#${fieldId}`)
+  await field.scrollIntoViewIfNeeded()
+  await field.click({ force: true })
+  const overlay = page.locator(".p-select-overlay")
+  await overlay.waitFor({ state: "visible" })
+  await overlay.getByText(optionText, { exact: true }).click()
+})
