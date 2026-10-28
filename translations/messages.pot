@@ -41439,3 +41439,6 @@ msgstr ""
 
 msgid "Survey published. Created: %d. Updated: %d. Messages sent: %d."
 msgstr ""
+
+msgid "The recording will be saved with the correction."
+msgstr ""

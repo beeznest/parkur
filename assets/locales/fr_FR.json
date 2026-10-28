@@ -4262,5 +4262,7 @@
     "Learner details in course": "Détails de l'apprenant dans le cours",
     "Delete message": "Supprimer le message",
     "Message Sent": "Message envoyé",
-    "Are you sure you want to delete the selected message?": "Êtes-vous certain de vouloir supprimer le message sélectionné ?"
+    "Are you sure you want to delete the selected message?": "Êtes-vous certain de vouloir supprimer le message sélectionné ?",
+    "Audio comment": "Commentaire audio",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

@@ -4261,5 +4261,7 @@
     "Learner details in course": "コース内の学習者詳細",
     "Delete message": "メッセージ削除",
     "Message Sent": "送信済みメッセージ",
-    "Are you sure you want to delete the selected message?": "選択したメッセージを削除してもよろしいですか？"
+    "Are you sure you want to delete the selected message?": "選択したメッセージを削除してもよろしいですか？",
+    "Audio comment": "音声のコメント",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

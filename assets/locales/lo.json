@@ -4258,5 +4258,7 @@
     "Learner details in course": "ລາຍລະອຽດຜູ້ຮຽນໃນລາຍວິຊາ",
     "Delete message": "ລຶບຂໍ້ຄວາມ",
     "Message Sent": "ສົ່ງຂໍ້ຄວາມແລ້ວ",
-    "Are you sure you want to delete the selected message?": "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ຄວາມທີ່ເລືອກ?"
+    "Are you sure you want to delete the selected message?": "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບຂໍ້ຄວາມທີ່ເລືອກ?",
+    "Audio comment": "ຄຳເຫັນສຽງ",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

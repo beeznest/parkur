@@ -4261,5 +4261,7 @@
     "Learner details in course": "Подробно за курсиста в този курс",
     "Delete message": "Изтриване на съобщението",
     "Message Sent": "Съобщението е изпратено.",
-    "Are you sure you want to delete the selected message?": "Сигурни ли сте, че искате да изтриете избраните съобщения?"
+    "Are you sure you want to delete the selected message?": "Сигурни ли сте, че искате да изтриете избраните съобщения?",
+    "Audio comment": "Аудио коментар",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

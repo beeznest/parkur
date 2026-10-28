@@ -4261,5 +4261,7 @@
     "Learner details in course": "Detaljer om brugeren i relation til kursussiden",
     "Delete message": "Slet besked",
     "Message Sent": "Besked sendt",
-    "Are you sure you want to delete the selected message?": "Er du sikker på, at du vil slette den valgte besked?"
+    "Are you sure you want to delete the selected message?": "Er du sikker på, at du vil slette den valgte besked?",
+    "Audio comment": "Lydkommentar",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

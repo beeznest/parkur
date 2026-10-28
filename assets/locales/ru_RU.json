@@ -4261,5 +4261,7 @@
     "Learner details in course": "Подробности об учащемся на курсе",
     "Delete message": "Удалить сообщение",
     "Message Sent": "Сообщение отправлено",
-    "Are you sure you want to delete the selected message?": "Вы уверены, что хотите удалить выбранное сообщение?"
+    "Are you sure you want to delete the selected message?": "Вы уверены, что хотите удалить выбранное сообщение?",
+    "Audio comment": "Аудио-комментарий",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

@@ -4261,5 +4261,7 @@
     "Learner details in course": "A kurzus tanulóinak adatai",
     "Delete message": "Üzenet törlése",
     "Message Sent": "Az üzenet elküldve",
-    "Are you sure you want to delete the selected message?": "Biztosan törölni akarja a kiválasztott üzenetet?"
+    "Are you sure you want to delete the selected message?": "Biztosan törölni akarja a kiválasztott üzenetet?",
+    "Audio comment": "Hang kommentár",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

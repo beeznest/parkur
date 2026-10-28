@@ -4261,5 +4261,7 @@
     "Learner details in course": "課程學員詳細資料",
     "Delete message": "刪除訊息",
     "Message Sent": "訊息已傳送",
-    "Are you sure you want to delete the selected message?": "您確定要刪除選取的訊息嗎？"
+    "Are you sure you want to delete the selected message?": "您確定要刪除選取的訊息嗎？",
+    "Audio comment": "音訊註解",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

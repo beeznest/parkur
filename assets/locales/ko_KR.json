@@ -4261,5 +4261,7 @@
     "Learner details in course": "코스 내 학습자 상세 정보",
     "Delete message": "메시지 삭제",
     "Message Sent": "보낸 메시지",
-    "Are you sure you want to delete the selected message?": "선택된 메시지를 삭제하시겠습니까?"
+    "Are you sure you want to delete the selected message?": "선택된 메시지를 삭제하시겠습니까?",
+    "Audio comment": "오디오 주석",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

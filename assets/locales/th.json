@@ -4261,5 +4261,7 @@
     "Learner details in course": "รายละเอียดผู้เรียนในคอร์ส",
     "Delete message": "ลบข้อความ",
     "Message Sent": "ส่งข้อความแล้ว",
-    "Are you sure you want to delete the selected message?": "คุณแน่ใจหรือไม่ว่าต้องการลบข้อความที่เลือก?"
+    "Are you sure you want to delete the selected message?": "คุณแน่ใจหรือไม่ว่าต้องการลบข้อความที่เลือก?",
+    "Audio comment": "คำอธิบายเสียง",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }

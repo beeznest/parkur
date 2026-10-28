@@ -4261,5 +4261,7 @@
     "Learner details in course": "Oppijan tiedot kurssilla",
     "Delete message": "Poista viesti",
     "Message Sent": "Viesti lähetetty",
-    "Are you sure you want to delete the selected message?": "Haluatko varmasti poistaa valitun viestin?"
+    "Are you sure you want to delete the selected message?": "Haluatko varmasti poistaa valitun viestin?",
+    "Audio comment": "Ääniraidalla",
+    "The recording will be saved with the correction.": "The recording will be saved with the correction."
 }
