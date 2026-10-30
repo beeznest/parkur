@@ -3785,3 +3785,11 @@ When("I select the dropdown option {string} in {string}", async ({ page }, optio
   await overlay.waitFor({ state: "visible" })
   await overlay.getByText(optionText, { exact: true }).click()
 })
+
+// Ported from master. Scopes a raw CSS selector by visible text, for
+// clickable elements that are neither a link nor a button (e.g. a message
+// row's <td> in the inbox table), which "I follow ..." cannot resolve.
+When("I click element {string} containing text {string}", async ({ page }, selector: string, text: string) => {
+  await dismissBlockingUi(page)
+  await page.locator(selector, { hasText: text }).first().click()
+})
