@@ -128,6 +128,9 @@ final class ExerciseRuntimeResult
     #[Groups(['exercise_runtime_result:read'])]
     public bool $canManage = false;
 
+    #[Groups(['exercise_runtime_result:read'])]
+    public string $correctionNotificationContent = '';
+
     public function getExerciseId(): ?int
     {
         return $this->exerciseId;

@@ -1025,16 +1025,19 @@
                       />
                       {{ t("Send email") }}
                     </label>
-                    <BaseTextArea
+                    <div
                       v-if="correctionForms[question.id].sendNotification"
-                      v-model="correctionForms[question.id].notificationContent"
-                      :disabled="correctionSavingQuestionId === question.id"
-                      :id="correctionNotificationInputId(question)"
-                      :label="t('Content')"
                       class="mt-3"
-                      name="notification_content"
-                      rows="3"
-                    />
+                    >
+                      <BaseTinyEditor
+                        v-model="correctionForms[question.id].notificationContent"
+                        :editor-config="notificationEditorConfig"
+                        :editor-id="correctionNotificationInputId(question)"
+                        :enable-translate-html="false"
+                        :full-page="false"
+                        :title="t('Content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1250,16 +1253,19 @@
                       />
                       {{ t("Send email") }}
                     </label>
-                    <BaseTextArea
+                    <div
                       v-if="correctionForms[question.id].sendNotification"
-                      v-model="correctionForms[question.id].notificationContent"
-                      :disabled="correctionSavingQuestionId === question.id"
-                      :id="correctionNotificationInputId(question)"
-                      :label="t('Content')"
                       class="mt-3"
-                      name="notification_content"
-                      rows="3"
-                    />
+                    >
+                      <BaseTinyEditor
+                        v-model="correctionForms[question.id].notificationContent"
+                        :editor-config="notificationEditorConfig"
+                        :editor-id="correctionNotificationInputId(question)"
+                        :enable-translate-html="false"
+                        :full-page="false"
+                        :title="t('Content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1477,16 +1483,19 @@
                       />
                       {{ t("Send email") }}
                     </label>
-                    <BaseTextArea
+                    <div
                       v-if="correctionForms[question.id].sendNotification"
-                      v-model="correctionForms[question.id].notificationContent"
-                      :disabled="correctionSavingQuestionId === question.id"
-                      :id="correctionNotificationInputId(question)"
-                      :label="t('Content')"
                       class="mt-3"
-                      name="notification_content"
-                      rows="3"
-                    />
+                    >
+                      <BaseTinyEditor
+                        v-model="correctionForms[question.id].notificationContent"
+                        :editor-config="notificationEditorConfig"
+                        :editor-id="correctionNotificationInputId(question)"
+                        :enable-translate-html="false"
+                        :full-page="false"
+                        :title="t('Content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1688,16 +1697,19 @@
                       />
                       {{ t("Send email") }}
                     </label>
-                    <BaseTextArea
+                    <div
                       v-if="correctionForms[question.id].sendNotification"
-                      v-model="correctionForms[question.id].notificationContent"
-                      :disabled="correctionSavingQuestionId === question.id"
-                      :id="correctionNotificationInputId(question)"
-                      :label="t('Content')"
                       class="mt-3"
-                      name="notification_content"
-                      rows="3"
-                    />
+                    >
+                      <BaseTinyEditor
+                        v-model="correctionForms[question.id].notificationContent"
+                        :editor-config="notificationEditorConfig"
+                        :editor-id="correctionNotificationInputId(question)"
+                        :enable-translate-html="false"
+                        :full-page="false"
+                        :title="t('Content')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1767,6 +1779,7 @@ import BaseButton from "../../components/basecomponents/BaseButton.vue"
 import BaseIcon from "../../components/basecomponents/BaseIcon.vue"
 import BaseInputNumber from "../../components/basecomponents/BaseInputNumber.vue"
 import BaseTextArea from "../../components/basecomponents/BaseTextArea.vue"
+import BaseTinyEditor from "../../components/basecomponents/BaseTinyEditor.vue"
 import exerciseService from "../../services/exerciseService"
 import ExerciseTeacherAudioRecorder from "./components/ExerciseTeacherAudioRecorder.vue"
 import { useTranslatedHtml } from "../../composables/useTranslatedHtml"
@@ -1789,6 +1802,11 @@ const finalActions = ref({})
 const progressiveAdaptiveResult = ref({})
 const correctionHistory = ref([])
 const aiCorrection = ref({})
+const correctionNotificationContent = ref("")
+const notificationEditorConfig = {
+  height: 260,
+  menubar: false,
+}
 const isStartingAttempt = ref(false)
 const correctionForms = ref({})
 const aiCorrectionForms = ref({})
@@ -2015,6 +2033,7 @@ async function loadResult() {
     progressiveAdaptiveResult.value = response.progressiveAdaptiveResult || {}
     correctionHistory.value = Array.isArray(response.correctionHistory) ? response.correctionHistory : []
     aiCorrection.value = response.aiCorrection || {}
+    correctionNotificationContent.value = response.correctionNotificationContent || ""
     initializeCorrectionForms()
     initializeAiCorrectionForms()
     scheduleAutoPrintIfRequested()
@@ -2582,7 +2601,7 @@ function prepareCorrectionNotificationContent(question) {
     return
   }
 
-  form.notificationContent = form.teacherComment || ""
+  form.notificationContent = correctionNotificationContent.value || form.teacherComment || ""
 }
 
 async function saveManualCorrection(question, final = true) {
