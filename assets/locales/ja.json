@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "選択したメッセージを削除してもよろしいですか？",
     "Audio comment": "音声のコメント",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "保存しました。"
+    "Saved.": "保存しました。",
+    "You have tried to resolve this exercise earlier": "この演習を以前に試しました",
+    "Disable new test attempts": "新しいテスト試行を無効化"
 }

@@ -4265,5 +4265,7 @@
     "Are you sure you want to delete the selected message?": "Êtes-vous certain de vouloir supprimer le message sélectionné ?",
     "Audio comment": "Commentaire audio",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Sauvegardé."
+    "Saved.": "Sauvegardé.",
+    "You have tried to resolve this exercise earlier": "Vous avez essayé de résoudre cet exercice plus tôt",
+    "Disable new test attempts": "Désactiver les nouvelles tentatives de test"
 }

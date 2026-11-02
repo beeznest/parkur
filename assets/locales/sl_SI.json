@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Ste prepričani, da želite odstraniti izbrana sporočila?",
     "Audio comment": "Govoreča stran",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Shranjeno."
+    "Saved.": "Shranjeno.",
+    "You have tried to resolve this exercise earlier": "Ta test ste predhodno že poskusili rešiti",
+    "Disable new test attempts": "Onemogoči nove poskuse testov"
 }

@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "선택된 메시지를 삭제하시겠습니까?",
     "Audio comment": "오디오 주석",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "저장되었습니다."
+    "Saved.": "저장되었습니다.",
+    "You have tried to resolve this exercise earlier": "이 연습을 이전에 시도한 적이 있습니다",
+    "Disable new test attempts": "새 시험 시도 비활성화"
 }

@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Дали сте сигурни дека сакате да ја избришете избраната порака?",
     "Audio comment": "Аудио коментар",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Зачувано."
+    "Saved.": "Зачувано.",
+    "You have tried to resolve this exercise earlier": "Веќе сте се обиделе да го решите овој вежбалка порано",
+    "Disable new test attempts": "Оневозможи нови обиди на тестови"
 }

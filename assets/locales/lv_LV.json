@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Jūs esat pārliecināts par vēlmi dzēst iezīmētās vēstules?",
     "Audio comment": "Audio komentārs",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Saglabāts"
+    "Saved.": "Saglabāts",
+    "You have tried to resolve this exercise earlier": "Jūs jau mēģinājāt atbildēt uz šo jautājumu agrāk",
+    "Disable new test attempts": "Atspējot jaunus testa mēģinājumus"
 }

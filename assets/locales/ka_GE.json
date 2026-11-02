@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "დარწმუნებული ხართ რომ გსურთ არჩეული შეტყობინების წაშლა?",
     "Audio comment": "აუდიო კომენტარი",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "შენახულია."
+    "Saved.": "შენახულია.",
+    "You have tried to resolve this exercise earlier": "თქვენ უკვე სცადეთ ამ ვარჯიშის შესრულება",
+    "Disable new test attempts": "ახალი ტესტის მცდელობების გამორთვა"
 }

@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Είστε σίγουρος/η ότι θέλετε να διαγράψετε τα επιλεγμένα μηνύματα;",
     "Audio comment": "Ηχητικό σχόλιο",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Αποθηκευτηκε"
+    "Saved.": "Αποθηκευτηκε",
+    "You have tried to resolve this exercise earlier": "Έχετε προσπαθήσει να λύσετε αυτή την άσκηση νωρίτερα",
+    "Disable new test attempts": "Απενεργοποίηση νέων προσπαθειών τεστ"
 }

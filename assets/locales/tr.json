@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Seçili mesajı silmek istediğinizden emin misiniz?",
     "Audio comment": "Sesli yorum",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Kaydedildi."
+    "Saved.": "Kaydedildi.",
+    "You have tried to resolve this exercise earlier": "Bu alıştırmayı daha önce çözmeye çalıştınız",
+    "Disable new test attempts": "Yeni test denemelerini devre dışı bırak"
 }

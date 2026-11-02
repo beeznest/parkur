@@ -4261,5 +4261,7 @@
     "Are you sure you want to delete the selected message?": "ရွေးချယ်ထားသော စာတိုကို ဖျက်လိုသည်မှာ သေချာပါသလား။",
     "Audio comment": "အသံမှတ်ချက်",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "သိမ်းဆည်းပြီးဖြစ်သည်။"
+    "Saved.": "သိမ်းဆည်းပြီးဖြစ်သည်။",
+    "You have tried to resolve this exercise earlier": "သင်သည် ဤလေ့ကျင့်ခန်းကို ယခင်က ဖြေရှင်းရန် ကြိုးစားခဲ့သည်",
+    "Disable new test attempts": "စာမေးပွဲအကြိမ်သစ်များကို ပိတ်ပါ"
 }

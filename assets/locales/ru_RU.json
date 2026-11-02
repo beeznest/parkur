@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Вы уверены, что хотите удалить выбранное сообщение?",
     "Audio comment": "Аудио-комментарий",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Сохранено."
+    "Saved.": "Сохранено.",
+    "You have tried to resolve this exercise earlier": "Вы уже пытались выполнить это упражнение ранее",
+    "Disable new test attempts": "Отключить новые попытки тестов"
 }

@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "คุณแน่ใจหรือไม่ว่าต้องการลบข้อความที่เลือก?",
     "Audio comment": "คำอธิบายเสียง",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "บันทึกแล้ว"
+    "Saved.": "บันทึกแล้ว",
+    "You have tried to resolve this exercise earlier": "คุณเคยพยายามแก้ไขแบบฝึกหัดนี้ก่อนหน้านี้",
+    "Disable new test attempts": "ปิดการพยายามแบบทดสอบใหม่"
 }

@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "क्या आप निश्चित हैं कि आप चयनित संदेश को हटाना चाहते हैं?",
     "Audio comment": "ऑडियो टिप्पणी",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "सहेजा गया।"
+    "Saved.": "सहेजा गया।",
+    "You have tried to resolve this exercise earlier": "आपने पहले इस व्यायाम को हल करने का प्रयास किया है",
+    "Disable new test attempts": "नई परीक्षा प्रयास अक्षम करें"
 }

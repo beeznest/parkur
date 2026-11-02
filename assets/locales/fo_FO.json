@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Er tú vís í at sletta valda boðini?",
     "Audio comment": "Lyd viðmerking",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Goymt."
+    "Saved.": "Goymt.",
+    "You have tried to resolve this exercise earlier": "Tú hevur gjørt hesa royndina áður",
+    "Disable new test attempts": "Ógild nýggjar royndir av próvum"
 }

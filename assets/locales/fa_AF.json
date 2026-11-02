@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "آیا مطمئن هستید که می‌خواهید پیام انتخاب شده را حذف کنید؟",
     "Audio comment": "نظر صوتی",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "ذخیره شد."
+    "Saved.": "ذخیره شد.",
+    "You have tried to resolve this exercise earlier": "شما قبلاً این تمرین را حل کرده‌اید",
+    "Disable new test attempts": "غیرفعال کردن تلاش‌های جدید آزمون"
 }

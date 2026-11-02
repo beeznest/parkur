@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "האם אתה בטוח שברצונך למחוק את ההודעה שנבחרה?",
     "Audio comment": "הערת אודיו",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "נשמר."
+    "Saved.": "נשמר.",
+    "You have tried to resolve this exercise earlier": "ניסית לפתור תרגיל זה קודם לכן",
+    "Disable new test attempts": "נטרל ניסיונות מבחן חדשים"
 }

@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Ar tikrai norite ištrinti pažymėtą pranešimą?",
     "Audio comment": "Garso komentaras",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Įrašyta."
+    "Saved.": "Įrašyta.",
+    "You have tried to resolve this exercise earlier": "Jūs jau bandėte išspręsti šią užduotį anksčiau",
+    "Disable new test attempts": "Išjungti naujus testo bandymus"
 }

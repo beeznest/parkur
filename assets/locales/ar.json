@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "هل انت متأكد بانك تريد حذف الرسائل المحددة؟",
     "Audio comment": "تعليق صوتي",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "محفوظ"
+    "Saved.": "محفوظ",
+    "You have tried to resolve this exercise earlier": "لقد حاولت حل هذا التمرين تواً",
+    "Disable new test attempts": "تعطيل محاولات الاختبار الجديدة"
 }

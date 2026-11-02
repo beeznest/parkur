@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Biztosan törölni akarja a kiválasztott üzenetet?",
     "Audio comment": "Hang kommentár",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Mentve."
+    "Saved.": "Mentve.",
+    "You have tried to resolve this exercise earlier": "Ezt a feladatot korábban már megpróbálta megoldani",
+    "Disable new test attempts": "Új tesztkísérletek letiltása"
 }

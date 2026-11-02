@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "آیا تاسو ډاډه یاست چې غوره شوی پیغام غواړئ پاک کړئ؟",
     "Audio comment": "غږيز تبصره",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "ساتل شوی."
+    "Saved.": "ساتل شوی.",
+    "You have tried to resolve this exercise earlier": "تاسو د دې تمرین حل کولو هڅه پخوا کړې ده",
+    "Disable new test attempts": "نوي ازموینې هڅې غیرفعال کړئ"
 }

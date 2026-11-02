@@ -4264,5 +4264,7 @@
     "Are you sure you want to delete the selected message?": "Haluatko varmasti poistaa valitun viestin?",
     "Audio comment": "Ääniraidalla",
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
-    "Saved.": "Tallennettu"
+    "Saved.": "Tallennettu",
+    "You have tried to resolve this exercise earlier": "Olet yrittänyt ratkaista tämän harjoituksen aiemmin",
+    "Disable new test attempts": "Poista käytöstä uudet testiyritykset"
 }
