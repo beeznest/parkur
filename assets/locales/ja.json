@@ -4266,5 +4266,6 @@
     "The recording will be saved with the correction.": "The recording will be saved with the correction.",
     "Saved.": "保存しました。",
     "You have tried to resolve this exercise earlier": "この演習を以前に試しました",
-    "Disable new test attempts": "新しいテスト試行を無効化"
+    "Disable new test attempts": "新しいテスト試行を無効化",
+    "This skill cannot be acquired": "このスキルは習得できません"
 }
