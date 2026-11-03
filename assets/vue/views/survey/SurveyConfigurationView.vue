@@ -50,16 +50,6 @@
     </div>
 
     <div
-      v-if="successMessage"
-      ref="successAlertRef"
-      class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-700"
-      role="status"
-      tabindex="-1"
-    >
-      {{ successMessage }}
-    </div>
-
-    <div
       v-if="isLoading"
       class="rounded-2xl border border-gray-20 bg-white p-6 shadow-sm"
     >
@@ -407,8 +397,10 @@ import BaseTinyEditor from "../../components/basecomponents/BaseTinyEditor.vue"
 import ResourceLanguageSelector from "../../components/resources/ResourceLanguageSelector.vue"
 import { useResourceLanguageVisibility } from "../../composables/useResourceLanguageVisibility"
 import surveyService from "../../services/surveyService"
+import { useNotification } from "../../composables/notification"
 
 const { t } = useI18n()
+const { showSuccessNotification } = useNotification()
 const route = useRoute()
 const router = useRouter()
 const { resourceLanguageEnabled } = useResourceLanguageVisibility()
@@ -417,9 +409,7 @@ const isLoading = ref(false)
 const isSaving = ref(false)
 const formSubmitted = ref(false)
 const errorMessage = ref("")
-const successMessage = ref("")
 const errorAlertRef = ref(null)
-const successAlertRef = ref(null)
 const firstInvalidFieldId = ref("")
 const questionUrl = ref("")
 const settings = ref({})
@@ -771,10 +761,10 @@ function buildPayload() {
   return payload
 }
 
-async function scrollToFeedback(target = "error") {
+async function scrollToFeedback() {
   await nextTick()
 
-  const alert = "success" === target ? successAlertRef.value : errorAlertRef.value
+  const alert = errorAlertRef.value
   if (alert?.scrollIntoView) {
     alert.scrollIntoView({ behavior: "smooth", block: "center" })
     alert.focus?.({ preventScroll: true })
@@ -794,7 +784,6 @@ async function focusFirstInvalidField() {
 async function submitForm() {
   formSubmitted.value = true
   errorMessage.value = ""
-  successMessage.value = ""
 
   if (!validateForm()) {
     await scrollToFeedback()
@@ -839,8 +828,7 @@ async function submitForm() {
       return
     }
 
-    successMessage.value = t("The survey has been saved successfully")
-    await scrollToFeedback("success")
+    showSuccessNotification(t("The survey has been saved successfully"))
   } catch (error) {
     console.error("Error saving survey configuration", error)
     errorMessage.value = getApiErrorMessage(error, t("Could not save survey configuration"))

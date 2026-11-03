@@ -108,13 +108,6 @@
     </div>
 
     <div
-      v-if="successMessage"
-      class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700"
-    >
-      {{ successMessage }}
-    </div>
-
-    <div
       v-if="selectedSurveyIds.length > 0"
       class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-20 bg-white px-4 py-3 text-sm shadow-sm"
     >
@@ -470,8 +463,10 @@ import { useTranslatedHtml } from "../../composables/useTranslatedHtml"
 import surveyService from "../../services/surveyService"
 import { useStudentViewRefresh } from "../../composables/useStudentViewRefresh"
 import SectionHeader from "../../components/layout/SectionHeader.vue"
+import { useNotification } from "../../composables/notification"
 
 const { t } = useI18n()
+const { showSuccessNotification } = useNotification()
 const route = useRoute()
 const router = useRouter()
 const { displayTranslatedHtml } = useTranslatedHtml()
@@ -483,7 +478,6 @@ const canManage = ref(false)
 const canCreate = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref("")
-const successMessage = ref("")
 const selectedSurveyIds = ref([])
 const searchTerm = ref(getSearchQuery())
 const isSearchVisible = ref(Boolean(getSearchQuery()))
@@ -775,13 +769,12 @@ function confirmBulkDelete() {
 
 async function performBulkDelete() {
   errorMessage.value = ""
-  successMessage.value = ""
   isLoading.value = true
 
   try {
     const response = await surveyService.runSurveyBulkDelete(getContextParams(), selectedSurveyIds.value)
 
-    successMessage.value = response.message ? t(response.message) : t("Updated")
+    showSuccessNotification(response.message ? t(response.message) : t("Updated"))
     clearSelection()
     await loadSurveys()
   } catch (error) {
@@ -847,13 +840,12 @@ function confirmSurveyAction(survey, action) {
 
 async function performSurveyAction(survey, action) {
   errorMessage.value = ""
-  successMessage.value = ""
   isLoading.value = true
 
   try {
     const response = await surveyService.runSurveyAction(getContextParams(), survey.iid, action)
 
-    successMessage.value = response.message ? t(response.message) : t("Updated")
+    showSuccessNotification(response.message ? t(response.message) : t("Updated"))
     await loadSurveys()
   } catch (error) {
     console.error("Error running survey action", error)
