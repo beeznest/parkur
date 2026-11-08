@@ -4267,5 +4267,7 @@
     "Saved.": "Αποθηκευτηκε",
     "You have tried to resolve this exercise earlier": "Έχετε προσπαθήσει να λύσετε αυτή την άσκηση νωρίτερα",
     "Disable new test attempts": "Απενεργοποίηση νέων προσπαθειών τεστ",
-    "This skill cannot be acquired": "Αυτή η δεξιότητα δεν μπορεί να αποκτηθεί"
+    "This skill cannot be acquired": "Αυτή η δεξιότητα δεν μπορεί να αποκτηθεί",
+    "Start test": "Εκκίνηση test",
+    "Proceed with the test": "Συνέχεια με το test"
 }

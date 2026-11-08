@@ -4267,5 +4267,7 @@
     "Saved.": "შენახულია.",
     "You have tried to resolve this exercise earlier": "თქვენ უკვე სცადეთ ამ ვარჯიშის შესრულება",
     "Disable new test attempts": "ახალი ტესტის მცდელობების გამორთვა",
-    "This skill cannot be acquired": "ამ უნარის შეძენა შეუძლებელია"
+    "This skill cannot be acquired": "ამ უნარის შეძენა შეუძლებელია",
+    "Start test": "ტესტის დაწყება",
+    "Proceed with the test": "ტესტის გაგრძელება"
 }

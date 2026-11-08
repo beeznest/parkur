@@ -4267,5 +4267,7 @@
     "Saved.": "محفوظ",
     "You have tried to resolve this exercise earlier": "لقد حاولت حل هذا التمرين تواً",
     "Disable new test attempts": "تعطيل محاولات الاختبار الجديدة",
-    "This skill cannot be acquired": "لا يمكن اكتساب هذه المهارة"
+    "This skill cannot be acquired": "لا يمكن اكتساب هذه المهارة",
+    "Start test": "ابدأ الاختبار",
+    "Proceed with the test": "الاستمرار في الاختبار"
 }

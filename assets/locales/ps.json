@@ -4267,5 +4267,7 @@
     "Saved.": "ساتل شوی.",
     "You have tried to resolve this exercise earlier": "تاسو د دې تمرین حل کولو هڅه پخوا کړې ده",
     "Disable new test attempts": "نوي ازموینې هڅې غیرفعال کړئ",
-    "This skill cannot be acquired": "دا مهارت نشي ترلاسه کېدای"
+    "This skill cannot be acquired": "دا مهارت نشي ترلاسه کېدای",
+    "Start test": "د ازموینې پیل",
+    "Proceed with the test": "د ازموینې سره پیل کول"
 }

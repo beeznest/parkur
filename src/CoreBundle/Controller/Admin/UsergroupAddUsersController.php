@@ -9,6 +9,7 @@ namespace Chamilo\CoreBundle\Controller\Admin;
 use Chamilo\CoreBundle\Entity\User;
 use Chamilo\CoreBundle\Entity\Usergroup;
 use Chamilo\CoreBundle\Entity\UsergroupRelUser;
+use Chamilo\CoreBundle\Helpers\CsvFormulaEscaper;
 use Chamilo\CoreBundle\Helpers\UsergroupHelper;
 use Chamilo\CoreBundle\Settings\SettingsManager;
 use Doctrine\DBAL\Types\Types;
@@ -65,11 +66,13 @@ class UsergroupAddUsersController extends AbstractController
             $membersQb->andWhere('ru.relationType = :rel')
                 ->setParameter('rel', $relationType, Types::INTEGER)
             ;
-        } else {
-            $membersQb->andWhere('ru.relationType = :rel')
-                ->setParameter('rel', Usergroup::GROUP_USER_PERMISSION_READER, Types::INTEGER)
-            ;
         }
+        // A normal class has no per-user "role" — every UsergroupRelUser row is a member,
+        // whichever screen or CSV import created it, regardless of its relationType. Filtering
+        // by Usergroup::GROUP_USER_PERMISSION_READER here (a Doctrine-entity constant that,
+        // unlike every other GROUP_USER_PERMISSION_* value, does not match the legacy global
+        // constant of the same name — legacy uses 0, this constant is 2) hid every member
+        // added via CSV import, which persists with the legacy value; see save() below.
 
         $memberRows = $membersQb->getQuery()->getArrayResult();
         $memberIds = array_map(static fn (array $r): int => (int) $r['userId'], $memberRows);
@@ -181,7 +184,12 @@ class UsergroupAddUsersController extends AbstractController
                 return $this->json(['error' => 'Invalid relation type'], Response::HTTP_BAD_REQUEST);
             }
         } else {
-            $relationType = Usergroup::GROUP_USER_PERMISSION_READER;
+            // Must match every other class-membership writer (CSV imports, legacy
+            // ClassId user import) so subscribeUsers()'s own "current members" diff — which
+            // reads every relation_type back — doesn't wipe members those wrote. See the
+            // matching comment in data() above for why this isn't
+            // Usergroup::GROUP_USER_PERMISSION_READER.
+            $relationType = 0;
         }
 
         $rawIds = $request->request->all('userIds');
@@ -223,9 +231,9 @@ class UsergroupAddUsersController extends AbstractController
             if (false === $handle) {
                 return;
             }
-            fputcsv($handle, ['UserName', 'ClassName']);
+            fputcsv($handle, CsvFormulaEscaper::escapeRow(['UserName', 'ClassName']));
             foreach ($rows as $row) {
-                fputcsv($handle, [$row['username'], $groupTitle]);
+                fputcsv($handle, CsvFormulaEscaper::escapeRow([$row['username'], $groupTitle]));
             }
             fclose($handle);
         });

@@ -4267,5 +4267,7 @@
     "Saved.": "Kaydedildi.",
     "You have tried to resolve this exercise earlier": "Bu alıştırmayı daha önce çözmeye çalıştınız",
     "Disable new test attempts": "Yeni test denemelerini devre dışı bırak",
-    "This skill cannot be acquired": "Bu beceri kazanılamaz"
+    "This skill cannot be acquired": "Bu beceri kazanılamaz",
+    "Start test": "Sınavı başlat",
+    "Proceed with the test": "Teste devam et"
 }

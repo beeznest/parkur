@@ -4267,5 +4267,7 @@
     "Saved.": "Ruajtur.",
     "You have tried to resolve this exercise earlier": "Keni provuar të zgjidhni këtë ushtrim më herët",
     "Disable new test attempts": "Çaktivizo përpjekjet e reja të testit",
-    "This skill cannot be acquired": "Kjo aftësi nuk mund të përfohet"
+    "This skill cannot be acquired": "Kjo aftësi nuk mund të përfohet",
+    "Start test": "Fillo provën",
+    "Proceed with the test": "Vazhdo me testin"
 }

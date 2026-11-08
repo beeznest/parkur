@@ -4267,5 +4267,7 @@
     "Saved.": "Mentve.",
     "You have tried to resolve this exercise earlier": "Ezt a feladatot korábban már megpróbálta megoldani",
     "Disable new test attempts": "Új tesztkísérletek letiltása",
-    "This skill cannot be acquired": "Ez a készség nem szerezhető meg"
+    "This skill cannot be acquired": "Ez a készség nem szerezhető meg",
+    "Start test": "Teszt indítása",
+    "Proceed with the test": "Teszt folytatása"
 }

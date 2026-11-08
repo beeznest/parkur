@@ -4267,5 +4267,7 @@
     "Saved.": "সংরক্ষিত।",
     "You have tried to resolve this exercise earlier": "আপনি আগে এই ব্যায়াম সমাধান করার চেষ্টা করেছেন",
     "Disable new test attempts": "নতুন টেস্ট অ্যাটেম্পট নিষ্ক্রিয় করুন",
-    "This skill cannot be acquired": "এই দক্ষতা অর্জন করা যায় না"
+    "This skill cannot be acquired": "এই দক্ষতা অর্জন করা যায় না",
+    "Start test": "পরীক্ষা শুরু করুন",
+    "Proceed with the test": "পরীক্ষা চালিয়ে যান"
 }

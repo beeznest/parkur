@@ -4267,5 +4267,7 @@
     "Saved.": "บันทึกแล้ว",
     "You have tried to resolve this exercise earlier": "คุณเคยพยายามแก้ไขแบบฝึกหัดนี้ก่อนหน้านี้",
     "Disable new test attempts": "ปิดการพยายามแบบทดสอบใหม่",
-    "This skill cannot be acquired": "ทักษะนี้ไม่สามารถได้รับ"
+    "This skill cannot be acquired": "ทักษะนี้ไม่สามารถได้รับ",
+    "Start test": "เริ่มทดสอบ",
+    "Proceed with the test": "ดำเนินการทดสอบ"
 }

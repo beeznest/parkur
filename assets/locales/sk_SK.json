@@ -4267,5 +4267,7 @@
     "Saved.": "Uložené.",
     "You have tried to resolve this exercise earlier": "Pokúsili ste sa vyriešiť toto zadanie predčasne",
     "Disable new test attempts": "Vypnúť nové pokusy testov",
-    "This skill cannot be acquired": "Túto zručnosť nie je možné získať"
+    "This skill cannot be acquired": "Túto zručnosť nie je možné získať",
+    "Start test": "Spustiť test",
+    "Proceed with the test": "Pokračujte v teste"
 }

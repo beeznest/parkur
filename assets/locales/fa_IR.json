@@ -4267,5 +4267,7 @@
     "Saved.": "ذخیره شد.",
     "You have tried to resolve this exercise earlier": "شما قبلاً سعی کرده‌اید این تمرین را حل کنید",
     "Disable new test attempts": "غیرفعال کردن تلاش‌های جدید آزمون",
-    "This skill cannot be acquired": "این مهارت قابل کسب نیست"
+    "This skill cannot be acquired": "این مهارت قابل کسب نیست",
+    "Start test": "شروع آزمون",
+    "Proceed with the test": "ادامه با آزمون"
 }

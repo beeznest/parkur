@@ -4267,5 +4267,7 @@
     "Saved.": "保存しました。",
     "You have tried to resolve this exercise earlier": "この演習を以前に試しました",
     "Disable new test attempts": "新しいテスト試行を無効化",
-    "This skill cannot be acquired": "このスキルは習得できません"
+    "This skill cannot be acquired": "このスキルは習得できません",
+    "Start test": "テストを開始",
+    "Proceed with the test": "テストを続行"
 }

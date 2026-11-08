@@ -4267,5 +4267,7 @@
     "Saved.": "Сохранено.",
     "You have tried to resolve this exercise earlier": "Вы уже пытались выполнить это упражнение ранее",
     "Disable new test attempts": "Отключить новые попытки тестов",
-    "This skill cannot be acquired": "Этот навык нельзя приобрести"
+    "This skill cannot be acquired": "Этот навык нельзя приобрести",
+    "Start test": "Начать тест",
+    "Proceed with the test": "Пройти тест"
 }

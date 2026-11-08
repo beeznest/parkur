@@ -4267,5 +4267,7 @@
     "Saved.": "Tallennettu",
     "You have tried to resolve this exercise earlier": "Olet yrittänyt ratkaista tämän harjoituksen aiemmin",
     "Disable new test attempts": "Poista käytöstä uudet testiyritykset",
-    "This skill cannot be acquired": "Tätä taitoa ei voi hankkia"
+    "This skill cannot be acquired": "Tätä taitoa ei voi hankkia",
+    "Start test": "Aloita testi",
+    "Proceed with the test": "Jatka testiä"
 }
