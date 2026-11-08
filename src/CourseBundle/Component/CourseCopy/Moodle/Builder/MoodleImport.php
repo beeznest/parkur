@@ -24,16 +24,19 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use PharData;
+use RecursiveIteratorIterator;
 use RuntimeException;
 use stdClass;
 use Throwable;
 use ZipArchive;
 
+use const ENT_HTML5;
 use const ENT_QUOTES;
 use const ENT_SUBSTITUTE;
 use const FILEINFO_MIME_TYPE;
 use const JSON_UNESCAPED_SLASHES;
 use const JSON_UNESCAPED_UNICODE;
+use const LIBXML_NONET;
 use const PATHINFO_EXTENSION;
 
 /**
@@ -47,7 +50,9 @@ class MoodleImport
     private int $ctxSessionId = 0;
     private ?int $ctxSameFileNameOption = null;
 
-    public function __construct(private bool $debug = false) {}
+    public function __construct(
+        private bool $debug = false
+    ) {}
 
     public function attachContext(
         string $archivePath,
@@ -71,15 +76,22 @@ class MoodleImport
     public function buildLegacyCourseFromMoodleArchive(string $archivePath): object
     {
         $rid = \function_exists('random_bytes') ? substr(bin2hex(random_bytes(3)), 0, 6) : substr(sha1((string) mt_rand()), 0, 6);
-        if ($this->debug) { error_log("MBZ[$rid] START buildLegacyCourseFromMoodleArchive archivePath={$archivePath}"); }
+        if ($this->debug) {
+            error_log("MBZ[$rid] START buildLegacyCourseFromMoodleArchive archivePath={$archivePath}");
+        }
 
         // 1) Extract archive to a temp working directory
         [$workDir] = $this->extractToTemp($archivePath);
-        if ($this->debug) { error_log("MBZ[$rid] extracted workDir={$workDir}"); }
+        if ($this->debug) {
+            error_log("MBZ[$rid] extracted workDir={$workDir}");
+        }
 
         $mbx = $workDir.'/moodle_backup.xml';
         if (!is_file($mbx)) {
-            if ($this->debug) { error_log("MBZ[$rid] ERROR moodle_backup.xml missing at {$mbx}"); }
+            if ($this->debug) {
+                error_log("MBZ[$rid] ERROR moodle_backup.xml missing at {$mbx}");
+            }
+
             throw new RuntimeException('Not a Moodle backup (moodle_backup.xml missing)');
         }
 
@@ -88,9 +100,9 @@ class MoodleImport
         $hasFilesXml = is_file($fx);
         $fileIndex = $hasFilesXml ? $this->buildFileIndex($fx, $workDir) : ['byId' => [], 'byHash' => []];
         if ($this->debug) {
-            $byId  = isset($fileIndex['byId']) ? count((array) $fileIndex['byId']) : 0;
-            $byHash= isset($fileIndex['byHash']) ? count((array) $fileIndex['byHash']) : 0;
-            error_log("MBZ[$rid] indexes moodle_backup.xml=1 files.xml=".($hasFilesXml?1:0)." fileIndex.byId={$byId} fileIndex.byHash={$byHash}");
+            $byId = isset($fileIndex['byId']) ? \count((array) $fileIndex['byId']) : 0;
+            $byHash = isset($fileIndex['byHash']) ? \count((array) $fileIndex['byHash']) : 0;
+            error_log("MBZ[$rid] indexes moodle_backup.xml=1 files.xml=".($hasFilesXml ? 1 : 0)." fileIndex.byId={$byId} fileIndex.byHash={$byHash}");
         }
 
         // 2) Load main XMLs
@@ -99,9 +111,11 @@ class MoodleImport
 
         // Detect meta sidecars early to drive import policy
         $hasQuizMeta = $this->hasQuizMeta($workDir);
-        $hasLpMeta   = $this->hasLearnpathMeta($workDir);
+        $hasLpMeta = $this->hasLearnpathMeta($workDir);
         $hasDocumentMeta = $this->hasDocumentMeta($workDir);
-        if ($this->debug) { error_log("MBZ[$rid] meta_flags hasQuizMeta=".($hasQuizMeta?1:0)." hasLpMeta=".($hasLpMeta?1:0)." hasDocumentMeta=".($hasDocumentMeta?1:0)); }
+        if ($this->debug) {
+            error_log("MBZ[$rid] meta_flags hasQuizMeta=".($hasQuizMeta ? 1 : 0).' hasLpMeta='.($hasLpMeta ? 1 : 0).' hasDocumentMeta='.($hasDocumentMeta ? 1 : 0));
+        }
 
         $skippedQuizXml = 0; // stats
 
@@ -109,55 +123,59 @@ class MoodleImport
         $courseXmlPath = $workDir.'/course/course.xml';
         $courseMeta = $this->readCourseMeta($courseXmlPath); // NEW: safe, tolerant
         if ($this->debug) {
-            $cm = array_intersect_key((array)$courseMeta, array_flip(['fullname','shortname','idnumber','format','language']));
-            error_log("MBZ[$rid] course_meta ".json_encode($cm, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            $cm = array_intersect_key((array) $courseMeta, array_flip(['fullname', 'shortname', 'idnumber', 'format', 'language']));
+            error_log("MBZ[$rid] course_meta ".json_encode($cm, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
         // 3) Read sections & pre-build LP map (one LP per section)
         $sections = $this->readSections($mb);
-        if ($this->debug) { error_log("MBZ[$rid] sections.count=".count((array)$sections)); }
+        if ($this->debug) {
+            error_log("MBZ[$rid] sections.count=".\count((array) $sections));
+        }
         $lpMap = $this->sectionsToLearnpaths($sections);
 
         // 4) Init resource buckets (legacy snapshot shape)
         $resources = [
-            'document'            => [],
-            'Forum_Category'      => [],
-            'forum'               => [],
-            'Link_Category'       => [],
-            'link'                => [],
-            'learnpath'           => [],
-            'learnpath_category'  => [],
-            'scorm_documents'     => [],
-            'scorm'               => [],
-            'announcement'        => [],
+            'document' => [],
+            'Forum_Category' => [],
+            'forum' => [],
+            'Link_Category' => [],
+            'link' => [],
+            'learnpath' => [],
+            'learnpath_category' => [],
+            'scorm_documents' => [],
+            'scorm' => [],
+            'announcement' => [],
             'course_descriptions' => [],
-            'tool_intro'          => [],
-            'events'              => [],
-            'quizzes'             => [],
-            'quiz_question'       => [],
-            'surveys'             => [],
-            'survey_question'     => [],
-            'works'               => [],
-            'glossary'            => [],
-            'wiki'                => [],
-            'gradebook'           => [],
-            'assets'              => [],
-            'attendance'          => [],
+            'tool_intro' => [],
+            'events' => [],
+            'quizzes' => [],
+            'quiz_question' => [],
+            'surveys' => [],
+            'survey_question' => [],
+            'works' => [],
+            'glossary' => [],
+            'wiki' => [],
+            'gradebook' => [],
+            'assets' => [],
+            'attendance' => [],
             'course_illustration' => [],
-            'course_tools'        => [],
-            'course_settings'     => [],
+            'course_tools' => [],
+            'course_settings' => [],
         ];
 
         // 5) Ensure a default Forum Category (fallback)
         $defaultForumCatId = 1;
         $resources['Forum_Category'][$defaultForumCatId] = $this->mkLegacyItem('Forum_Category', $defaultForumCatId, [
-            'id'          => $defaultForumCatId,
-            'cat_title'   => 'General',
+            'id' => $defaultForumCatId,
+            'cat_title' => 'General',
             'cat_comment' => '',
-            'title'       => 'General',
+            'title' => 'General',
             'description' => '',
         ]);
-        if ($this->debug) { error_log("MBZ[$rid] forum.default_category id={$defaultForumCatId}"); }
+        if ($this->debug) {
+            error_log("MBZ[$rid] forum.default_category id={$defaultForumCatId}");
+        }
 
         // 6) Ensure document working dirs
         $this->ensureDir($workDir.'/document');
@@ -179,40 +197,50 @@ class MoodleImport
         foreach ($activityNodes as $node) {
             /** @var DOMElement $node */
             $i++;
-            $modName   = (string) ($node->getElementsByTagName('modulename')->item(0)?->nodeValue ?? '');
-            $dir       = (string) ($node->getElementsByTagName('directory')->item(0)?->nodeValue ?? '');
-            $sectionId = (int)    ($node->getElementsByTagName('sectionid')->item(0)?->nodeValue ?? 0);
+            $modName = (string) ($node->getElementsByTagName('modulename')->item(0)?->nodeValue ?? '');
+            $dir = (string) ($node->getElementsByTagName('directory')->item(0)?->nodeValue ?? '');
+            $sectionId = (int) ($node->getElementsByTagName('sectionid')->item(0)?->nodeValue ?? 0);
 
-            if ($this->debug) { error_log("MBZ[$rid] activity #{$i} mod={$modName} dir={$dir} section={$sectionId}"); }
+            if ($this->debug) {
+                error_log("MBZ[$rid] activity #{$i} mod={$modName} dir={$dir} section={$sectionId}");
+            }
 
             // Locate module xml path
             $moduleXml = ('' !== $modName && '' !== $dir) ? $workDir.'/'.$dir.'/'.$modName.'.xml' : null;
             if (!$moduleXml || !is_file($moduleXml)) {
                 // Some modules use different file names (resource, folder...) – handled separately
-                if ($this->debug) { error_log("MBZ[$rid] activity #{$i} skip={$modName} reason=module_xml_not_found"); }
+                if ($this->debug) {
+                    error_log("MBZ[$rid] activity #{$i} skip={$modName} reason=module_xml_not_found");
+                }
             }
 
             // --- Early mapping: Moodle forum(type=news) -> Chamilo announcements (skip normal forum path)
-            if ($moduleXml && is_file($moduleXml) && strtolower((string)$modName) === 'forum') {
+            if ($moduleXml && is_file($moduleXml) && 'forum' === strtolower((string) $modName)) {
                 if ($this->hasChamiloAnnouncementMeta($workDir)) {
-                    if ($this->debug) { error_log("MBZ[$rid] forum early-map: announcements meta present -> keep non-news, skip news"); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] forum early-map: announcements meta present -> keep non-news, skip news");
+                    }
                 } else {
                     $forumInfo = $this->readForumHeader($moduleXml);
                     if ($this->isNewsForum($forumInfo)) {
-                        if ($this->debug) { error_log("MBZ[$rid] forum NEWS detected -> mapping to announcements"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] forum NEWS detected -> mapping to announcements");
+                        }
                         $anns = $this->readAnnouncementsFromForum($moduleXml, $workDir);
 
                         if (empty($anns)) {
-                            if ($this->debug) { error_log("MBZ[$rid] forum NEWS no-discussions fallback=module intro"); }
+                            if ($this->debug) {
+                                error_log("MBZ[$rid] forum NEWS no-discussions fallback=module intro");
+                            }
                             $f = $this->readForumModule($moduleXml);
-                            $fallbackTitle = (string)($f['name'] ?? 'announcement');
-                            $fallbackHtml  = (string)($f['description'] ?? '');
-                            $fallbackTime  = (int)($f['timemodified'] ?? $f['timecreated'] ?? time());
-                            if ($fallbackHtml !== '') {
+                            $fallbackTitle = (string) ($f['name'] ?? 'announcement');
+                            $fallbackHtml = (string) ($f['description'] ?? '');
+                            $fallbackTime = (int) ($f['timemodified'] ?? $f['timecreated'] ?? time());
+                            if ('' !== $fallbackHtml) {
                                 $anns[] = [
-                                    'title'       => $fallbackTitle,
-                                    'html'        => $this->wrapHtmlIfNeeded($fallbackHtml, $fallbackTitle),
-                                    'date'        => date('Y-m-d H:i:s', $fallbackTime),
+                                    'title' => $fallbackTitle,
+                                    'html' => $this->wrapHtmlIfNeeded($fallbackHtml, $fallbackTitle),
+                                    'date' => date('Y-m-d H:i:s', $fallbackTime),
                                     'attachments' => [],
                                 ];
                             }
@@ -221,49 +249,58 @@ class MoodleImport
                         foreach ($anns as $a) {
                             $iid = $this->nextId($resources['announcement']);
                             $payload = [
-                                'title'               => (string) $a['title'],
-                                'content'             => (string) $this->wrapHtmlIfNeeded($a['html'], (string)$a['title']),
-                                'date'                => (string) $a['date'],
-                                'display_order'       => 0,
-                                'email_sent'          => 0,
-                                'attachment_path'     => (string) ($a['first_path'] ?? ''),
+                                'title' => (string) $a['title'],
+                                'content' => (string) $this->wrapHtmlIfNeeded($a['html'], (string) $a['title']),
+                                'date' => (string) $a['date'],
+                                'display_order' => 0,
+                                'email_sent' => 0,
+                                'attachment_path' => (string) ($a['first_path'] ?? ''),
                                 'attachment_filename' => (string) ($a['first_name'] ?? ''),
-                                'attachment_size'     => (int)    ($a['first_size'] ?? 0),
-                                'attachment_comment'  => '',
-                                'attachments'         => (array)  ($a['attachments'] ?? []),
+                                'attachment_size' => (int) ($a['first_size'] ?? 0),
+                                'attachment_comment' => '',
+                                'attachments' => (array) ($a['attachments'] ?? []),
                             ];
                             $resources['announcement'][$iid] = $this->mkLegacyItem('announcement', $iid, $payload, ['attachments']);
                         }
-                        if ($this->debug) { error_log("MBZ[$rid] forum NEWS mapped announcements.count=".count($anns)." -> skip forum case"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] forum NEWS mapped announcements.count=".\count($anns).' -> skip forum case');
+                        }
+
                         continue; // Skip normal forum case
                     }
                 }
             }
 
             switch ($modName) {
-                case 'label': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                case 'label':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     $this->materializeActivityHtmlFiles($workDir, $dir, $fileIndex, $resources['document']);
                     $data = $this->readHtmlModule($moduleXml, 'label');
                     $title = (string) ($data['name'] ?? 'Label');
-                    $html  = (string) $this->wrapHtmlIfNeeded(
+                    $html = (string) $this->wrapHtmlIfNeeded(
                         $this->rewritePluginfileBasic((string) ($data['content'] ?? ''), 'label'),
                         $title
                     );
                     $descId = $this->nextId($resources['course_descriptions']);
                     $resources['course_descriptions'][$descId] = $this->mkLegacyItem('course_descriptions', $descId, [
-                        'title'            => $title,
-                        'content'          => $html,
+                        'title' => $title,
+                        'content' => $html,
                         'description_type' => CCourseDescription::TYPE_CUSTOM,
-                        'progress'         => 0,
-                        'source_id'        => $descId,
+                        'progress' => 0,
+                        'source_id' => $descId,
                     ]);
-                    if ($this->debug) { error_log("MBZ[$rid] label -> course_descriptions id={$descId} title=".json_encode($title)); }
-                    break;
-                }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] label -> course_descriptions id={$descId} title=".json_encode($title));
+                    }
 
-                case 'page': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'page':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     $this->materializeActivityHtmlFiles($workDir, $dir, $fileIndex, $resources['document']);
                     $isHomepage = $this->looksLikeCourseHomepage($dir, $moduleXml);
 
@@ -275,22 +312,27 @@ class MoodleImport
                         );
                         if (!isset($resources['tool_intro']['course_homepage'])) {
                             $resources['tool_intro']['course_homepage'] = $this->mkLegacyItem('tool_intro', 0, [
-                                'id'         => 'course_homepage',
+                                'id' => 'course_homepage',
                                 'intro_text' => $html,
-                                'title'      => 'Introduction',
+                                'title' => 'Introduction',
                             ]);
-                            if ($this->debug) { error_log("MBZ[$rid] page HOMEPAGE -> tool_intro[course_homepage] set"); }
+                            if ($this->debug) {
+                                error_log("MBZ[$rid] page HOMEPAGE -> tool_intro[course_homepage] set");
+                            }
                         } else {
-                            if ($this->debug) { error_log("MBZ[$rid] page HOMEPAGE -> tool_intro[course_homepage] exists, skip overwrite"); }
+                            if ($this->debug) {
+                                error_log("MBZ[$rid] page HOMEPAGE -> tool_intro[course_homepage] exists, skip overwrite");
+                            }
                         }
+
                         break;
                     }
 
                     $data = $this->readHtmlModule($moduleXml, $modName);
                     $docId = $this->nextId($resources['document']);
-                    $slug  = $data['slug'] ?: ('page_'.$docId);
-                    $rel   = 'document/moodle_pages/'.$slug.'.html';
-                    $abs   = $workDir.'/'.$rel;
+                    $slug = $data['slug'] ?: ('page_'.$docId);
+                    $rel = 'document/moodle_pages/'.$slug.'.html';
+                    $abs = $workDir.'/'.$rel;
 
                     $this->ensureDir(\dirname($abs));
                     $html = $this->wrapHtmlIfNeeded(
@@ -301,61 +343,71 @@ class MoodleImport
 
                     $resources['document'][$docId] = $this->mkLegacyItem('document', $docId, [
                         'file_type' => 'file',
-                        'path'      => '/'.$rel,
-                        'title'     => (string) ($data['name'] ?? ucfirst($modName)),
-                        'size'      => @filesize($abs) ?: 0,
-                        'comment'   => '',
+                        'path' => '/'.$rel,
+                        'title' => (string) ($data['name'] ?? ucfirst($modName)),
+                        'size' => @filesize($abs) ?: 0,
+                        'comment' => '',
                         'source_id' => $docId,
                     ]);
-                    if ($this->debug) { error_log("MBZ[$rid] page -> document id={$docId} path=/{$rel} title=".json_encode($resources['document'][$docId]->title)); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] page -> document id={$docId} path=/{$rel} title=".json_encode($resources['document'][$docId]->title));
+                    }
 
                     if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                         $lpMap[$sectionId]['items'][] = [
                             'item_type' => 'document',
-                            'ref'       => $docId,
-                            'title'     => $data['name'] ?? ucfirst($modName),
-                            'path'      => '/'.$rel,
+                            'ref' => $docId,
+                            'title' => $data['name'] ?? ucfirst($modName),
+                            'path' => '/'.$rel,
                         ];
-                        if ($this->debug) { error_log("MBZ[$rid] page -> LP section={$sectionId} add document ref={$docId}"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] page -> LP section={$sectionId} add document ref={$docId}");
+                        }
                     }
-                    break;
-                }
 
-                case 'forum': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'forum':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
 
                     // If there is Chamilo meta for announcements, prefer it and let non-news forums pass through
                     if ($this->hasChamiloAnnouncementMeta($workDir)) {
-                        if ($this->debug) { error_log('MOODLE_IMPORT: announcements meta present → keep forum import for non-news'); }
+                        if ($this->debug) {
+                            error_log('MOODLE_IMPORT: announcements meta present → keep forum import for non-news');
+                        }
                     }
 
                     // 1) Read forum type header
                     $forumInfo = $this->readForumHeader($moduleXml); // ['type' => 'news'|'general'|..., 'name' => ..., ...]
                     if ($this->debug) {
-                        error_log('MOODLE_IMPORT: forum header peek -> ' . json_encode([
-                                'name' => $forumInfo['name'] ?? null,
-                                'type' => $forumInfo['type'] ?? null,
-                            ]));
+                        error_log('MOODLE_IMPORT: forum header peek -> '.json_encode([
+                            'name' => $forumInfo['name'] ?? null,
+                            'type' => $forumInfo['type'] ?? null,
+                        ]));
                     }
 
                     // 2) If it's a "news" forum and meta wasn't used → import as announcements (with fallback)
                     if (!$this->hasChamiloAnnouncementMeta($workDir) && $this->isNewsForum($forumInfo)) {
                         $anns = $this->readAnnouncementsFromForum($moduleXml, $workDir);
                         if ($this->debug) {
-                            error_log('MOODLE_IMPORT: news-forum detected, announcements extracted=' . count($anns));
+                            error_log('MOODLE_IMPORT: news-forum detected, announcements extracted='.\count($anns));
                         }
 
                         if (empty($anns)) {
-                            if ($this->debug) { error_log('MOODLE_IMPORT: announcements empty -> intro fallback (in switch)'); }
+                            if ($this->debug) {
+                                error_log('MOODLE_IMPORT: announcements empty -> intro fallback (in switch)');
+                            }
                             $f = $this->readForumModule($moduleXml);
-                            $fallbackTitle = (string)($f['name'] ?? 'announcement');
-                            $fallbackHtml  = (string)($f['description'] ?? '');
-                            $fallbackTime  = (int)($f['timemodified'] ?? $f['timecreated'] ?? time());
-                            if ($fallbackHtml !== '') {
+                            $fallbackTitle = (string) ($f['name'] ?? 'announcement');
+                            $fallbackHtml = (string) ($f['description'] ?? '');
+                            $fallbackTime = (int) ($f['timemodified'] ?? $f['timecreated'] ?? time());
+                            if ('' !== $fallbackHtml) {
                                 $anns[] = [
-                                    'title'       => $fallbackTitle,
-                                    'html'        => $this->wrapHtmlIfNeeded($fallbackHtml, $fallbackTitle),
-                                    'date'        => date('Y-m-d H:i:s', $fallbackTime),
+                                    'title' => $fallbackTitle,
+                                    'html' => $this->wrapHtmlIfNeeded($fallbackHtml, $fallbackTitle),
+                                    'date' => date('Y-m-d H:i:s', $fallbackTime),
                                     'attachments' => [],
                                 ];
                             }
@@ -364,16 +416,16 @@ class MoodleImport
                         foreach ($anns as $a) {
                             $iid = $this->nextId($resources['announcement']);
                             $payload = [
-                                'title'               => (string) $a['title'],
-                                'content'             => (string) $this->wrapHtmlIfNeeded($a['html'], (string)$a['title']),
-                                'date'                => (string) $a['date'],
-                                'display_order'       => 0,
-                                'email_sent'          => 0,
-                                'attachment_path'     => (string) ($a['first_path'] ?? ''),
+                                'title' => (string) $a['title'],
+                                'content' => (string) $this->wrapHtmlIfNeeded($a['html'], (string) $a['title']),
+                                'date' => (string) $a['date'],
+                                'display_order' => 0,
+                                'email_sent' => 0,
+                                'attachment_path' => (string) ($a['first_path'] ?? ''),
                                 'attachment_filename' => (string) ($a['first_name'] ?? ''),
-                                'attachment_size'     => (int)    ($a['first_size'] ?? 0),
-                                'attachment_comment'  => '',
-                                'attachments'         => (array)  ($a['attachments'] ?? []),
+                                'attachment_size' => (int) ($a['first_size'] ?? 0),
+                                'attachment_comment' => '',
+                                'attachments' => (array) ($a['attachments'] ?? []),
                             ];
                             $resources['announcement'][$iid] = $this->mkLegacyItem('announcement', $iid, $payload, ['attachments']);
                         }
@@ -385,120 +437,153 @@ class MoodleImport
                     // 3) Normal forum path (general, Q&A, etc.)
                     $f = $this->readForumModule($moduleXml);
 
-                    $catId    = (int) ($f['category_id'] ?? 0);
+                    $catId = (int) ($f['category_id'] ?? 0);
                     $catTitle = (string) ($f['category_title'] ?? '');
                     if ($catId > 0 && !isset($resources['Forum_Category'][$catId])) {
                         $resources['Forum_Category'][$catId] = $this->mkLegacyItem('Forum_Category', $catId, [
-                            'id'          => $catId,
-                            'cat_title'   => ('' !== $catTitle ? $catTitle : ('Category '.$catId)),
+                            'id' => $catId,
+                            'cat_title' => ('' !== $catTitle ? $catTitle : ('Category '.$catId)),
                             'cat_comment' => '',
-                            'title'       => ('' !== $catTitle ? $catTitle : ('Category '.$catId)),
+                            'title' => ('' !== $catTitle ? $catTitle : ('Category '.$catId)),
                             'description' => '',
                         ]);
-                        if ($this->debug) { error_log("MBZ[$rid] forum -> created Forum_Category id={$catId} title=".json_encode($catTitle)); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] forum -> created Forum_Category id={$catId} title=".json_encode($catTitle));
+                        }
                     }
                     $dstCatId = $catId > 0 ? $catId : $defaultForumCatId;
 
                     $fid = $this->nextId($resources['forum']);
                     $resources['forum'][$fid] = $this->mkLegacyItem('forum', $fid, [
-                        'id'             => $fid,
-                        'forum_title'    => (string) ($f['name'] ?? 'Forum'),
-                        'forum_comment'  => (string) ($f['description'] ?? ''),
+                        'id' => $fid,
+                        'forum_title' => (string) ($f['name'] ?? 'Forum'),
+                        'forum_comment' => (string) ($f['description'] ?? ''),
                         'forum_category' => $dstCatId,
-                        'default_view'   => 'flat',
+                        'default_view' => 'flat',
                     ]);
-                    if ($this->debug) { error_log("MBZ[$rid] forum -> forum id={$fid} category={$dstCatId} title=".json_encode($resources['forum'][$fid]->forum_title)); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] forum -> forum id={$fid} category={$dstCatId} title=".json_encode($resources['forum'][$fid]->forum_title));
+                    }
 
                     if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                         $lpMap[$sectionId]['items'][] = [
                             'item_type' => 'forum',
-                            'ref'       => $fid,
-                            'title'     => $f['name'] ?? 'Forum',
+                            'ref' => $fid,
+                            'title' => $f['name'] ?? 'Forum',
                         ];
-                        if ($this->debug) { error_log("MBZ[$rid] forum -> LP section={$sectionId} add forum ref={$fid}"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] forum -> LP section={$sectionId} add forum ref={$fid}");
+                        }
                     }
-                    break;
-                }
 
-                case 'url': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'url':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     $u = $this->readUrlModule($moduleXml);
                     $urlVal = trim((string) ($u['url'] ?? ''));
-                    if ('' === $urlVal) { if ($this->debug) { error_log("MBZ[$rid] url -> empty url, skip"); } break; }
+                    if ('' === $urlVal) {
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] url -> empty url, skip");
+                        }
 
-                    $catId    = (int) ($u['category_id'] ?? 0);
+                        break;
+                    }
+
+                    $catId = (int) ($u['category_id'] ?? 0);
                     $catTitle = (string) ($u['category_title'] ?? '');
                     if ($catId > 0 && !isset($resources['Link_Category'][$catId])) {
                         $resources['Link_Category'][$catId] = $this->mkLegacyItem('Link_Category', $catId, [
-                            'id'          => $catId,
-                            'title'       => ('' !== $catTitle ? $catTitle : ('Category '.$catId)),
+                            'id' => $catId,
+                            'title' => ('' !== $catTitle ? $catTitle : ('Category '.$catId)),
                             'description' => '',
                         ]);
-                        if ($this->debug) { error_log("MBZ[$rid] url -> created Link_Category id={$catId} title=".json_encode($catTitle)); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] url -> created Link_Category id={$catId} title=".json_encode($catTitle));
+                        }
                     }
 
-                    $lid       = $this->nextId($resources['link']);
+                    $lid = $this->nextId($resources['link']);
                     $linkTitle = ($u['name'] ?? '') !== '' ? (string) $u['name'] : $urlVal;
 
                     $resources['link'][$lid] = $this->mkLegacyItem('link', $lid, [
-                        'id'          => $lid,
-                        'title'       => $linkTitle,
+                        'id' => $lid,
+                        'title' => $linkTitle,
                         'description' => '',
-                        'url'         => $urlVal,
-                        'target'      => '',
+                        'url' => $urlVal,
+                        'target' => '',
                         'category_id' => $catId,
                         'on_homepage' => false,
                     ]);
-                    if ($this->debug) { error_log("MBZ[$rid] url -> link id={$lid} url=".json_encode($urlVal)); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] url -> link id={$lid} url=".json_encode($urlVal));
+                    }
 
                     if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                         $lpMap[$sectionId]['items'][] = [
                             'item_type' => 'link',
-                            'ref'       => $lid,
-                            'title'     => $linkTitle,
+                            'ref' => $lid,
+                            'title' => $linkTitle,
                         ];
-                        if ($this->debug) { error_log("MBZ[$rid] url -> LP section={$sectionId} add link ref={$lid}"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] url -> LP section={$sectionId} add link ref={$lid}");
+                        }
                     }
-                    break;
-                }
 
-                case 'scorm': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'scorm':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     $sc = $this->readScormModule($moduleXml);
                     $sid = $this->nextId($resources['scorm_documents']);
 
                     $resources['scorm_documents'][$sid] = $this->mkLegacyItem('scorm_documents', $sid, [
-                        'id'    => $sid,
+                        'id' => $sid,
                         'title' => (string) ($sc['name'] ?? 'SCORM package'),
                     ]);
                     $resources['scorm'][$sid] = $resources['scorm_documents'][$sid];
-                    if ($this->debug) { error_log("MBZ[$rid] scorm -> scorm_documents id={$sid}"); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] scorm -> scorm_documents id={$sid}");
+                    }
 
                     if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                         $lpMap[$sectionId]['items'][] = [
                             'item_type' => 'scorm',
-                            'ref'       => $sid,
-                            'title'     => $sc['name'] ?? 'SCORM package',
+                            'ref' => $sid,
+                            'title' => $sc['name'] ?? 'SCORM package',
                         ];
-                        if ($this->debug) { error_log("MBZ[$rid] scorm -> LP section={$sectionId} add scorm ref={$sid}"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] scorm -> LP section={$sectionId} add scorm ref={$sid}");
+                        }
                     }
-                    break;
-                }
 
-                case 'quiz': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'quiz':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     if ($hasQuizMeta) {
                         $peekTitle = $this->peekQuizTitle($moduleXml);
                         if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                             $lpMap[$sectionId]['items'][] = [
                                 'item_type' => 'quiz',
-                                'ref'       => null,
-                                'title'     => $peekTitle ?? 'Quiz',
+                                'ref' => null,
+                                'title' => $peekTitle ?? 'Quiz',
                             ];
-                            if ($this->debug) { error_log("MBZ[$rid] quiz(meta) -> LP section={$sectionId} add quiz (ref=null) title=".json_encode($peekTitle ?? 'Quiz')); }
+                            if ($this->debug) {
+                                error_log("MBZ[$rid] quiz(meta) -> LP section={$sectionId} add quiz (ref=null) title=".json_encode($peekTitle ?? 'Quiz'));
+                            }
                         }
                         $skippedQuizXml++;
-                        if ($this->debug) { error_log("MBZ[$rid] quiz(meta) skipping heavy XML (skipped={$skippedQuizXml})"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] quiz(meta) skipping heavy XML (skipped={$skippedQuizXml})");
+                        }
+
                         break;
                     }
 
@@ -506,27 +591,35 @@ class MoodleImport
                     if (!empty($quiz)) {
                         $qid = $this->nextId($resources['quizzes']);
                         $resources['quizzes'][$qid] = $this->mkLegacyItem('quizzes', $qid, $quiz);
-                        if ($this->debug) { error_log("MBZ[$rid] quiz -> quizzes id={$qid} title=".json_encode($quiz['name'] ?? 'Quiz')); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] quiz -> quizzes id={$qid} title=".json_encode($quiz['name'] ?? 'Quiz'));
+                        }
                         if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                             $lpMap[$sectionId]['items'][] = [
                                 'item_type' => 'quiz',
-                                'ref'       => $qid,
-                                'title'     => $quiz['name'] ?? 'Quiz',
+                                'ref' => $qid,
+                                'title' => $quiz['name'] ?? 'Quiz',
                             ];
-                            if ($this->debug) { error_log("MBZ[$rid] quiz -> LP section={$sectionId} add quiz ref={$qid}"); }
+                            if ($this->debug) {
+                                error_log("MBZ[$rid] quiz -> LP section={$sectionId} add quiz ref={$qid}");
+                            }
                         }
                         foreach ($questions as $q) {
                             $qqid = $this->nextId($resources['quiz_question']);
                             $resources['quiz_question'][$qqid] = $this->mkLegacyItem('quiz_question', $qqid, $q);
                         }
-                        if ($this->debug) { error_log("MBZ[$rid] quiz -> quiz_question added=".count($questions)); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] quiz -> quiz_question added=".\count($questions));
+                        }
                     }
+
                     break;
-                }
 
                 case 'survey':
-                case 'feedback': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                case 'feedback':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
 
                     $parsed = $this->readSurveyMetaActivity($workDir, $dir);
                     $fromChamiloMeta = !empty($parsed);
@@ -565,7 +658,7 @@ class MoodleImport
 
                         if ($this->debug) {
                             error_log(
-                                "MBZ[$rid] {$modName} -> surveys id={$sid} questions=".count($questionIds)
+                                "MBZ[$rid] {$modName} -> surveys id={$sid} questions=".\count($questionIds)
                                 .' source='.($fromChamiloMeta ? 'chamilo-meta' : 'moodle-xml')
                             );
                         }
@@ -573,8 +666,8 @@ class MoodleImport
                         if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                             $lpMap[$sectionId]['items'][] = [
                                 'item_type' => 'survey',
-                                'ref'       => $sid,
-                                'title'     => $surveyData['title'] ?? $surveyData['name'] ?? ucfirst($modName),
+                                'ref' => $sid,
+                                'title' => $surveyData['title'] ?? $surveyData['name'] ?? ucfirst($modName),
                             ];
                             if ($this->debug) {
                                 error_log("MBZ[$rid] {$modName} -> LP section={$sectionId} add survey ref={$sid}");
@@ -583,82 +676,97 @@ class MoodleImport
                     }
 
                     break;
-                }
 
-                case 'assign': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                case 'assign':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     $w = $this->readAssignModule($moduleXml);
                     if (!empty($w)) {
                         $wid = $this->nextId($resources['works']);
                         $resources['works'][$wid] = $this->mkLegacyItem('works', $wid, $w);
-                        if ($this->debug) { error_log("MBZ[$rid] assign -> works id={$wid}"); }
+                        if ($this->debug) {
+                            error_log("MBZ[$rid] assign -> works id={$wid}");
+                        }
                         if ($sectionId > 0 && isset($lpMap[$sectionId])) {
                             $lpMap[$sectionId]['items'][] = [
                                 'item_type' => 'works',
-                                'ref'       => $wid,
-                                'title'     => $w['name'] ?? 'Assignment',
+                                'ref' => $wid,
+                                'title' => $w['name'] ?? 'Assignment',
                             ];
-                            if ($this->debug) { error_log("MBZ[$rid] assign -> LP section={$sectionId} add works ref={$wid}"); }
+                            if ($this->debug) {
+                                error_log("MBZ[$rid] assign -> LP section={$sectionId} add works ref={$wid}");
+                            }
                         }
                     }
-                    break;
-                }
 
-                case 'glossary': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'glossary':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     $g = $this->readGlossaryModule($moduleXml);
                     $added = 0;
                     foreach ((array) ($g['entries'] ?? []) as $term) {
                         $title = (string) ($term['concept'] ?? '');
-                        if ($title === '') { continue; }
+                        if ('' === $title) {
+                            continue;
+                        }
                         $descHtml = $this->wrapHtmlIfNeeded((string) ($term['definition'] ?? ''), $title);
                         $gid = $this->nextId($resources['glossary']);
                         $resources['glossary'][$gid] = $this->mkLegacyItem('glossary', $gid, [
-                            'id'          => $gid,
-                            'title'       => $title,
+                            'id' => $gid,
+                            'title' => $title,
                             'description' => $descHtml,
-                            'approved'    => (int) ($term['approved'] ?? 1),
-                            'aliases'     => (array) ($term['aliases'] ?? []),
-                            'userid'      => (int) ($term['userid'] ?? 0),
+                            'approved' => (int) ($term['approved'] ?? 1),
+                            'aliases' => (array) ($term['aliases'] ?? []),
+                            'userid' => (int) ($term['userid'] ?? 0),
                             'timecreated' => (int) ($term['timecreated'] ?? 0),
-                            'timemodified'=> (int) ($term['timemodified'] ?? 0),
+                            'timemodified' => (int) ($term['timemodified'] ?? 0),
                         ]);
                         $added++;
                     }
-                    if ($this->debug) { error_log("MBZ[$rid] glossary -> entries added={$added}"); }
-                    break;
-                }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] glossary -> entries added={$added}");
+                    }
 
-                case 'wiki': {
-                    if (!$moduleXml || !is_file($moduleXml)) { break; }
+                    break;
+
+                case 'wiki':
+                    if (!$moduleXml || !is_file($moduleXml)) {
+                        break;
+                    }
                     [$meta, $pages] = $this->readWikiModuleFull($moduleXml);
                     $added = 0;
                     if (!empty($pages)) {
                         foreach ($pages as $p) {
                             $payload = [
-                                'pageId'  => (int) $p['id'],
-                                'reflink' => (string) ($p['reflink'] ?? $this->slugify((string)$p['title'])),
-                                'title'   => (string) $p['title'],
-                                'content' => (string) $this->wrapHtmlIfNeeded($this->rewritePluginfileBasic((string)($p['content'] ?? ''), 'wiki'), (string)$p['title']),
-                                'userId'  => (int) ($p['userid'] ?? 0),
+                                'pageId' => (int) $p['id'],
+                                'reflink' => (string) ($p['reflink'] ?? $this->slugify((string) $p['title'])),
+                                'title' => (string) $p['title'],
+                                'content' => (string) $this->wrapHtmlIfNeeded($this->rewritePluginfileBasic((string) ($p['content'] ?? ''), 'wiki'), (string) $p['title']),
+                                'userId' => (int) ($p['userid'] ?? 0),
                                 'groupId' => 0,
-                                'dtime'   => date('Y-m-d H:i:s', (int) ($p['timemodified'] ?? time())),
-                                'progress'=> '',
+                                'dtime' => date('Y-m-d H:i:s', (int) ($p['timemodified'] ?? time())),
+                                'progress' => '',
                                 'version' => (int) ($p['version'] ?? 1),
-                                'source_id'       => (int) $p['id'],
+                                'source_id' => (int) $p['id'],
                                 'source_moduleid' => (int) ($meta['moduleid'] ?? 0),
-                                'source_sectionid'=> (int) ($meta['sectionid'] ?? 0),
+                                'source_sectionid' => (int) ($meta['sectionid'] ?? 0),
                             ];
                             $wkid = $this->nextId($resources['wiki']);
                             $resources['wiki'][$wkid] = $this->mkLegacyItem('wiki', $wkid, $payload);
                             $added++;
                         }
                     }
-                    if ($this->debug) { error_log("MBZ[$rid] wiki -> pages added={$added}"); }
-                    break;
-                }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] wiki -> pages added={$added}");
+                    }
 
-                case 'resource': {
+                    break;
+
+                case 'resource':
                     // Resource files are imported later through document handling:
                     // - authoritative Chamilo document meta when available
                     // - readDocuments() fallback using resource.xml + inforef.xml
@@ -668,10 +776,10 @@ class MoodleImport
                             ($hasDocumentMeta ? 'document meta' : 'readDocuments fallback')
                         );
                     }
-                    break;
-                }
 
-                case 'folder': {
+                    break;
+
+                case 'folder':
                     // Folder files are imported later through document handling:
                     // - authoritative Chamilo document meta when available
                     // - readDocuments() fallback for mod_folder entries from files.xml
@@ -681,17 +789,20 @@ class MoodleImport
                             ($hasDocumentMeta ? 'document meta' : 'readDocuments fallback')
                         );
                     }
+
                     break;
-                }
 
                 default:
-                    if ($this->debug) { error_log("MBZ[$rid] unhandled module {$modName}"); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] unhandled module {$modName}");
+                    }
+
                     break;
             }
 
-            if ($this->debug && ($i % 10 === 0)) {
+            if ($this->debug && (0 === $i % 10)) {
                 $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-                error_log("MBZ[$rid] progress.counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+                error_log("MBZ[$rid] progress.counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
         }
 
@@ -702,15 +813,15 @@ class MoodleImport
             $this->readDocuments($workDir, $mb, $fileIndex, $resources, $lpMap);
             if ($this->debug) {
                 $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-                error_log("MBZ[$rid] after.readDocuments fallback counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+                error_log("MBZ[$rid] after.readDocuments fallback counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
         } elseif ($this->debug) {
             $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-            error_log("MBZ[$rid] after.tryImportDocumentMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            error_log("MBZ[$rid] after.tryImportDocumentMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         } else {
             if ($this->debug) {
                 $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-                error_log("MBZ[$rid] after.documentMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+                error_log("MBZ[$rid] after.documentMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
         }
 
@@ -719,7 +830,7 @@ class MoodleImport
             $this->tryImportQuizMeta($workDir, $resources);
             if ($this->debug) {
                 $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-                error_log("MBZ[$rid] after.quizMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+                error_log("MBZ[$rid] after.quizMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
         }
 
@@ -728,9 +839,9 @@ class MoodleImport
         if ($hasLpMeta) {
             $lpFromMeta = $this->tryImportLearnpathMeta($workDir, $resources);
             if ($this->debug) {
-                error_log("MBZ[$rid] lpFromMeta=".($lpFromMeta?1:0));
+                error_log("MBZ[$rid] lpFromMeta=".($lpFromMeta ? 1 : 0));
                 $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-                error_log("MBZ[$rid] after.lpMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+                error_log("MBZ[$rid] after.lpMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
         }
 
@@ -738,21 +849,21 @@ class MoodleImport
         $this->tryImportThematicMeta($workDir, $resources);
         if ($this->debug) {
             $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-            error_log("MBZ[$rid] after.thematicMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            error_log("MBZ[$rid] after.thematicMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
         // 8.4) Attendance meta (authoritative)
         $this->tryImportAttendanceMeta($workDir, $resources);
         if ($this->debug) {
             $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-            error_log("MBZ[$rid] after.attendanceMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            error_log("MBZ[$rid] after.attendanceMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
         // 8.5) Gradebook meta (authoritative)
         $this->tryImportGradebookMeta($workDir, $resources);
         if ($this->debug) {
             $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-            error_log("MBZ[$rid] after.gradebookMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            error_log("MBZ[$rid] after.gradebookMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
         // 8.6) Course-level Chamilo metadata (Moodle path only)
@@ -761,7 +872,7 @@ class MoodleImport
         $this->tryImportCourseSettingsMeta($workDir, $resources);
         if ($this->debug) {
             $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-            error_log("MBZ[$rid] after.courseMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            error_log("MBZ[$rid] after.courseMeta counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
         // 9) Build learnpaths from sections (fallback only if no meta)
@@ -779,43 +890,47 @@ class MoodleImport
                 if (empty($resources['learnpath_category'])) {
                     $catId = $this->nextId($resources['learnpath_category']);
                     $resources['learnpath_category'][$catId] = $this->mkLegacyItem('learnpath_category', $catId, [
-                        'id'    => $catId,
-                        'name'  => 'Sections',
+                        'id' => $catId,
+                        'name' => 'Sections',
                         'title' => 'Sections',
                     ]);
-                    if ($this->debug) { error_log("MBZ[$rid] lp.category created id={$catId}"); }
+                    if ($this->debug) {
+                        error_log("MBZ[$rid] lp.category created id={$catId}");
+                    }
                 }
 
                 $linked = $this->collectLinkedFromLpItems($lp['items']);
-                $lid    = $this->nextId($resources['learnpath']);
+                $lid = $this->nextId($resources['learnpath']);
 
                 $resources['learnpath'][$lid] = $this->mkLegacyItem(
                     'learnpath',
                     $lid,
                     [
-                        'id'          => $lid,
-                        'source_id'   => $lid,
-                        'name'        => (string) $lp['title'],
-                        'title'       => (string) $lp['title'],
-                        'lp_type'     => 1,
-                        'path'        => '',
+                        'id' => $lid,
+                        'source_id' => $lid,
+                        'name' => (string) $lp['title'],
+                        'title' => (string) $lp['title'],
+                        'lp_type' => 1,
+                        'path' => '',
                         'description' => '',
                         'category_id' => array_key_first($resources['learnpath_category']),
                     ],
-                    ['items','linked_resources']
+                    ['items', 'linked_resources']
                 );
                 $resources['learnpath'][$lid]->items = array_map(
                     static fn (array $i) => [
                         'item_type' => (string) $i['item_type'],
-                        'title'     => (string) $i['title'],
-                        'path'      => '',
-                        'ref'       => $i['ref'] ?? null,
+                        'title' => (string) $i['title'],
+                        'path' => '',
+                        'ref' => $i['ref'] ?? null,
                     ],
                     $lp['items']
                 );
                 $resources['learnpath'][$lid]->linked_resources = $linked;
 
-                if ($this->debug) { error_log("MBZ[$rid] lp.created id={$lid} name=".json_encode($resources['learnpath'][$lid]->name)); }
+                if ($this->debug) {
+                    error_log("MBZ[$rid] lp.created id={$lid} name=".json_encode($resources['learnpath'][$lid]->name));
+                }
             }
         }
 
@@ -823,21 +938,23 @@ class MoodleImport
         if (!empty($courseMeta['summary'])) {
             $cdId = $this->nextId($resources['course_descriptions']);
             $resources['course_descriptions'][$cdId] = $this->mkLegacyItem('course_descriptions', $cdId, [
-                'title'            => 'Course summary',
-                'content'          => (string) $courseMeta['summary'],
+                'title' => 'Course summary',
+                'content' => (string) $courseMeta['summary'],
                 'description_type' => 1,
-                'progress'         => 0,
-                'source_id'        => $cdId,
+                'progress' => 0,
+                'source_id' => $cdId,
             ]);
 
             if (!isset($resources['tool_intro']['course_homepage'])) {
                 $resources['tool_intro']['course_homepage'] = $this->mkLegacyItem('tool_intro', 0, [
-                    'id'         => 'course_homepage',
-                    'title'      => 'Introduction',
+                    'id' => 'course_homepage',
+                    'title' => 'Introduction',
                     'intro_text' => (string) $courseMeta['summary'],
                 ]);
             }
-            if ($this->debug) { error_log("MBZ[$rid] course_meta -> added summary to course_descriptions id={$cdId} and tool_intro[course_homepage]"); }
+            if ($this->debug) {
+                error_log("MBZ[$rid] course_meta -> added summary to course_descriptions id={$cdId} and tool_intro[course_homepage]");
+            }
         }
 
         // 11) Events (course-level calendar) — optional
@@ -846,31 +963,33 @@ class MoodleImport
             $eid = $this->nextId($resources['events']);
             $resources['events'][$eid] = $this->mkLegacyItem('events', $eid, $e);
         }
-        if ($this->debug) { error_log("MBZ[$rid] events.added count=".count($events)); }
+        if ($this->debug) {
+            error_log("MBZ[$rid] events.added count=".\count($events));
+        }
 
         $resources = $this->canonicalizeResourceBags($resources);
         if ($this->debug) {
             $counts = array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources);
-            error_log("MBZ[$rid] final.counts ".json_encode($counts, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES));
+            error_log("MBZ[$rid] final.counts ".json_encode($counts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         }
 
         // 12) Compose Course snapshot
         $course = new Course();
-        $course->resources   = $resources;
+        $course->resources = $resources;
         $course->backup_path = $workDir;
 
         // 13) Meta: "metaexport" + derived moodle meta
         $meta = [
             'import_source' => 'moodle',
-            'generated_at'  => date('c'),
-            'moodle'        => [
-                'fullname'  => (string) ($courseMeta['fullname'] ?? ''),
+            'generated_at' => date('c'),
+            'moodle' => [
+                'fullname' => (string) ($courseMeta['fullname'] ?? ''),
                 'shortname' => (string) ($courseMeta['shortname'] ?? ''),
-                'idnumber'  => (string) ($courseMeta['idnumber'] ?? ''),
-                'startdate' => (int)    ($courseMeta['startdate'] ?? 0),
-                'enddate'   => (int)    ($courseMeta['enddate'] ?? 0),
-                'format'    => (string) ($courseMeta['format'] ?? ''),
-                'language'  => (string) ($courseMeta['language'] ?? ''),
+                'idnumber' => (string) ($courseMeta['idnumber'] ?? ''),
+                'startdate' => (int) ($courseMeta['startdate'] ?? 0),
+                'enddate' => (int) ($courseMeta['enddate'] ?? 0),
+                'format' => (string) ($courseMeta['format'] ?? ''),
+                'language' => (string) ($courseMeta['language'] ?? ''),
             ],
         ];
 
@@ -896,9 +1015,9 @@ class MoodleImport
 
         if ($this->debug) {
             error_log('MOODLE_IMPORT: resources='.json_encode(
-                    array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources),
-                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-                ));
+                array_map(static fn ($b) => \is_array($b) ? \count($b) : 0, $resources),
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+            ));
             error_log('MOODLE_IMPORT: backup_path='.$course->backup_path);
             if (property_exists($course, 'code') && property_exists($course, 'encoding')) {
                 error_log('MOODLE_IMPORT: course_code='.$course->code.' encoding='.$course->encoding);
@@ -908,7 +1027,6 @@ class MoodleImport
 
         return $course;
     }
-
 
     private function extractToTemp(string $archivePath): array
     {
@@ -928,6 +1046,7 @@ class MoodleImport
                 $entryName = str_replace('\\', '/', $zip->getNameIndex($zi));
                 if (str_contains($entryName, '../') || str_starts_with($entryName, '/')) {
                     $zip->close();
+
                     throw new RuntimeException('Malicious ZIP entry detected');
                 }
             }
@@ -940,10 +1059,10 @@ class MoodleImport
         } elseif (\in_array($ext, ['gz', 'tgz'], true)) {
             $phar = new PharData($archivePath);
             // Guard against ZIP Slip in PHAR/tar
-            foreach (new \RecursiveIteratorIterator($phar) as $pharEntry) {
+            foreach (new RecursiveIteratorIterator($phar) as $pharEntry) {
                 $entryPath = str_replace('\\', '/', $pharEntry->getPathname());
                 $pharBase = str_replace('\\', '/', $archivePath);
-                $relative = ltrim(substr($entryPath, strlen($pharBase)), '/');
+                $relative = ltrim(substr($entryPath, \strlen($pharBase)), '/');
                 if (str_contains($relative, '../') || str_starts_with($relative, '/')) {
                     throw new RuntimeException('Malicious archive entry detected');
                 }
@@ -2193,6 +2312,7 @@ class MoodleImport
                 }
                 $existing = $docRepo->find($existsIid);
                 $registerRestoredDoc($wrap, $existing);
+
                 continue;
             }
             if ($existsIid && FILE_RENAME === $filePolicy) {
@@ -2722,7 +2842,6 @@ class MoodleImport
      * Normalize a relative document path coming from Moodle XML or sidecar files
      * so that only the logical Chamilo document tree remains visible.
      */
-
     private function normalizeImportedDocumentRelativePath(string $rawPath): string
     {
         $path = trim(str_replace('\\', '/', $rawPath));
@@ -2745,7 +2864,7 @@ class MoodleImport
                 }
             }
             $path = trim((string) preg_replace('#/+#', '/', $path), '/');
-        } while ($path !== '' && $path !== $before);
+        } while ('' !== $path && $path !== $before);
 
         $segments = array_values(array_filter(
             explode('/', $path),
@@ -2759,8 +2878,8 @@ class MoodleImport
         // Only drop a host-like prefix when there is still a remaining path after it.
         // This avoids treating real filenames like "Cuzco.png" as if they were a hostname.
         if (
-            \count($segments) > 1 &&
-            preg_match('~^(localhost(?:-\d+)?|127(?:\.\d+){3}|[a-z0-9.-]+\.[a-z]{2,})$~i', (string) $segments[0])
+            \count($segments) > 1
+            && preg_match('~^(localhost(?:-\d+)?|127(?:\.\d+){3}|[a-z0-9.-]+\.[a-z]{2,})$~i', (string) $segments[0])
         ) {
             array_shift($segments);
         }
@@ -2852,13 +2971,13 @@ class MoodleImport
 
             $targetRel = 'document/'.$relative;
             $targetAbs = rtrim($workDir, '/').'/'.$targetRel;
-            $this->ensureDir(dirname($targetAbs));
+            $this->ensureDir(\dirname($targetAbs));
 
             if (!is_file($targetAbs)) {
                 @copy($blob, $targetAbs);
             }
 
-            $folderParts = array_values(array_filter(explode('/', trim(dirname('/'.$targetRel), '/'))));
+            $folderParts = array_values(array_filter(explode('/', trim(\dirname('/'.$targetRel), '/'))));
             $accum = '';
             foreach ($folderParts as $part) {
                 if ('' === $part) {
@@ -2877,6 +2996,7 @@ class MoodleImport
                 $path = (string) (($existing->path ?? '') ?: ($existing->obj->path ?? ''));
                 if ($path === $legacyPath) {
                     $already = true;
+
                     break;
                 }
             }
@@ -2902,7 +3022,7 @@ class MoodleImport
             return [];
         }
         $doc = $this->loadXml($courseXmlPath);
-        $xp  = new DOMXPath($doc);
+        $xp = new DOMXPath($doc);
 
         $get = static function (string $q) use ($xp) {
             $n = $xp->query($q)->item(0);
@@ -2911,25 +3031,25 @@ class MoodleImport
         };
 
         // Moodle course.xml typical nodes
-        $fullname  = $get('//course/fullname');
+        $fullname = $get('//course/fullname');
         $shortname = $get('//course/shortname');
-        $idnumber  = $get('//course/idnumber');
-        $summary   = $get('//course/summary');
-        $format    = $get('//course/format');
-        $language  = $get('//course/lang');
+        $idnumber = $get('//course/idnumber');
+        $summary = $get('//course/summary');
+        $format = $get('//course/format');
+        $language = $get('//course/lang');
 
         $startdate = (int) ($get('//course/startdate') ?: 0);
-        $enddate   = (int) ($get('//course/enddate')   ?: 0);
+        $enddate = (int) ($get('//course/enddate') ?: 0);
 
         return [
-            'fullname'  => $fullname,
+            'fullname' => $fullname,
             'shortname' => $shortname,
-            'idnumber'  => $idnumber,
-            'summary'   => $summary,
-            'format'    => $format,
-            'language'  => $language,
+            'idnumber' => $idnumber,
+            'summary' => $summary,
+            'format' => $format,
+            'language' => $language,
             'startdate' => $startdate,
-            'enddate'   => $enddate,
+            'enddate' => $enddate,
         ];
     }
 
@@ -2937,7 +3057,7 @@ class MoodleImport
     {
         $candidates = ['meta_export.json', 'export_meta.json', 'meta.json'];
         foreach ($candidates as $fn) {
-            $p = rtrim($workDir,'/').'/'.$fn;
+            $p = rtrim($workDir, '/').'/'.$fn;
             if (is_file($p)) {
                 $raw = @file_get_contents($p);
                 if (false !== $raw && '' !== $raw) {
@@ -2947,6 +3067,7 @@ class MoodleImport
                         $meta['metaexport'] = $j;
                     }
                 }
+
                 break;
             }
         }
@@ -2957,12 +3078,12 @@ class MoodleImport
     private function readQuizModule(string $workDir, string $dir, string $quizXmlPath): array
     {
         $doc = $this->loadXml($quizXmlPath);
-        $xp  = new DOMXPath($doc);
+        $xp = new DOMXPath($doc);
         $meta = $this->extractActivitySourceMeta($quizXmlPath);
 
-        $name  = (string) ($xp->query('//quiz/name')->item(0)?->nodeValue ?? 'Quiz');
+        $name = (string) ($xp->query('//quiz/name')->item(0)?->nodeValue ?? 'Quiz');
         $intro = (string) ($xp->query('//quiz/intro')->item(0)?->nodeValue ?? '');
-        $timeopen  = (int) ($xp->query('//quiz/timeopen')->item(0)?->nodeValue ?? 0);
+        $timeopen = (int) ($xp->query('//quiz/timeopen')->item(0)?->nodeValue ?? 0);
         $timeclose = (int) ($xp->query('//quiz/timeclose')->item(0)?->nodeValue ?? 0);
         $timelimit = (int) ($xp->query('//quiz/timelimit')->item(0)?->nodeValue ?? 0);
 
@@ -2985,7 +3106,7 @@ class MoodleImport
         $questions = [];
         if (is_file($qxml)) {
             $qDoc = $this->loadXml($qxml);
-            $qx   = new DOMXPath($qDoc);
+            $qx = new DOMXPath($qDoc);
 
             foreach ($qx->query('//question') as $qn) {
                 /** @var DOMElement $qn */
@@ -3037,12 +3158,12 @@ class MoodleImport
     private function readAssignModule(string $xmlPath): array
     {
         $doc = $this->loadXml($xmlPath);
-        $xp  = new DOMXPath($doc);
+        $xp = new DOMXPath($doc);
         $meta = $this->extractActivitySourceMeta($xmlPath);
 
-        $name     = trim((string) ($xp->query('//assign/name')->item(0)?->nodeValue ?? 'Assignment'));
-        $intro    = (string) ($xp->query('//assign/intro')->item(0)?->nodeValue ?? '');
-        $duedate  = (int) ($xp->query('//assign/duedate')->item(0)?->nodeValue ?? 0);
+        $name = trim((string) ($xp->query('//assign/name')->item(0)?->nodeValue ?? 'Assignment'));
+        $intro = (string) ($xp->query('//assign/intro')->item(0)?->nodeValue ?? '');
+        $duedate = (int) ($xp->query('//assign/duedate')->item(0)?->nodeValue ?? 0);
         $allowsub = (int) ($xp->query('//assign/teamsubmission')->item(0)?->nodeValue ?? 0);
 
         if ('' === $name) {
@@ -3132,7 +3253,7 @@ class MoodleImport
     private function readSurveyModule(string $xmlPath, string $type): array
     {
         $doc = $this->loadXml($xmlPath);
-        $xp  = new DOMXPath($doc);
+        $xp = new DOMXPath($doc);
         $meta = $this->extractActivitySourceMeta($xmlPath);
 
         $base = "//{$type}";
@@ -3215,9 +3336,9 @@ class MoodleImport
                     } elseif ('d' === $mode) {
                         $questionType = 'dropdown';
                     } else {
-                        if (count($options) === 2) {
+                        if (2 === \count($options)) {
                             $lower = array_map(static fn ($v) => mb_strtolower($v), $options);
-                            if (in_array('yes', $lower, true) && in_array('no', $lower, true)) {
+                            if (\in_array('yes', $lower, true) && \in_array('no', $lower, true)) {
                                 $questionType = 'yesno';
                             } else {
                                 $questionType = 'multiplechoice';
@@ -3226,24 +3347,28 @@ class MoodleImport
                             $questionType = 'multiplechoice';
                         }
                     }
+
                     break;
 
                 case 'textfield':
                 case 'textarea':
                     $questionType = 'open';
+
                     break;
 
                 case 'numeric':
                     $questionType = 'score';
+
                     break;
 
                 default:
                     $questionType = 'open';
+
                     break;
             }
 
             $questions[] = [
-                'id' => $itemId > 0 ? $itemId : (count($questions) + 1),
+                'id' => $itemId > 0 ? $itemId : (\count($questions) + 1),
                 'survey_question' => $questionText,
                 'survey_question_comment' => '',
                 'survey_question_type' => $questionType,
@@ -3264,21 +3389,21 @@ class MoodleImport
     private function readGlossaryModule(string $xmlPath): array
     {
         $doc = $this->loadXml($xmlPath);
-        $xp  = new DOMXPath($doc);
+        $xp = new DOMXPath($doc);
 
-        $name  = (string) ($xp->query('//glossary/name')->item(0)?->nodeValue ?? 'Glossary');
+        $name = (string) ($xp->query('//glossary/name')->item(0)?->nodeValue ?? 'Glossary');
         $intro = (string) ($xp->query('//glossary/intro')->item(0)?->nodeValue ?? '');
 
         $entries = [];
         foreach ($xp->query('//glossary/entries/entry') as $eNode) {
             /** @var DOMElement $eNode */
-            $entryId    = (int) $eNode->getAttribute('id');
-            $concept    = trim((string) ($xp->evaluate('string(concept)', $eNode) ?? ''));
+            $entryId = (int) $eNode->getAttribute('id');
+            $concept = trim((string) ($xp->evaluate('string(concept)', $eNode) ?? ''));
             $definition = (string) ($xp->evaluate('string(definition)', $eNode) ?? '');
-            $approved   = (int) $xp->evaluate('number(approved)', $eNode);
-            $userId     = (int) $xp->evaluate('number(userid)', $eNode);
-            $created    = (int) $xp->evaluate('number(timecreated)', $eNode);
-            $modified   = (int) $xp->evaluate('number(timemodified)', $eNode);
+            $approved = (int) $xp->evaluate('number(approved)', $eNode);
+            $userId = (int) $xp->evaluate('number(userid)', $eNode);
+            $created = (int) $xp->evaluate('number(timecreated)', $eNode);
+            $modified = (int) $xp->evaluate('number(timemodified)', $eNode);
 
             // Collect aliases
             $aliases = [];
@@ -3287,21 +3412,21 @@ class MoodleImport
             }
 
             $entries[] = [
-                'id'          => $entryId,
-                'concept'     => $concept,
-                'definition'  => $definition, // keep HTML; resolver for @@PLUGINFILE@@ can run later
-                'approved'    => $approved ?: 1,
-                'userid'      => $userId,
+                'id' => $entryId,
+                'concept' => $concept,
+                'definition' => $definition, // keep HTML; resolver for @@PLUGINFILE@@ can run later
+                'approved' => $approved ?: 1,
+                'userid' => $userId,
                 'timecreated' => $created,
-                'timemodified'=> $modified,
-                'aliases'     => $aliases,
+                'timemodified' => $modified,
+                'aliases' => $aliases,
             ];
         }
 
         return [
-            'name'        => $name,
+            'name' => $name,
             'description' => $intro,
-            'entries'     => $entries,
+            'entries' => $entries,
         ];
     }
 
@@ -3323,6 +3448,7 @@ class MoodleImport
         foreach ($candidates as $candidate) {
             if (is_file($candidate)) {
                 $path = $candidate;
+
                 break;
             }
         }
@@ -3331,7 +3457,7 @@ class MoodleImport
             return [];
         }
 
-        $doc = new \DOMDocument('1.0', 'UTF-8');
+        $doc = new DOMDocument('1.0', 'UTF-8');
         $doc->preserveWhiteSpace = false;
         $doc->formatOutput = false;
 
@@ -3344,34 +3470,34 @@ class MoodleImport
             return [];
         }
 
-        $xp = new \DOMXPath($doc);
+        $xp = new DOMXPath($doc);
 
         $evNodes = $xp->query('/events/event');
-        if (!$evNodes || $evNodes->length === 0) {
+        if (!$evNodes || 0 === $evNodes->length) {
             $evNodes = $xp->query('/calendar/event');
         }
-        if (!$evNodes || $evNodes->length === 0) {
+        if (!$evNodes || 0 === $evNodes->length) {
             return [];
         }
 
         $out = [];
 
-        /** @var \DOMElement $ev */
+        /** @var DOMElement $ev */
         foreach ($evNodes as $ev) {
-            $get = static function (\DOMElement $ctx, string $tag): ?string {
+            $get = static function (DOMElement $ctx, string $tag): ?string {
                 $n = $ctx->getElementsByTagName($tag)->item(0);
 
                 return $n ? (string) $n->nodeValue : null;
             };
 
-            $name       = trim((string) ($get($ev, 'name') ?? ''));
-            $desc       = (string) ($get($ev, 'description') ?? '');
+            $name = trim((string) ($get($ev, 'name') ?? ''));
+            $desc = (string) ($get($ev, 'description') ?? '');
             $timestartV = (string) ($get($ev, 'timestart') ?? '');
-            $durationV  = (string) ($get($ev, 'timeduration') ?? $get($ev, 'duration') ?? '');
-            $alldayV    = (string) ($get($ev, 'allday') ?? '');
-            $visibleV   = (string) ($get($ev, 'visible') ?? '1');
-            $eventtype  = (string) ($get($ev, 'eventtype') ?? 'course');
-            $uuid       = (string) ($get($ev, 'uuid') ?? '');
+            $durationV = (string) ($get($ev, 'timeduration') ?? $get($ev, 'duration') ?? '');
+            $alldayV = (string) ($get($ev, 'allday') ?? '');
+            $visibleV = (string) ($get($ev, 'visible') ?? '1');
+            $eventtype = (string) ($get($ev, 'eventtype') ?? 'course');
+            $uuid = (string) ($get($ev, 'uuid') ?? '');
 
             $toTs = static function (string $v, int $fallback = 0): int {
                 if ('' === $v) {
@@ -3381,25 +3507,25 @@ class MoodleImport
                     return (int) $v;
                 }
 
-                $t = @\strtotime($v);
+                $t = @strtotime($v);
 
                 return false !== $t ? (int) $t : $fallback;
             };
 
             $timestart = $toTs($timestartV, time());
-            $duration  = max(0, (int) $durationV);
-            $allday    = (int) $alldayV ? 1 : 0;
-            $visible   = (int) $visibleV ? 1 : 0;
+            $duration = max(0, (int) $durationV);
+            $allday = (int) $alldayV ? 1 : 0;
+            $visible = (int) $visibleV ? 1 : 0;
 
             $out[] = [
-                'name'        => '' !== $name ? $name : 'Event',
+                'name' => '' !== $name ? $name : 'Event',
                 'description' => $desc,
-                'timestart'   => $timestart,
-                'duration'    => $duration,
-                'allday'      => $allday,
-                'visible'     => $visible,
-                'eventtype'   => $eventtype,
-                'uuid'        => $uuid,
+                'timestart' => $timestart,
+                'duration' => $duration,
+                'allday' => $allday,
+                'visible' => $visible,
+                'eventtype' => $eventtype,
+                'uuid' => $uuid,
             ];
         }
 
@@ -3437,25 +3563,25 @@ class MoodleImport
         foreach ($legacy->resources as $v) {
             $total += \is_array($v) ? \count($v) : 0;
         }
-        if ($total === 0) {
+        if (0 === $total) {
             return ['imported' => 0, 'notes' => ['No resources to restore for '.implode(',', $allowedBuckets)]];
         }
 
-        $restorerClass = '\\Chamilo\\CourseBundle\\Component\\CourseCopy\\CourseRestorer';
-        if (!\class_exists($restorerClass)) {
+        $restorerClass = '\Chamilo\CourseBundle\Component\CourseCopy\CourseRestorer';
+        if (!class_exists($restorerClass)) {
             return ['imported' => 0, 'notes' => ['CourseRestorer not available']];
         }
         $restorer = new $restorerClass($em, $courseRealId, $sessionId);
 
         if (property_exists($restorer, 'course')) {
             $restorer->course = $legacy;
-        } elseif (\method_exists($restorer, 'setCourse')) {
+        } elseif (method_exists($restorer, 'setCourse')) {
             $restorer->setCourse($legacy);
         }
 
         $destCode = '';
         $courseEntity = \function_exists('api_get_course_entity') ? api_get_course_entity($courseRealId) : null;
-        if ($courseEntity && \method_exists($courseEntity, 'getCode')) {
+        if ($courseEntity && method_exists($courseEntity, 'getCode')) {
             $destCode = (string) $courseEntity->getCode();
         } else {
             $ci = \function_exists('api_get_course_info_by_id') ? api_get_course_info_by_id($courseRealId) : null;
@@ -3464,7 +3590,7 @@ class MoodleImport
             }
         }
 
-        if (\method_exists($restorer, 'restore')) {
+        if (method_exists($restorer, 'restore')) {
             $restorer->restore($destCode, $sessionId, false, false);
         } else {
             return ['imported' => 0, 'notes' => ['No supported restore() method in CourseRestorer']];
@@ -3476,21 +3602,21 @@ class MoodleImport
     private function expandBucketAliases(array $buckets): array
     {
         $map = [
-            'quizzes'        => ['quizzes', 'quiz', \defined('RESOURCE_QUIZ') ? (string) RESOURCE_QUIZ : 'quiz'],
-            'quiz'           => ['quiz', 'quizzes', \defined('RESOURCE_QUIZ') ? (string) RESOURCE_QUIZ : 'quiz'],
-            'quiz_question'  => ['quiz_question', 'Exercise_Question', \defined('RESOURCE_QUIZQUESTION') ? (string) RESOURCE_QUIZQUESTION : 'quiz_question'],
-            'scorm'             => ['scorm', 'scorm_documents'],
-            'scorm_documents'   => ['scorm_documents', 'scorm'],
-            'document'       => ['document', 'Document'],
-            'forum'          => ['forum'],
+            'quizzes' => ['quizzes', 'quiz', \defined('RESOURCE_QUIZ') ? (string) RESOURCE_QUIZ : 'quiz'],
+            'quiz' => ['quiz', 'quizzes', \defined('RESOURCE_QUIZ') ? (string) RESOURCE_QUIZ : 'quiz'],
+            'quiz_question' => ['quiz_question', 'Exercise_Question', \defined('RESOURCE_QUIZQUESTION') ? (string) RESOURCE_QUIZQUESTION : 'quiz_question'],
+            'scorm' => ['scorm', 'scorm_documents'],
+            'scorm_documents' => ['scorm_documents', 'scorm'],
+            'document' => ['document', 'Document'],
+            'forum' => ['forum'],
             'Forum_Category' => ['Forum_Category'],
-            'link'           => ['link'],
-            'Link_Category'  => ['Link_Category'],
-            'learnpath'          => ['learnpath'],
+            'link' => ['link'],
+            'Link_Category' => ['Link_Category'],
+            'learnpath' => ['learnpath'],
             'learnpath_category' => ['learnpath_category'],
-            'thematic'    => ['thematic', \defined('RESOURCE_THEMATIC') ? (string) RESOURCE_THEMATIC : 'thematic'],
-            'attendance'  => ['attendance', \defined('RESOURCE_ATTENDANCE') ? (string) RESOURCE_ATTENDANCE : 'attendance'],
-            'gradebook'   => ['gradebook', 'Gradebook', \defined('RESOURCE_GRADEBOOK') ? (string) RESOURCE_GRADEBOOK : 'gradebook'],
+            'thematic' => ['thematic', \defined('RESOURCE_THEMATIC') ? (string) RESOURCE_THEMATIC : 'thematic'],
+            'attendance' => ['attendance', \defined('RESOURCE_ATTENDANCE') ? (string) RESOURCE_ATTENDANCE : 'attendance'],
+            'gradebook' => ['gradebook', 'Gradebook', \defined('RESOURCE_GRADEBOOK') ? (string) RESOURCE_GRADEBOOK : 'gradebook'],
             'announcement' => array_values(array_unique(array_filter([
                 'announcement',
                 'news',
@@ -3513,6 +3639,7 @@ class MoodleImport
      * Keeps all logic inside MoodleImport (no new classes).
      *
      * @param string[] $buckets
+     *
      * @return array{imported:int,notes:array}
      */
     public function restoreSelectedBuckets(
@@ -3538,7 +3665,9 @@ class MoodleImport
         );
     }
 
-    /** Quizzes (+ question bank minimal snapshot) */
+    /**
+     * Quizzes (+ question bank minimal snapshot).
+     */
     public function restoreQuizzes(
         string $archivePath,
         EntityManagerInterface $em,
@@ -3547,13 +3676,18 @@ class MoodleImport
         ?object $courseArg = null
     ): array {
         return $this->restoreSelectedBuckets(
-            $archivePath, $em, $courseRealId, $sessionId,
+            $archivePath,
+            $em,
+            $courseRealId,
+            $sessionId,
             ['quizzes', 'quiz_question'],
             $courseArg
         );
     }
 
-    /** SCORM packages */
+    /**
+     * SCORM packages.
+     */
     public function restoreScorm(
         string $archivePath,
         EntityManagerInterface $em,
@@ -3563,7 +3697,10 @@ class MoodleImport
     ): array {
         // Keep both keys for maximum compatibility with CourseRestorer implementations
         return $this->restoreSelectedBuckets(
-            $archivePath, $em, $courseRealId, $sessionId,
+            $archivePath,
+            $em,
+            $courseRealId,
+            $sessionId,
             ['scorm_documents', 'scorm'],
             $courseArg
         );
@@ -3873,12 +4010,17 @@ class MoodleImport
         return $imported > 0;
     }
 
-    /** Read JSON file safely; return [] on error. */
+    /**
+     * Read JSON file safely; return [] on error.
+     */
     private function readJsonFile(string $file): array
     {
         $raw = @file_get_contents($file);
-        if ($raw === false) { return []; }
+        if (false === $raw) {
+            return [];
+        }
         $data = json_decode($raw, true);
+
         return \is_array($data) ? $data : [];
     }
 
@@ -4173,7 +4315,7 @@ class MoodleImport
     }
 
     /**
-    " Import quizzes from QuizMetaExport sidecars under chamilo/quiz/quiz_.
+     * " Import quizzes from QuizMetaExport sidecars under chamilo/quiz/quiz_.
      * Builds 'quiz' and 'quiz_question' (and their constant-key aliases if defined).
      * Returns true if at least one quiz was imported.
      */
@@ -4198,12 +4340,12 @@ class MoodleImport
         }
 
         while (false !== ($entry = readdir($dh))) {
-            if ($entry === '.' || $entry === '..') {
+            if ('.' === $entry || '..' === $entry) {
                 continue;
             }
 
             $dir = $base.'/'.$entry;
-            if (!is_dir($dir) || strpos($entry, 'quiz_') !== 0) {
+            if (!is_dir($dir) || !str_starts_with($entry, 'quiz_')) {
                 continue;
             }
 
@@ -4218,6 +4360,7 @@ class MoodleImport
                 if ($this->debug) {
                     @error_log("MOODLE_IMPORT: Quiz meta missing or incomplete in {$entry}");
                 }
+
                 continue;
             }
 
@@ -4331,8 +4474,7 @@ class MoodleImport
             } else {
                 usort(
                     $normalizedQuestions,
-                    static fn (array $a, array $b): int =>
-                        (int) (($a['_data']['_order'] ?? 0)) <=> (int) (($b['_data']['_order'] ?? 0))
+                    static fn (array $a, array $b): int => (int) ($a['_data']['_order'] ?? 0) <=> (int) ($b['_data']['_order'] ?? 0)
                 );
 
                 foreach ($normalizedQuestions as $row) {
@@ -4435,49 +4577,67 @@ class MoodleImport
         return $imported > 0;
     }
 
-    /** Find an existing quiz by title (case-insensitive) in any of the provided bags. */
+    /**
+     * Find an existing quiz by title (case-insensitive) in any of the provided bags.
+     */
     private function findExistingQuizIdByTitle(array $resources, string $title, array $bags): ?int
     {
         $needle = mb_strtolower(trim($title));
         foreach ($bags as $bag) {
             foreach ((array) ($resources[$bag] ?? []) as $id => $q) {
                 $arr = \is_object($q) ? get_object_vars($q) : (array) $q;
-                $t   = (string) ($arr['title'] ?? $arr['name'] ?? '');
-                if ($needle !== '' && mb_strtolower($t) === $needle) {
+                $t = (string) ($arr['title'] ?? $arr['name'] ?? '');
+                if ('' !== $needle && mb_strtolower($t) === $needle) {
                     return (int) $id;
                 }
             }
         }
+
         return null;
     }
 
-    /** Quick probe: do we have at least one chamilo/quiz/quiz_quiz.json + questions.json ? */
+    /**
+     * Quick probe: do we have at least one chamilo/quiz/quiz_quiz.json + questions.json ?
+     */
     private function hasQuizMeta(string $workDir): bool
     {
         $base = rtrim($workDir, '/').'/chamilo/quiz';
-        if (!is_dir($base)) return false;
-        if (!$dh = @opendir($base)) return false;
+        if (!is_dir($base)) {
+            return false;
+        }
+        if (!$dh = @opendir($base)) {
+            return false;
+        }
         while (false !== ($e = readdir($dh))) {
-            if ($e === '.' || $e === '..') continue;
+            if ('.' === $e || '..' === $e) {
+                continue;
+            }
             $dir = $base.'/'.$e;
             if (is_dir($dir) && str_starts_with($e, 'quiz_')
                 && is_file($dir.'/quiz.json') && is_file($dir.'/questions.json')) {
                 closedir($dh);
+
                 return true;
             }
         }
         closedir($dh);
+
         return false;
     }
 
-    /** Quick probe: typical LearnpathMetaExport artifacts */
+    /**
+     * Quick probe: typical LearnpathMetaExport artifacts.
+     */
     private function hasLearnpathMeta(string $workDir): bool
     {
         $base = rtrim($workDir, '/').'/chamilo/learnpath';
+
         return is_dir($base) && (is_file($base.'/index.json') || is_file($base.'/categories.json'));
     }
 
-    /** Quick probe: Chamilo-sidecar document index. */
+    /**
+     * Quick probe: Chamilo-sidecar document index.
+     */
     private function hasDocumentMeta(string $workDir): bool
     {
         return is_file(rtrim($workDir, '/').'/chamilo/document/index.json');
@@ -4563,7 +4723,7 @@ class MoodleImport
 
             if ('folder' === $fileType) {
                 // Build parent chain without forcing intermediate visibility; apply leaf visibility.
-                $parent = trim((string) dirname($relative), '.');
+                $parent = trim((string) \dirname($relative), '.');
                 if ('.' === $parent) {
                     $parent = '';
                 }
@@ -4575,12 +4735,13 @@ class MoodleImport
                 $leafTitle = '' !== $title ? $title : basename($relative);
                 $this->ensureFolderLegacy($resources['document'], $legacyFolderPath, $leafTitle, $visibility);
                 $existing[$legacyFolderPath] = true;
+
                 continue;
             }
 
             $fileRows++;
 
-            $parent = trim((string) dirname($relative), '.');
+            $parent = trim((string) \dirname($relative), '.');
             if ('.' === $parent) {
                 $parent = '';
             }
@@ -4621,6 +4782,7 @@ class MoodleImport
                 if ($this->debug) {
                     error_log('MOODLE_IMPORT: document meta file missing '.$legacyPath);
                 }
+
                 continue;
             }
 
@@ -4637,10 +4799,12 @@ class MoodleImport
                                 $it->obj->visibility = $visibility;
                             }
                             $resources['document'][$k] = $it;
+
                             break;
                         }
                     }
                 }
+
                 continue;
             }
 
@@ -4729,6 +4893,7 @@ class MoodleImport
                 foreach ($folderPaths as $folderPath => $_) {
                     if (str_starts_with($folderPath, $relative.'/')) {
                         $conflicts = true;
+
                         break;
                     }
                 }
@@ -4746,7 +4911,7 @@ class MoodleImport
                 continue;
             }
 
-            $parent = trim((string) dirname($relative), '.');
+            $parent = trim((string) \dirname($relative), '.');
             if ('.' === $parent) {
                 $parent = '';
             }
@@ -4759,7 +4924,7 @@ class MoodleImport
             }
 
             if ($this->debug) {
-                error_log(sprintf(
+                error_log(\sprintf(
                     'MOODLE_IMPORT: corrected document meta path collision "%s" -> "%s"',
                     $relative,
                     $corrected
@@ -4787,7 +4952,7 @@ class MoodleImport
         try {
             $doc = $this->loadXml($filesXml);
             $xp = new DOMXPath($doc);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return [];
         }
 
@@ -4816,15 +4981,18 @@ class MoodleImport
         return $out;
     }
 
-    /** Cheap reader: obtain <quiz><name> from module xml without building resources. */
+    /**
+     * Cheap reader: obtain <quiz><name> from module xml without building resources.
+     */
     private function peekQuizTitle(string $moduleXml): ?string
     {
         try {
             $doc = $this->loadXml($moduleXml);
-            $xp  = new DOMXPath($doc);
+            $xp = new DOMXPath($doc);
             $name = $xp->query('//quiz/name')->item(0)?->nodeValue ?? null;
+
             return $name ? (string) $name : null;
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
@@ -4850,11 +5018,15 @@ class MoodleImport
                 } elseif (isset($obj->obj) && \is_object($obj->obj)) {
                     $title = (string) ($obj->obj->title ?? $obj->obj->name ?? '');
                 }
-                if ($title === '') continue;
+                if ('' === $title) {
+                    continue;
+                }
 
                 $key = mb_strtolower($title);
                 $typeKey = $this->normalizeItemTypeKey($bag); // e.g. 'quiz' for ['quiz','quizzes']
-                if (!isset($lookups[$typeKey])) $lookups[$typeKey] = [];
+                if (!isset($lookups[$typeKey])) {
+                    $lookups[$typeKey] = [];
+                }
                 $lookups[$typeKey][$key] = (int) $id;
             }
         }
@@ -4862,10 +5034,12 @@ class MoodleImport
         // Walk all LP items and fill 'ref' when empty
         foreach ($lpMap as &$lp) {
             foreach ($lp['items'] as &$it) {
-                if (!empty($it['ref'])) continue;
+                if (!empty($it['ref'])) {
+                    continue;
+                }
                 $type = $this->normalizeItemTypeKey((string) ($it['item_type'] ?? ''));
-                $t    = mb_strtolower((string) ($it['title'] ?? ''));
-                if ($t !== '' && isset($lookups[$type][$t])) {
+                $t = mb_strtolower((string) ($it['title'] ?? ''));
+                if ('' !== $t && isset($lookups[$type][$t])) {
                     $it['ref'] = $lookups[$type][$t];
                 }
             }
@@ -4874,35 +5048,40 @@ class MoodleImport
         unset($lp);
     }
 
-    /** Normalize various bag/item_type labels into a stable key used in lookup. */
+    /**
+     * Normalize various bag/item_type labels into a stable key used in lookup.
+     */
     private function normalizeItemTypeKey(string $s): string
     {
         $s = strtolower($s);
+
         return match ($s) {
             'quizzes', 'quiz', \defined('RESOURCE_QUIZ') ? strtolower((string) RESOURCE_QUIZ) : 'quiz' => 'quiz',
             'document', 'documents' => 'document',
             'forum', 'forums' => 'forum',
             'link', 'links' => 'link',
             'scorm', 'scorm_documents' => 'scorm',
-            'coursedescription'   => 'course_description',
+            'coursedescription' => 'course_description',
             'course_descriptions' => 'course_description',
             default => $s,
         };
     }
 
-    /** Merge bag aliases into canonical keys to avoid duplicate groups. */
+    /**
+     * Merge bag aliases into canonical keys to avoid duplicate groups.
+     */
     private function canonicalizeResourceBags(array $res): array
     {
         // Canonical keys (fall back to strings if constants not defined)
         $QUIZ_KEY = \defined('RESOURCE_QUIZ') ? RESOURCE_QUIZ : 'quiz';
-        $QQ_KEY   = \defined('RESOURCE_QUIZQUESTION') ? RESOURCE_QUIZQUESTION : 'quiz_question';
+        $QQ_KEY = \defined('RESOURCE_QUIZQUESTION') ? RESOURCE_QUIZQUESTION : 'quiz_question';
 
         // ---- Quizzes ----
         $mergedQuiz = [];
         foreach (['quizzes', 'quiz', 'Exercise', $QUIZ_KEY] as $k) {
             if (!empty($res[$k]) && \is_array($res[$k])) {
                 foreach ($res[$k] as $id => $item) {
-                    $mergedQuiz[(int)$id] = $item;
+                    $mergedQuiz[(int) $id] = $item;
                 }
             }
             unset($res[$k]);
@@ -4914,7 +5093,7 @@ class MoodleImport
         foreach (['quiz_question', 'Exercise_Question', $QQ_KEY] as $k) {
             if (!empty($res[$k]) && \is_array($res[$k])) {
                 foreach ($res[$k] as $id => $item) {
-                    $mergedQQ[(int)$id] = $item;
+                    $mergedQQ[(int) $id] = $item;
                 }
             }
             unset($res[$k]);
@@ -4926,7 +5105,7 @@ class MoodleImport
         foreach (['thematic', $THEM_KEY] as $k) {
             if (!empty($res[$k]) && \is_array($res[$k])) {
                 foreach ($res[$k] as $id => $item) {
-                    $mergedThematic[(int)$id] = $item;
+                    $mergedThematic[(int) $id] = $item;
                 }
             }
             unset($res[$k]);
@@ -4939,21 +5118,29 @@ class MoodleImport
         $merged = [];
         foreach (['attendance', $ATT_KEY] as $k) {
             if (!empty($res[$k]) && \is_array($res[$k])) {
-                foreach ($res[$k] as $id => $it) { $merged[(int)$id] = $it; }
+                foreach ($res[$k] as $id => $it) {
+                    $merged[(int) $id] = $it;
+                }
             }
             unset($res[$k]);
         }
-        if ($merged) { $res[$ATT_KEY] = $merged; }
+        if ($merged) {
+            $res[$ATT_KEY] = $merged;
+        }
 
         $GB_KEY = \defined('RESOURCE_GRADEBOOK') ? RESOURCE_GRADEBOOK : 'gradebook';
         $merged = [];
         foreach (['gradebook', 'Gradebook', $GB_KEY] as $k) {
             if (!empty($res[$k]) && \is_array($res[$k])) {
-                foreach ($res[$k] as $id => $it) { $merged[(int)$id] = $it; }
+                foreach ($res[$k] as $id => $it) {
+                    $merged[(int) $id] = $it;
+                }
             }
             unset($res[$k]);
         }
-        if ($merged) { $res[$GB_KEY] = $merged; }
+        if ($merged) {
+            $res[$GB_KEY] = $merged;
+        }
 
         // ---- Surveys (RESOURCE_SURVEY = 'survey'; importer historically used 'surveys') ----
         $SURVEY_KEY = \defined('RESOURCE_SURVEY') ? RESOURCE_SURVEY : 'survey';
@@ -5061,11 +5248,11 @@ class MoodleImport
 
         // 1) Discover files (prefer manifest, fallback to glob)
         $files = [];
-        $manifest = @json_decode((string)@file_get_contents(rtrim($workDir, '/').'/chamilo/manifest.json'), true);
+        $manifest = @json_decode((string) @file_get_contents(rtrim($workDir, '/').'/chamilo/manifest.json'), true);
         if (\is_array($manifest['items'] ?? null)) {
             foreach ($manifest['items'] as $it) {
                 if (($it['kind'] ?? '') === 'thematic' && !empty($it['path'])) {
-                    $path = rtrim($workDir, '/').'/'.ltrim((string)$it['path'], '/');
+                    $path = rtrim($workDir, '/').'/'.ltrim((string) $it['path'], '/');
                     if (is_file($path)) {
                         $files[] = $path;
                     }
@@ -5073,7 +5260,7 @@ class MoodleImport
             }
         }
         if (empty($files)) {
-            foreach ((array)@glob($base.'/thematic_*.json') as $f) {
+            foreach ((array) @glob($base.'/thematic_*.json') as $f) {
                 if (is_file($f)) {
                     $files[] = $f;
                 }
@@ -5088,23 +5275,23 @@ class MoodleImport
 
         $imported = 0;
         foreach ($files as $f) {
-            $payload = @json_decode((string)@file_get_contents($f), true);
+            $payload = @json_decode((string) @file_get_contents($f), true);
             if (!\is_array($payload)) {
                 continue;
             }
 
             // Exporter shape: { "type":"thematic", ..., "title","content","active","advances":[...], "plans":[...] }
-            $title   = (string)($payload['title']   ?? 'Thematic');
-            $content = (string)($payload['content'] ?? '');
-            $active  = (int)   ($payload['active']  ?? 1);
+            $title = (string) ($payload['title'] ?? 'Thematic');
+            $content = (string) ($payload['content'] ?? '');
+            $active = (int) ($payload['active'] ?? 1);
 
             // Prefer explicit id inside nested shapes if present
-            $iid = (int)($payload['id'] ?? 0);
+            $iid = (int) ($payload['id'] ?? 0);
             if ($iid <= 0) {
                 // Derive from filename thematic_{moduleId}.json or moduleid
-                $iid = (int)($payload['moduleid'] ?? 0);
-                if ($iid <= 0 && preg_match('/thematic_(\d+)\.json$/', (string)$f, $m)) {
-                    $iid = (int)$m[1];
+                $iid = (int) ($payload['moduleid'] ?? 0);
+                if ($iid <= 0 && preg_match('/thematic_(\d+)\.json$/', (string) $f, $m)) {
+                    $iid = (int) $m[1];
                 }
                 if ($iid <= 0) {
                     $iid = $this->nextId($resources[$THEM_KEY] ?? []);
@@ -5113,43 +5300,43 @@ class MoodleImport
 
             // Normalize lists
             $advances = [];
-            foreach ((array)($payload['advances'] ?? []) as $a) {
-                $a = (array)$a;
+            foreach ((array) ($payload['advances'] ?? []) as $a) {
+                $a = (array) $a;
                 $advances[] = [
-                    'id'            => (int)   ($a['id'] ?? ($a['iid'] ?? 0)),
-                    'thematic_id'   => (int)   ($a['thematic_id'] ?? $iid),
-                    'content'       => (string)($a['content'] ?? ''),
-                    'start_date'    => (string)($a['start_date'] ?? ''),
-                    'duration'      => (int)   ($a['duration'] ?? 0),
-                    'done_advance'  => (bool)  ($a['done_advance'] ?? false),
-                    'attendance_id' => (int)   ($a['attendance_id'] ?? 0),
-                    'room_id'       => (int)   ($a['room_id'] ?? 0),
+                    'id' => (int) ($a['id'] ?? ($a['iid'] ?? 0)),
+                    'thematic_id' => (int) ($a['thematic_id'] ?? $iid),
+                    'content' => (string) ($a['content'] ?? ''),
+                    'start_date' => (string) ($a['start_date'] ?? ''),
+                    'duration' => (int) ($a['duration'] ?? 0),
+                    'done_advance' => (bool) ($a['done_advance'] ?? false),
+                    'attendance_id' => (int) ($a['attendance_id'] ?? 0),
+                    'room_id' => (int) ($a['room_id'] ?? 0),
                 ];
             }
 
             $plans = [];
-            foreach ((array)($payload['plans'] ?? []) as $p) {
-                $p = (array)$p;
+            foreach ((array) ($payload['plans'] ?? []) as $p) {
+                $p = (array) $p;
                 $plans[] = [
-                    'id'               => (int)   ($p['id'] ?? ($p['iid'] ?? 0)),
-                    'thematic_id'      => (int)   ($p['thematic_id'] ?? $iid),
-                    'title'            => (string)($p['title'] ?? ''),
-                    'description'      => (string)($p['description'] ?? ''),
-                    'description_type' => (int)   ($p['description_type'] ?? 0),
+                    'id' => (int) ($p['id'] ?? ($p['iid'] ?? 0)),
+                    'thematic_id' => (int) ($p['thematic_id'] ?? $iid),
+                    'title' => (string) ($p['title'] ?? ''),
+                    'description' => (string) ($p['description'] ?? ''),
+                    'description_type' => (int) ($p['description_type'] ?? 0),
                 ];
             }
 
             // mkLegacyItem wrapper with explicit list fields
             $item = $this->mkLegacyItem($THEM_KEY, $iid, [
-                'id'      => $iid,
-                'title'   => $title,
+                'id' => $iid,
+                'title' => $title,
                 'content' => $content,
-                'active'  => $active,
-            ], ['thematic_advance_list','thematic_plan_list']);
+                'active' => $active,
+            ], ['thematic_advance_list', 'thematic_plan_list']);
 
             // Attach lists on the wrapper (builder-friendly)
             $item->thematic_advance_list = $advances;
-            $item->thematic_plan_list    = $plans;
+            $item->thematic_plan_list = $plans;
 
             $resources[$THEM_KEY][$iid] = $item;
             $imported++;
@@ -5171,7 +5358,7 @@ class MoodleImport
     private function tryImportAttendanceMeta(string $workDir, array &$resources): bool
     {
         $ATT_KEY = \defined('RESOURCE_ATTENDANCE') ? RESOURCE_ATTENDANCE : 'attendance';
-        $base    = rtrim($workDir, '/').'/chamilo/attendance';
+        $base = rtrim($workDir, '/').'/chamilo/attendance';
         if (!is_dir($base)) {
             return false;
         }
@@ -5179,11 +5366,11 @@ class MoodleImport
         // 1) Discover files via manifest (preferred), fallback to glob
         $files = [];
         $manifestFile = rtrim($workDir, '/').'/chamilo/manifest.json';
-        $manifest = @json_decode((string)@file_get_contents($manifestFile), true);
+        $manifest = @json_decode((string) @file_get_contents($manifestFile), true);
         if (\is_array($manifest['items'] ?? null)) {
             foreach ($manifest['items'] as $it) {
                 if (($it['kind'] ?? '') === 'attendance' && !empty($it['path'])) {
-                    $path = rtrim($workDir, '/').'/'.ltrim((string)$it['path'], '/');
+                    $path = rtrim($workDir, '/').'/'.ltrim((string) $it['path'], '/');
                     if (is_file($path)) {
                         $files[] = $path;
                     }
@@ -5191,7 +5378,7 @@ class MoodleImport
             }
         }
         if (empty($files)) {
-            foreach ((array)@glob($base.'/attendance_*.json') as $f) {
+            foreach ((array) @glob($base.'/attendance_*.json') as $f) {
                 if (is_file($f)) {
                     $files[] = $f;
                 }
@@ -5206,57 +5393,57 @@ class MoodleImport
 
         $imported = 0;
         foreach ($files as $f) {
-            $payload = @json_decode((string)@file_get_contents($f), true);
+            $payload = @json_decode((string) @file_get_contents($f), true);
             if (!\is_array($payload)) {
                 continue;
             }
 
             // ---- Map top-level fields (robust against naming variants)
-            $iid   = (int)($payload['id'] ?? 0);
+            $iid = (int) ($payload['id'] ?? 0);
             if ($iid <= 0) {
-                $iid = (int)($payload['moduleid'] ?? 0);
+                $iid = (int) ($payload['moduleid'] ?? 0);
             }
-            if ($iid <= 0 && preg_match('/attendance_(\d+)\.json$/', (string)$f, $m)) {
-                $iid = (int)$m[1];
+            if ($iid <= 0 && preg_match('/attendance_(\d+)\.json$/', (string) $f, $m)) {
+                $iid = (int) $m[1];
             }
             if ($iid <= 0) {
                 $iid = $this->nextId($resources[$ATT_KEY] ?? []);
             }
 
-            $title = (string)($payload['title'] ?? $payload['name'] ?? 'Attendance');
-            $desc  = (string)($payload['description'] ?? $payload['intro'] ?? '');
-            $active= (int)   ($payload['active'] ?? 1);
-            $locked= (int)   ($payload['locked'] ?? 0);
+            $title = (string) ($payload['title'] ?? $payload['name'] ?? 'Attendance');
+            $desc = (string) ($payload['description'] ?? $payload['intro'] ?? '');
+            $active = (int) ($payload['active'] ?? 1);
+            $locked = (int) ($payload['locked'] ?? 0);
 
             // Qualify block may be nested or flattened
-            $qual   = \is_array($payload['qualify'] ?? null) ? $payload['qualify'] : [];
-            $qualTitle = (string)($qual['title'] ?? $payload['attendance_qualify_title'] ?? '');
-            $qualMax   = (int)   ($qual['max']   ?? $payload['attendance_qualify_max'] ?? 0);
-            $weight    = (float) ($qual['weight']?? $payload['attendance_weight'] ?? 0.0);
+            $qual = \is_array($payload['qualify'] ?? null) ? $payload['qualify'] : [];
+            $qualTitle = (string) ($qual['title'] ?? $payload['attendance_qualify_title'] ?? '');
+            $qualMax = (int) ($qual['max'] ?? $payload['attendance_qualify_max'] ?? 0);
+            $weight = (float) ($qual['weight'] ?? $payload['attendance_weight'] ?? 0.0);
 
             // ---- Normalize calendars
-            $calIn  = (array)($payload['calendars'] ?? []);
-            $cals   = [];
+            $calIn = (array) ($payload['calendars'] ?? []);
+            $cals = [];
             foreach ($calIn as $c) {
                 if (!\is_array($c) && !\is_object($c)) {
                     continue;
                 }
-                $c = (array)$c;
-                $cid   = (int)($c['id'] ?? $c['iid'] ?? 0);
-                $aid   = (int)($c['attendance_id'] ?? $iid);
-                $dt    = (string)($c['date_time'] ?? $c['datetime'] ?? '');
-                $done  = (bool)  ($c['done_attendance'] ?? false);
-                $block = (bool)  ($c['blocked'] ?? false);
-                $dur   = $c['duration'] ?? null;
-                $dur   = (null !== $dur) ? (int)$dur : null;
+                $c = (array) $c;
+                $cid = (int) ($c['id'] ?? $c['iid'] ?? 0);
+                $aid = (int) ($c['attendance_id'] ?? $iid);
+                $dt = (string) ($c['date_time'] ?? $c['datetime'] ?? '');
+                $done = (bool) ($c['done_attendance'] ?? false);
+                $block = (bool) ($c['blocked'] ?? false);
+                $dur = $c['duration'] ?? null;
+                $dur = (null !== $dur) ? (int) $dur : null;
 
                 $cals[] = [
-                    'id'              => $cid > 0 ? $cid : $this->nextId($cals),
-                    'attendance_id'   => $aid,
-                    'date_time'       => $dt,
+                    'id' => $cid > 0 ? $cid : $this->nextId($cals),
+                    'attendance_id' => $aid,
+                    'date_time' => $dt,
                     'done_attendance' => $done,
-                    'blocked'         => $block,
-                    'duration'        => $dur,
+                    'blocked' => $block,
+                    'duration' => $dur,
                 ];
             }
 
@@ -5265,15 +5452,15 @@ class MoodleImport
                 $ATT_KEY,
                 $iid,
                 [
-                    'id'                        => $iid,
-                    'title'                     => $title,
-                    'name'                      => $title,   // keep alias
-                    'description'               => $desc,
-                    'active'                    => $active,
-                    'attendance_qualify_title'  => $qualTitle,
-                    'attendance_qualify_max'    => $qualMax,
-                    'attendance_weight'         => $weight,
-                    'locked'                    => $locked,
+                    'id' => $iid,
+                    'title' => $title,
+                    'name' => $title,   // keep alias
+                    'description' => $desc,
+                    'active' => $active,
+                    'attendance_qualify_title' => $qualTitle,
+                    'attendance_qualify_max' => $qualMax,
+                    'attendance_weight' => $weight,
+                    'locked' => $locked,
                 ],
                 ['attendance_calendar'] // list fields that will be appended below
             );
@@ -5301,7 +5488,7 @@ class MoodleImport
     private function tryImportGradebookMeta(string $workDir, array &$resources): bool
     {
         $GB_KEY = \defined('RESOURCE_GRADEBOOK') ? RESOURCE_GRADEBOOK : 'gradebook';
-        $base   = rtrim($workDir, '/').'/chamilo/gradebook';
+        $base = rtrim($workDir, '/').'/chamilo/gradebook';
         if (!is_dir($base)) {
             return false;
         }
@@ -5309,11 +5496,11 @@ class MoodleImport
         // 1) Discover files via manifest (preferred), fallback to glob
         $files = [];
         $manifestFile = rtrim($workDir, '/').'/chamilo/manifest.json';
-        $manifest = @json_decode((string)@file_get_contents($manifestFile), true);
+        $manifest = @json_decode((string) @file_get_contents($manifestFile), true);
         if (\is_array($manifest['items'] ?? null)) {
             foreach ($manifest['items'] as $it) {
                 if (($it['kind'] ?? '') === 'gradebook' && !empty($it['path'])) {
-                    $path = rtrim($workDir, '/').'/'.ltrim((string)$it['path'], '/');
+                    $path = rtrim($workDir, '/').'/'.ltrim((string) $it['path'], '/');
                     if (is_file($path)) {
                         $files[] = $path;
                     }
@@ -5321,7 +5508,7 @@ class MoodleImport
             }
         }
         if (empty($files)) {
-            foreach ((array)@glob($base.'/gradebook_*.json') as $f) {
+            foreach ((array) @glob($base.'/gradebook_*.json') as $f) {
                 if (is_file($f)) {
                     $files[] = $f;
                 }
@@ -5336,7 +5523,7 @@ class MoodleImport
 
         $imported = 0;
         foreach ($files as $f) {
-            $payload = @json_decode((string)@file_get_contents($f), true);
+            $payload = @json_decode((string) @file_get_contents($f), true);
             if (!\is_array($payload)) {
                 continue;
             }
@@ -5345,22 +5532,26 @@ class MoodleImport
             $categories = \is_array($payload['categories'] ?? null) ? $payload['categories'] : [];
 
             // Determine a stable id (not really used by Moodle, but kept for parity)
-            $iid = (int)($payload['id'] ?? 0);
-            if ($iid <= 0) { $iid = (int)($payload['moduleid'] ?? 0); }
-            if ($iid <= 0 && preg_match('/gradebook_(\d+)\.json$/', (string)$f, $m)) {
-                $iid = (int)$m[1];
+            $iid = (int) ($payload['id'] ?? 0);
+            if ($iid <= 0) {
+                $iid = (int) ($payload['moduleid'] ?? 0);
             }
-            if ($iid <= 0) { $iid = 1; }
+            if ($iid <= 0 && preg_match('/gradebook_(\d+)\.json$/', (string) $f, $m)) {
+                $iid = (int) $m[1];
+            }
+            if ($iid <= 0) {
+                $iid = 1;
+            }
 
             // Build a minimal legacy-like object compatible with GradebookMetaExport::findGradebookBackup()
-            $gb = (object)[
+            $gb = (object) [
                 // matches what the exporter looks for
                 'categories' => $categories,
 
                 // helpful hints
-                'id'        => $iid,
+                'id' => $iid,
                 'source_id' => $iid,
-                'title'     => (string)($payload['title'] ?? 'Gradebook'),
+                'title' => (string) ($payload['title'] ?? 'Gradebook'),
             ];
 
             // Store in canonical bag
@@ -5486,7 +5677,7 @@ class MoodleImport
                 continue;
             }
 
-            $visibility = array_key_exists('visibility', $row)
+            $visibility = \array_key_exists('visibility', $row)
                 ? (bool) $row['visibility']
                 : true;
             $position = (int) ($row['position'] ?? 0);
@@ -5531,7 +5722,7 @@ class MoodleImport
         }
 
         $imported = 0;
-        foreach (array_slice($items, 0, 1000) as $raw) {
+        foreach (\array_slice($items, 0, 1000) as $raw) {
             if (!\is_array($raw)) {
                 continue;
             }
@@ -5579,12 +5770,12 @@ class MoodleImport
             return '';
         }
 
-        return \function_exists('mb_substr') ? \mb_substr($value, 0, 255) : substr($value, 0, 255);
+        return \function_exists('mb_substr') ? mb_substr($value, 0, 255) : substr($value, 0, 255);
     }
 
     private function truncateCourseSettingValue(string $value): string
     {
-        return \function_exists('mb_substr') ? \mb_substr($value, 0, 65535) : substr($value, 0, 65535);
+        return \function_exists('mb_substr') ? mb_substr($value, 0, 65535) : substr($value, 0, 65535);
     }
 
     /**
@@ -5745,6 +5936,7 @@ class MoodleImport
         foreach ($pages as $page) {
             if (isset($homeCandidates[(string) $page['reflink']])) {
                 $homePageId = (int) $page['id'];
+
                 break;
             }
         }
@@ -5770,15 +5962,14 @@ class MoodleImport
         ];
     }
 
-
     private function rewritePluginfileBasic(string $html, string $context): string
     {
-        if ($html === '' || !str_contains($html, '@@PLUGINFILE@@')) {
+        if ('' === $html || !str_contains($html, '@@PLUGINFILE@@')) {
             return $html;
         }
 
         // src/href/poster/data
-        $html = (string)preg_replace_callback(
+        $html = (string) preg_replace_callback(
             '~\b(src|href|poster|data)\s*=\s*([\'\"])@@PLUGINFILE@@/([^\'\"]+)\2~i',
             function (array $m): string {
                 $attr = (string) ($m[1] ?? 'src');
@@ -5791,7 +5982,7 @@ class MoodleImport
         );
 
         // url(...) in inline styles
-        $html = (string)preg_replace_callback(
+        return (string) preg_replace_callback(
             '~url\((["\']?)@@PLUGINFILE@@/([^)\'\"]+)\1\)~i',
             function (array $m): string {
                 $quote = (string) ($m[1] ?? '');
@@ -5801,33 +5992,41 @@ class MoodleImport
             },
             $html
         );
-
-        return $html;
     }
 
-    /** Check if chamilo manifest has any 'announcement' kind to avoid duplicates */
+    /**
+     * Check if chamilo manifest has any 'announcement' kind to avoid duplicates.
+     */
     private function hasChamiloAnnouncementMeta(string $exportRoot): bool
     {
         $mf = rtrim($exportRoot, '/').'/chamilo/manifest.json';
-        if (!is_file($mf)) { return false; }
-        $data = json_decode((string)file_get_contents($mf), true);
-        if (!is_array($data) || empty($data['items'])) { return false; }
-        foreach ((array)$data['items'] as $it) {
-            $k = strtolower((string)($it['kind'] ?? ''));
-            if ($k === 'announcement' || $k === 'announcement') {
+        if (!is_file($mf)) {
+            return false;
+        }
+        $data = json_decode((string) file_get_contents($mf), true);
+        if (!\is_array($data) || empty($data['items'])) {
+            return false;
+        }
+        foreach ((array) $data['items'] as $it) {
+            $k = strtolower((string) ($it['kind'] ?? ''));
+            if ('announcement' === $k || 'announcement' === $k) {
                 return true;
             }
         }
+
         return false;
     }
 
-    /** Read minimal forum header (type, name) */
+    /**
+     * Read minimal forum header (type, name).
+     */
     private function readForumHeader(string $moduleXml): array
     {
         $doc = $this->loadXml($moduleXml);
-        $xp  = new \DOMXPath($doc);
+        $xp = new DOMXPath($doc);
         $type = (string) ($xp->query('//forum/type')->item(0)?->nodeValue ?? '');
         $name = (string) ($xp->query('//forum/name')->item(0)?->nodeValue ?? '');
+
         return ['type' => $type, 'name' => $name];
     }
 
@@ -5848,12 +6047,12 @@ class MoodleImport
     private function readAnnouncementsFromForum(string $moduleXml, string $exportRoot): array
     {
         $doc = $this->loadXml($moduleXml);
-        $xp  = new \DOMXPath($doc);
+        $xp = new DOMXPath($doc);
 
         $anns = [];
         // One discussion = one announcement; firstpost = main message
         foreach ($xp->query('//forum/discussions/discussion') as $d) {
-            /** @var \DOMElement $d */
+            /** @var DOMElement $d */
             $title = (string) ($d->getElementsByTagName('name')->item(0)?->nodeValue ?? 'Announcement');
             $firstPostId = (int) ($d->getElementsByTagName('firstpost')->item(0)?->nodeValue ?? 0);
             $created = (int) ($d->getElementsByTagName('timemodified')->item(0)?->nodeValue ?? time());
@@ -5861,21 +6060,25 @@ class MoodleImport
             // find post by id
             $postNode = null;
             foreach ($d->getElementsByTagName('post') as $p) {
-                /** @var \DOMElement $p */
+                /** @var DOMElement $p */
                 $pid = (int) $p->getAttribute('id');
-                if ($pid === $firstPostId || ($firstPostId === 0 && !$postNode)) {
+                if ($pid === $firstPostId || (0 === $firstPostId && !$postNode)) {
                     $postNode = $p;
-                    if ($pid === $firstPostId) { break; }
+                    if ($pid === $firstPostId) {
+                        break;
+                    }
                 }
             }
-            if (!$postNode) { continue; }
+            if (!$postNode) {
+                continue;
+            }
 
             $subject = (string) ($postNode->getElementsByTagName('subject')->item(0)?->nodeValue ?? $title);
             $message = (string) ($postNode->getElementsByTagName('message')->item(0)?->nodeValue ?? '');
             $createdPost = (int) ($postNode->getElementsByTagName('created')->item(0)?->nodeValue ?? $created);
 
             // Normalize HTML and rewrite @@PLUGINFILE@@
-            $html = $this->rewritePluginfileForAnnouncements($message, $exportRoot, (int)$postNode->getAttribute('id'));
+            $html = $this->rewritePluginfileForAnnouncements($message, $exportRoot, (int) $postNode->getAttribute('id'));
 
             // Attachments from files.xml (component=mod_forum, filearea=post, itemid=postId)
             $postId = (int) $postNode->getAttribute('id');
@@ -5884,13 +6087,13 @@ class MoodleImport
             // First attachment info (builder-style)
             $first = $attachments[0] ?? null;
             $anns[] = [
-                'title'       => $subject !== '' ? $subject : $title,
-                'html'        => $html,
-                'date'        => date('Y-m-d H:i:s', $createdPost ?: $created),
+                'title' => '' !== $subject ? $subject : $title,
+                'html' => $html,
+                'date' => date('Y-m-d H:i:s', $createdPost ?: $created),
                 'attachments' => $attachments,
-                'first_path'  => (string) ($first['path'] ?? ''),
-                'first_name'  => (string) ($first['filename'] ?? ''),
-                'first_size'  => (int)    ($first['size'] ?? 0),
+                'first_path' => (string) ($first['path'] ?? ''),
+                'first_name' => (string) ($first['filename'] ?? ''),
+                'first_size' => (int) ($first['size'] ?? 0),
             ];
         }
 
@@ -5903,25 +6106,25 @@ class MoodleImport
      */
     private function rewritePluginfileForAnnouncements(string $html, string $exportRoot, int $postId): string
     {
-        if ($html === '' || !str_contains($html, '@@PLUGINFILE@@')) { return $html; }
+        if ('' === $html || !str_contains($html, '@@PLUGINFILE@@')) {
+            return $html;
+        }
 
         $targetBase = '/document/announcements/'.$postId.'/';
 
         // src/href/poster/data
-        $html = (string)preg_replace(
+        $html = (string) preg_replace(
             '~\b(src|href|poster|data)\s*=\s*([\'"])@@PLUGINFILE@@/([^\'"]+)\2~i',
             '$1=$2'.$targetBase.'$3$2',
             $html
         );
 
         // url(...) in inline styles
-        $html = (string)preg_replace(
+        return (string) preg_replace(
             '~url\((["\']?)@@PLUGINFILE@@/([^)\'"]+)\1\)~i',
             'url($1'.$targetBase.'$2$1)',
             $html
         );
-
-        return $html;
     }
 
     /**
@@ -5931,28 +6134,34 @@ class MoodleImport
     private function extractForumPostAttachments(string $exportRoot, int $postId): array
     {
         $fx = rtrim($exportRoot, '/').'/files.xml';
-        if (!is_file($fx)) { return []; }
+        if (!is_file($fx)) {
+            return [];
+        }
 
         $doc = $this->loadXml($fx);
-        $xp  = new \DOMXPath($doc);
+        $xp = new DOMXPath($doc);
 
         // files/file with these conditions
-        $q = sprintf("//files/file[component='mod_forum' and filearea='post' and itemid='%d']", $postId);
+        $q = \sprintf("//files/file[component='mod_forum' and filearea='post' and itemid='%d']", $postId);
         $list = $xp->query($q);
 
-        if ($list->length === 0) { return []; }
+        if (0 === $list->length) {
+            return [];
+        }
 
         $destBase = rtrim($exportRoot, '/').'/document/announcements/'.$postId;
         $this->ensureDir($destBase);
 
         $out = [];
         foreach ($list as $f) {
-            /** @var \DOMElement $f */
+            /** @var DOMElement $f */
             $filename = basename(str_replace('\\', '/', (string) ($f->getElementsByTagName('filename')->item(0)?->nodeValue ?? '')));
-            if ($filename === '' || $filename === '.') { continue; } // skip directories
+            if ('' === $filename || '.' === $filename) {
+                continue;
+            } // skip directories
 
             $contenthash = (string) ($f->getElementsByTagName('contenthash')->item(0)?->nodeValue ?? '');
-            $filesize    = (int)    ($f->getElementsByTagName('filesize')->item(0)?->nodeValue ?? 0);
+            $filesize = (int) ($f->getElementsByTagName('filesize')->item(0)?->nodeValue ?? 0);
 
             // Moodle file path inside backup: files/aa/bb/<contenthash>
             $src = rtrim($exportRoot, '/').'/files/'.substr($contenthash, 0, 2).'/'.substr($contenthash, 2, 2).'/'.$contenthash;
@@ -5962,16 +6171,18 @@ class MoodleImport
                 @copy($src, $dst);
             } else {
                 // keep record even if missing; size may still be useful
-                if ($this->debug) { error_log("MOODLE_IMPORT: forum post attachment missing file=$src"); }
+                if ($this->debug) {
+                    error_log("MOODLE_IMPORT: forum post attachment missing file=$src");
+                }
             }
 
             $rel = 'document/announcements/'.$postId.'/'.$filename; // relative inside backup root
             $out[] = [
-                'path'           => $rel,            // builder sets 'attachment_path' from first item
-                'filename'       => $filename,
-                'size'           => $filesize,
-                'comment'        => '',
-                'asset_relpath'  => $rel,            // mirrors builder's asset_relpath semantics
+                'path' => $rel,            // builder sets 'attachment_path' from first item
+                'filename' => $filename,
+                'size' => $filesize,
+                'comment' => '',
+                'asset_relpath' => $rel,            // mirrors builder's asset_relpath semantics
             ];
         }
 
@@ -5980,17 +6191,17 @@ class MoodleImport
 
     private function isNewsForum(array $forumInfo): bool
     {
-        $type  = strtolower((string)($forumInfo['type'] ?? ''));
-        if ($type === 'news') {
+        $type = strtolower((string) ($forumInfo['type'] ?? ''));
+        if ('news' === $type) {
             return true;
         }
-        $name  = strtolower((string)($forumInfo['name'] ?? ''));
-        $intro = strtolower((string)($forumInfo['description'] ?? $forumInfo['intro'] ?? ''));
+        $name = strtolower((string) ($forumInfo['name'] ?? ''));
+        $intro = strtolower((string) ($forumInfo['description'] ?? $forumInfo['intro'] ?? ''));
 
         // Common names across locales
         $nameHints = ['announcement'];
         foreach ($nameHints as $h) {
-            if ($name !== '' && str_contains($name, $h)) {
+            if ('' !== $name && str_contains($name, $h)) {
                 return true;
             }
         }
@@ -6003,7 +6214,7 @@ class MoodleImport
      * Heuristics:
      *  - directory ends with 'activities/page_0'
      *  - or <activity id="0" moduleid="0" modulename="page">
-     *  - or page name equals 'Introduction' (soft signal)
+     *  - or page name equals 'Introduction' (soft signal).
      */
     private function looksLikeCourseHomepage(string $dir, string $moduleXml): bool
     {
@@ -6013,25 +6224,25 @@ class MoodleImport
 
         try {
             $doc = $this->loadXml($moduleXml);
-            $xp  = new DOMXPath($doc);
+            $xp = new DOMXPath($doc);
 
-            $idAttr       = $xp->query('/activity/@id')->item(0)?->nodeValue ?? null;
+            $idAttr = $xp->query('/activity/@id')->item(0)?->nodeValue ?? null;
             $moduleIdAttr = $xp->query('/activity/@moduleid')->item(0)?->nodeValue ?? null;
-            $modNameAttr  = $xp->query('/activity/@modulename')->item(0)?->nodeValue ?? null;
-            $nameNode     = $xp->query('//page/name')->item(0)?->nodeValue ?? '';
+            $modNameAttr = $xp->query('/activity/@modulename')->item(0)?->nodeValue ?? null;
+            $nameNode = $xp->query('//page/name')->item(0)?->nodeValue ?? '';
 
-            $id       = is_numeric($idAttr)       ? (int) $idAttr       : null;
+            $id = is_numeric($idAttr) ? (int) $idAttr : null;
             $moduleId = is_numeric($moduleIdAttr) ? (int) $moduleIdAttr : null;
-            $modName  = is_string($modNameAttr)   ? strtolower($modNameAttr) : '';
+            $modName = \is_string($modNameAttr) ? strtolower($modNameAttr) : '';
 
-            if ($id === 0 && $moduleId === 0 && $modName === 'page') {
+            if (0 === $id && 0 === $moduleId && 'page' === $modName) {
                 return true;
             }
-            if (trim($nameNode) === 'Introduction') {
+            if ('Introduction' === trim($nameNode)) {
                 // Soft hint: do not exclusively rely on this, but keep as fallback
                 return true;
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Be tolerant: if parsing fails, just return false
         }
 
@@ -6044,7 +6255,7 @@ class MoodleImport
     private function readPageContent(string $moduleXml): string
     {
         $doc = $this->loadXml($moduleXml);
-        $xp  = new DOMXPath($doc);
+        $xp = new DOMXPath($doc);
 
         $node = $xp->query('//page/content')->item(0);
         if (!$node) {
@@ -6080,7 +6291,7 @@ class MoodleImport
                 'section_id' => $sectionId,
                 'source_id' => $sourceId,
             ];
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return [
                 'activity_id' => 0,
                 'module_id' => 0,
@@ -6089,5 +6300,4 @@ class MoodleImport
             ];
         }
     }
-
 }
