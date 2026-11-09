@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "नयाँ परीक्षण प्रयासहरू असक्षम गर्नुहोस्",
     "This skill cannot be acquired": "यो सीप प्राप्त गर्न सकिँदैन",
     "Start test": "परीक्षा सुरु गर्नुहोस्",
-    "Proceed with the test": "परीक्षा जारी राख्नुहोस्"
+    "Proceed with the test": "परीक्षा जारी राख्नुहोस्",
+    "Validated": "मान्य",
+    "Not validated": "मान्य छैन"
 }

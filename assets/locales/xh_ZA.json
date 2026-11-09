@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Khubaza iz Lingezelo ezintsha zovavanyo",
     "This skill cannot be acquired": "Esi sakhono asinakufunyanwa",
     "Start test": "Qala uvavanyo",
-    "Proceed with the test": "Qhubeka novavanyo"
+    "Proceed with the test": "Qhubeka novavanyo",
+    "Validated": "Kugxininiswe",
+    "Not validated": "Akagxininiswanga"
 }

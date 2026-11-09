@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Neue Testversuche deaktivieren",
     "This skill cannot be acquired": "Diese Kompetenz kann nicht erworben werden",
     "Start test": "Test starten",
-    "Proceed with the test": "Mit dem Test weitermachen"
+    "Proceed with the test": "Mit dem Test weitermachen",
+    "Validated": "Bestätigt",
+    "Not validated": "Nicht bestätigt"
 }

@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Ógild nýggjar royndir av próvum",
     "This skill cannot be acquired": "Henda førleiki kann ikki vinnast",
     "Start test": "Byrja royndina",
-    "Proceed with the test": "Halt áfram við royndini"
+    "Proceed with the test": "Halt áfram við royndini",
+    "Validated": "Goðkoytt",
+    "Not validated": "Ikki váttað"
 }

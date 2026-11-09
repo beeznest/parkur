@@ -4266,5 +4266,7 @@
     "Disable new test attempts": "ປິດການພະຍາຍາມສອບເສັງໃໝ່",
     "This skill cannot be acquired": "ທັກສະນີ້ບໍ່ສາມາດໄດ້ມາ",
     "Start test": "ເລີ່ມທົດສອບ",
-    "Proceed with the test": "ດຳເນີນການທົດສອບ"
+    "Proceed with the test": "ດຳເນີນການທົດສອບ",
+    "Validated": "ກວດສອບແລ້ວ",
+    "Not validated": "ຍັງບໍ່ໄດ້ກວດສອບ"
 }

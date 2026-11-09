@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "புதிய சோதனை முயற்சிகளை முடக்கு",
     "This skill cannot be acquired": "இந்தத் திறனைப் பெற முடியாது",
     "Start test": "சோதனையைத் தொடங்கு",
-    "Proceed with the test": "சோதனையுடன் முன்னேறவும்"
+    "Proceed with the test": "சோதனையுடன் முன்னேறவும்",
+    "Validated": "சரிபார்க்கப்பட்டது",
+    "Not validated": "சரிபார்க்கப்படவில்லை"
 }

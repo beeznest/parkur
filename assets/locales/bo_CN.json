@@ -3215,5 +3215,7 @@
     "You have tried to resolve this exercise earlier": "ཁྱེད་ཀྱིས་སྙིང་རྗེས་འདི་ལ་སྔར་སྒྲུབ་པར་བྱས་ཡོད།",
     "This skill cannot be acquired": "This skill cannot be acquired",
     "Start test": "ཚོད་ལྟ་འགོ་རྩོམ",
-    "Proceed with the test": "ལས་རྩོལ་ལ་འགྲོ་བ"
+    "Proceed with the test": "ལས་རྩོལ་ལ་འགྲོ་བ",
+    "Validated": "བརྟན་འགྱུར་བྱས",
+    "Not validated": "བརྟན་འགྱུར་མ་བྱས"
 }

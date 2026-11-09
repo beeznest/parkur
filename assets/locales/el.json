@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Απενεργοποίηση νέων προσπαθειών τεστ",
     "This skill cannot be acquired": "Αυτή η δεξιότητα δεν μπορεί να αποκτηθεί",
     "Start test": "Εκκίνηση test",
-    "Proceed with the test": "Συνέχεια με το test"
+    "Proceed with the test": "Συνέχεια με το test",
+    "Validated": "Επικυρωμένη",
+    "Not validated": "Χωρίς Επικύρωση"
 }

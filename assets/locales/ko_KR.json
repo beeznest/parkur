@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "새 시험 시도 비활성화",
     "This skill cannot be acquired": "이 역량은 획득할 수 없습니다",
     "Start test": "시험 시작",
-    "Proceed with the test": "시험 진행"
+    "Proceed with the test": "시험 진행",
+    "Validated": "승인됨",
+    "Not validated": "승인되지 않음"
 }

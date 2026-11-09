@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Willakuy new attempts hark'ay",
     "This skill cannot be acquired": "Kay yachayta mana chaskiyta atikunchu",
     "Start test": "Iniciar prueba",
-    "Proceed with the test": "Proceder con la prueba"
+    "Proceed with the test": "Proceder con la prueba",
+    "Validated": "Kanchisqan",
+    "Not validated": "Mana kanchisqan"
 }

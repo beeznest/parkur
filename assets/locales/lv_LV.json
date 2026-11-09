@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Atspējot jaunus testa mēģinājumus",
     "This skill cannot be acquired": "Šo prasmi nevar iegūt",
     "Start test": "Sākt testu",
-    "Proceed with the test": "Turpināt pārbaudi"
+    "Proceed with the test": "Turpināt pārbaudi",
+    "Validated": "Apstiprināts",
+    "Not validated": "Nav apstiprināts"
 }

@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Išjungti naujus testo bandymus",
     "This skill cannot be acquired": "Šio gebėjimo negalima įgyti",
     "Start test": "Pradėti testą",
-    "Proceed with the test": "Tęsti testą"
+    "Proceed with the test": "Tęsti testą",
+    "Validated": "Patvirtinta",
+    "Not validated": "Nepatvirtinta"
 }

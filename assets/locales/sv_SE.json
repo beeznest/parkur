@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Inaktivera nya testförsök",
     "This skill cannot be acquired": "Den här färdigheten kan inte förvärvas",
     "Start test": "Starta test",
-    "Proceed with the test": "Fortsätt med testet"
+    "Proceed with the test": "Fortsätt med testet",
+    "Validated": "Validerad",
+    "Not validated": "Inte validerad"
 }

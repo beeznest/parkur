@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Díchumasaigh iarrachtaí trialach nua",
     "This skill cannot be acquired": "Ní féidir an scil seo a fháil",
     "Start test": "Tosaigh an tástáil",
-    "Proceed with the test": "Lean ar aghaidh leis an tástáil"
+    "Proceed with the test": "Lean ar aghaidh leis an tástáil",
+    "Validated": "Bailíochtaithe",
+    "Not validated": "Gan bailíochtú"
 }

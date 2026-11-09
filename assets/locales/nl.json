@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Nieuwe oefenpogingen uitschakelen",
     "This skill cannot be acquired": "Deze vaardigheid kan niet worden verworven",
     "Start test": "Start de test",
-    "Proceed with the test": "Ga verder met de test"
+    "Proceed with the test": "Ga verder met de test",
+    "Validated": "Nagezien",
+    "Not validated": "Niet nagezien"
 }

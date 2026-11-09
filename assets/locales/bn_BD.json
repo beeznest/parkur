@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "নতুন টেস্ট অ্যাটেম্পট নিষ্ক্রিয় করুন",
     "This skill cannot be acquired": "এই দক্ষতা অর্জন করা যায় না",
     "Start test": "পরীক্ষা শুরু করুন",
-    "Proceed with the test": "পরীক্ষা চালিয়ে যান"
+    "Proceed with the test": "পরীক্ষা চালিয়ে যান",
+    "Validated": "সত্যায়িত",
+    "Not validated": "সত্যায়িত নয়"
 }

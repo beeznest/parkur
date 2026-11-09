@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Onemogući nove pokušaje testova",
     "This skill cannot be acquired": "Ova vještina se ne može steći",
     "Start test": "Započni test",
-    "Proceed with the test": "Nastavi s testom"
+    "Proceed with the test": "Nastavi s testom",
+    "Validated": "Validirano",
+    "Not validated": "Nije validirano"
 }

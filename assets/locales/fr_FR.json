@@ -4271,5 +4271,7 @@
     "This skill cannot be acquired": "Cette compétence ne peut pas être acquise",
     "This records the migrations your database already carries, and leaves the newer ones pending so the update can execute them. Your data is not modified.": "Ceci enregistre les migrations déjà présentes dans votre base de données et laisse les plus récentes en attente afin que la mise à jour puisse les exécuter. Vos données ne sont pas modifiées.",
     "Start test": "Démarrer le test",
-    "Proceed with the test": "Continuer l'exercice"
+    "Proceed with the test": "Continuer l'exercice",
+    "Validated": "Annoté",
+    "Not validated": "Non annoté"
 }

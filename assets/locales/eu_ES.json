@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Desgaitu proba saiakerak berriak",
     "This skill cannot be acquired": "Trebetasun hau ezin da lortu",
     "Start test": "Hasi azterketa",
-    "Proceed with the test": "Ekin azterketari"
+    "Proceed with the test": "Ekin azterketari",
+    "Validated": "Zuzendua",
+    "Not validated": "Zuzendu gabe"
 }

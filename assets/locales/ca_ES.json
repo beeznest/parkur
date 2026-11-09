@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Desactiva nous intents de test",
     "This skill cannot be acquired": "Aquesta competència no es pot adquirir",
     "Start test": "Inicia la prova",
-    "Proceed with the test": "Continua amb l'exercici"
+    "Proceed with the test": "Continua amb l'exercici",
+    "Validated": "Corregit",
+    "Not validated": "Sense corregir"
 }

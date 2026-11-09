@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Dezactivați noile încercări de test",
     "This skill cannot be acquired": "Această competență nu poate fi dobândită",
     "Start test": "Incepeti proba",
-    "Proceed with the test": "Continuati cu exercitiu"
+    "Proceed with the test": "Continuati cu exercitiu",
+    "Validated": "Corectat",
+    "Not validated": "Necorectat"
 }

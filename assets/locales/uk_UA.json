@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Вимкнути нові спроби тестів",
     "This skill cannot be acquired": "Цю навичку не можна набути",
     "Start test": "Розпочати тест",
-    "Proceed with the test": "Продовжити тест"
+    "Proceed with the test": "Продовжити тест",
+    "Validated": "Підтверджено",
+    "Not validated": "Не підтверджено"
 }

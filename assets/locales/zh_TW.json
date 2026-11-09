@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "停用新測驗嘗試",
     "This skill cannot be acquired": "此技能無法獲得",
     "Start test": "開始測驗",
-    "Proceed with the test": "進行測驗"
+    "Proceed with the test": "進行測驗",
+    "Validated": "已驗證",
+    "Not validated": "未驗證"
 }

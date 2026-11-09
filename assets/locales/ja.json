@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "新しいテスト試行を無効化",
     "This skill cannot be acquired": "このスキルは習得できません",
     "Start test": "テストを開始",
-    "Proceed with the test": "テストを続行"
+    "Proceed with the test": "テストを続行",
+    "Validated": "確認済み",
+    "Not validated": "未確認"
 }

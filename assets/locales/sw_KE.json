@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Zima majaribio mapya ya jaribio",
     "This skill cannot be acquired": "Ujuzi huu hauwezi kupatikana",
     "Start test": "Anza jaribio",
-    "Proceed with the test": "Endelea na jaribio"
+    "Proceed with the test": "Endelea na jaribio",
+    "Validated": "Imethibitishwa",
+    "Not validated": "Haijathibitishwa"
 }

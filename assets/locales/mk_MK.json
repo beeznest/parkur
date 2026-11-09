@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Оневозможи нови обиди на тестови",
     "This skill cannot be acquired": "Оваа вештина не може да се стекне",
     "Start test": "Започни тест",
-    "Proceed with the test": "Продолжете со тестот"
+    "Proceed with the test": "Продолжете со тестот",
+    "Validated": "Потврдено",
+    "Not validated": "Непотврдено"
 }

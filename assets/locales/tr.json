@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Yeni test denemelerini devre dışı bırak",
     "This skill cannot be acquired": "Bu beceri kazanılamaz",
     "Start test": "Sınavı başlat",
-    "Proceed with the test": "Teste devam et"
+    "Proceed with the test": "Teste devam et",
+    "Validated": "Onaylandı",
+    "Not validated": "Onaylanmadı"
 }

@@ -4266,5 +4266,7 @@
     "Disable new test attempts": "စာမေးပွဲအကြိမ်သစ်များကို ပိတ်ပါ",
     "This skill cannot be acquired": "ဤကျွမ်းကျင်မှုကို ရယူ၍ မရပါ",
     "Start test": "စမ်းသပ်မှုစတင်ပါ",
-    "Proceed with the test": "စမ်းသပ်မှုကို ဆက်လက်လုပ်ဆောင်ပါ"
+    "Proceed with the test": "စမ်းသပ်မှုကို ဆက်လက်လုပ်ဆောင်ပါ",
+    "Validated": "အတည်ပြုပြီးဖြစ်သည်",
+    "Not validated": "အတည်မပြုရသေးပါ"
 }

@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Vypnout nové pokusy testů",
     "This skill cannot be acquired": "Tuto dovednost nelze získat",
     "Start test": "Spustit test",
-    "Proceed with the test": "Pokračovat v testu"
+    "Proceed with the test": "Pokračovat v testu",
+    "Validated": "Ověřeno",
+    "Not validated": "Neověřeno"
 }

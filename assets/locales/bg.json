@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Деактивиране на нови опити за тест",
     "This skill cannot be acquired": "Това умение не може да бъде придобито",
     "Start test": "Започни теста",
-    "Proceed with the test": "Напредни с теста"
+    "Proceed with the test": "Напредни с теста",
+    "Validated": "Одобрено",
+    "Not validated": "Неодобрено"
 }

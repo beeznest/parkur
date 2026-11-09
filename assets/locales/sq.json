@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Çaktivizo përpjekjet e reja të testit",
     "This skill cannot be acquired": "Kjo aftësi nuk mund të përfohet",
     "Start test": "Fillo provën",
-    "Proceed with the test": "Vazhdo me testin"
+    "Proceed with the test": "Vazhdo me testin",
+    "Validated": "E vërtetuar",
+    "Not validated": "E pavërtetuar"
 }

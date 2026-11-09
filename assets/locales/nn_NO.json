@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Deaktiver nye testforsøk",
     "This skill cannot be acquired": "Denne ferdigheita kan ikkje oppnåast",
     "Start test": "Start testar",
-    "Proceed with the test": "Fortsett med testen"
+    "Proceed with the test": "Fortsett med testen",
+    "Validated": "Godkjent",
+    "Not validated": "Ikkje godkjent"
 }

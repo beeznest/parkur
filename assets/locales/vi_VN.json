@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Tắt thử lại bài kiểm tra mới",
     "This skill cannot be acquired": "Kỹ năng này không thể đạt được",
     "Start test": "Bắt đầu bài kiểm tra",
-    "Proceed with the test": "Tiến hành bài kiểm tra"
+    "Proceed with the test": "Tiến hành bài kiểm tra",
+    "Validated": "Đã xác nhận",
+    "Not validated": "Chưa xác nhận"
 }

@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "غیرفعال کردن تلاش‌های جدید آزمون",
     "This skill cannot be acquired": "این مهارت قابل کسب نیست",
     "Start test": "شروع آزمون",
-    "Proceed with the test": "ادامه آزمون"
+    "Proceed with the test": "ادامه آزمون",
+    "Validated": "تأیید شده",
+    "Not validated": "تأیید نشده"
 }

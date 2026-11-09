@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Desactivar los novèls ensajhs de test",
     "This skill cannot be acquired": "Aquesta competéncia se pòt pas aquerir",
     "Start test": "Començar lo teste",
-    "Proceed with the test": "Contunhar lo teste"
+    "Proceed with the test": "Contunhar lo teste",
+    "Validated": "Validat",
+    "Not validated": "Pas validat"
 }

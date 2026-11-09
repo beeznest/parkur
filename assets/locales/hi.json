@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "नई परीक्षा प्रयास अक्षम करें",
     "This skill cannot be acquired": "यह कौशल अर्जित नहीं किया जा सकता",
     "Start test": "परीक्षा प्रारंभ करें",
-    "Proceed with the test": "परीक्षा के साथ आगे बढ़ें"
+    "Proceed with the test": "परीक्षा के साथ आगे बढ़ें",
+    "Validated": "मान्य किया गया",
+    "Not validated": "मान्य नहीं किया गया"
 }

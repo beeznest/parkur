@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Vypnúť nové pokusy testov",
     "This skill cannot be acquired": "Túto zručnosť nie je možné získať",
     "Start test": "Spustiť test",
-    "Proceed with the test": "Pokračujte v teste"
+    "Proceed with the test": "Pokračujte v teste",
+    "Validated": "Overené",
+    "Not validated": "Neoverené"
 }

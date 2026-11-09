@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "禁用新测试尝试",
     "This skill cannot be acquired": "此技能无法获得",
     "Start test": "开始测试",
-    "Proceed with the test": "继续测试"
+    "Proceed with the test": "继续测试",
+    "Validated": "已验证",
+    "Not validated": "未验证"
 }

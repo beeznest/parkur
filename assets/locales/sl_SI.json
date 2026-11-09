@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Onemogoči nove poskuse testov",
     "This skill cannot be acquired": "Te spretnosti ni mogoče pridobiti",
     "Start test": "Prični test",
-    "Proceed with the test": "Nadaljuj s testom"
+    "Proceed with the test": "Nadaljuj s testom",
+    "Validated": "Pregledan",
+    "Not validated": "Ni pregledan"
 }

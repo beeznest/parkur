@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "ปิดการพยายามแบบทดสอบใหม่",
     "This skill cannot be acquired": "ทักษะนี้ไม่สามารถได้รับ",
     "Start test": "เริ่มทดสอบ",
-    "Proceed with the test": "ดำเนินการทดสอบ"
+    "Proceed with the test": "ดำเนินการทดสอบ",
+    "Validated": "ผ่าน",
+    "Not validated": "ไม่ผ่าน"
 }

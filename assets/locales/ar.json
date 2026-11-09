@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "تعطيل محاولات الاختبار الجديدة",
     "This skill cannot be acquired": "لا يمكن اكتساب هذه المهارة",
     "Start test": "ابدأ الاختبار",
-    "Proceed with the test": "الاستمرار في الاختبار"
+    "Proceed with the test": "الاستمرار في الاختبار",
+    "Validated": "تم التحقق منه",
+    "Not validated": "لم يتم التحقق منه"
 }

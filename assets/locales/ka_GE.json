@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "ახალი ტესტის მცდელობების გამორთვა",
     "This skill cannot be acquired": "ამ უნარის შეძენა შეუძლებელია",
     "Start test": "ტესტის დაწყება",
-    "Proceed with the test": "ტესტის გაგრძელება"
+    "Proceed with the test": "ტესტის გაგრძელება",
+    "Validated": "დამოწმებული",
+    "Not validated": "არა დამოწმებული"
 }

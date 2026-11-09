@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "נטרל ניסיונות מבחן חדשים",
     "This skill cannot be acquired": "לא ניתן לרכוש מיומנות זו",
     "Start test": "התחל בדיקה",
-    "Proceed with the test": "המשך בבדיקה"
+    "Proceed with the test": "המשך בבדיקה",
+    "Validated": "אומת",
+    "Not validated": "לא מאומת"
 }

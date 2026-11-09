@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Ka jooji isku dayada imtixaanka cusub",
     "This skill cannot be acquired": "Xirfaddan lama heli karo",
     "Start test": "Bilow imtixaanka",
-    "Proceed with the test": "Sii wad imtixaanka"
+    "Proceed with the test": "Sii wad imtixaanka",
+    "Validated": "La xaqiijiyay",
+    "Not validated": "Ma xaqiijin"
 }

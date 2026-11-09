@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Lumpuhkan percubaan ujian baru",
     "This skill cannot be acquired": "Kemahiran ini tidak boleh diperoleh",
     "Start test": "Mula ujian",
-    "Proceed with the test": "Teruskan dengan ujian"
+    "Proceed with the test": "Teruskan dengan ujian",
+    "Validated": "Disahkan",
+    "Not validated": "Belum disahkan"
 }

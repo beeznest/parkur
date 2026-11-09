@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "نوي ازموینې هڅې غیرفعال کړئ",
     "This skill cannot be acquired": "دا مهارت نشي ترلاسه کېدای",
     "Start test": "د ازموینې پیل",
-    "Proceed with the test": "د ازموینې سره پیل کول"
+    "Proceed with the test": "د ازموینې سره پیل کول",
+    "Validated": "تصدیق شوی",
+    "Not validated": "تصدیق شوی نه دی"
 }

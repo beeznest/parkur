@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Új tesztkísérletek letiltása",
     "This skill cannot be acquired": "Ez a készség nem szerezhető meg",
     "Start test": "Teszt indítása",
-    "Proceed with the test": "Teszt folytatása"
+    "Proceed with the test": "Teszt folytatása",
+    "Validated": "Érvényesítve",
+    "Not validated": "Nem érvényesítve"
 }

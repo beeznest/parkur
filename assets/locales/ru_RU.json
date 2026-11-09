@@ -4269,5 +4269,7 @@
     "Disable new test attempts": "Отключить новые попытки тестов",
     "This skill cannot be acquired": "Этот навык нельзя приобрести",
     "Start test": "Начать тест",
-    "Proceed with the test": "Пройти тест"
+    "Proceed with the test": "Пройти тест",
+    "Validated": "Подтверждено",
+    "Not validated": "Не проверено"
 }
