@@ -2372,7 +2372,7 @@ function matchingIconClass(prompt) {
 }
 
 function isMatchingCorrect(prompt) {
-  return Boolean(prompt.correctOptionAnswer && prompt.selectedOptionAnswer === prompt.correctOptionAnswer)
+  return true === prompt.isCorrect
 }
 
 
