@@ -4268,5 +4268,6 @@
     "Start test": "စမ်းသပ်မှုစတင်ပါ",
     "Proceed with the test": "စမ်းသပ်မှုကို ဆက်လက်လုပ်ဆောင်ပါ",
     "Validated": "အတည်ပြုပြီးဖြစ်သည်",
-    "Not validated": "အတည်မပြုရသေးပါ"
+    "Not validated": "အတည်မပြုရသေးပါ",
+    "Don't know": "မသိပါ"
 }

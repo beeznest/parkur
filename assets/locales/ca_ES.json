@@ -4271,5 +4271,6 @@
     "Start test": "Inicia la prova",
     "Proceed with the test": "Continua amb l'exercici",
     "Validated": "Corregit",
-    "Not validated": "Sense corregir"
+    "Not validated": "Sense corregir",
+    "Don't know": "No sé"
 }

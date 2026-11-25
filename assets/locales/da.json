@@ -4271,5 +4271,6 @@
     "Start test": "Start test",
     "Proceed with the test": "Fortsæt med testen",
     "Validated": "Valideret",
-    "Not validated": "Ikke valideret"
+    "Not validated": "Ikke valideret",
+    "Don't know": "Vid ikke"
 }

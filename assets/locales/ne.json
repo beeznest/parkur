@@ -4271,5 +4271,6 @@
     "Start test": "परीक्षा सुरु गर्नुहोस्",
     "Proceed with the test": "परीक्षा जारी राख्नुहोस्",
     "Validated": "मान्य",
-    "Not validated": "मान्य छैन"
+    "Not validated": "मान्य छैन",
+    "Don't know": "पत्ता छैन"
 }

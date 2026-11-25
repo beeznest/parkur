@@ -4271,5 +4271,6 @@
     "Start test": "Spustiť test",
     "Proceed with the test": "Pokračujte v teste",
     "Validated": "Overené",
-    "Not validated": "Neoverené"
+    "Not validated": "Neoverené",
+    "Don't know": "Neviem"
 }

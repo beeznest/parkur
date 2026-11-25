@@ -4271,5 +4271,6 @@
     "Start test": "ტესტის დაწყება",
     "Proceed with the test": "ტესტის გაგრძელება",
     "Validated": "დამოწმებული",
-    "Not validated": "არა დამოწმებული"
+    "Not validated": "არა დამოწმებული",
+    "Don't know": "არ ვიცი"
 }

@@ -4271,5 +4271,6 @@
     "Start test": "Start testar",
     "Proceed with the test": "Fortsett med testen",
     "Validated": "Godkjent",
-    "Not validated": "Ikkje godkjent"
+    "Not validated": "Ikkje godkjent",
+    "Don't know": "Vet ikkje"
 }

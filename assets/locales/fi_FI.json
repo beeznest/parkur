@@ -4271,5 +4271,6 @@
     "Start test": "Aloita testi",
     "Proceed with the test": "Jatka testiä",
     "Validated": "Vahvistettu",
-    "Not validated": "Ei vahvistettu"
+    "Not validated": "Ei vahvistettu",
+    "Don't know": "En osaa sanoa"
 }

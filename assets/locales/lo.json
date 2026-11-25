@@ -4268,5 +4268,6 @@
     "Start test": "ເລີ່ມທົດສອບ",
     "Proceed with the test": "ດຳເນີນການທົດສອບ",
     "Validated": "ກວດສອບແລ້ວ",
-    "Not validated": "ຍັງບໍ່ໄດ້ກວດສອບ"
+    "Not validated": "ຍັງບໍ່ໄດ້ກວດສອບ",
+    "Don't know": "ບໍ່ຮູ້"
 }

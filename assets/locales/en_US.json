@@ -4273,5 +4273,6 @@
     "Start test": "Start test",
     "Proceed with the test": "Proceed with the test",
     "Validated": "Validated",
-    "Not validated": "Not validated"
+    "Not validated": "Not validated",
+    "Don't know": "Don't know"
 }

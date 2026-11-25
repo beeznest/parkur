@@ -4271,5 +4271,6 @@
     "Start test": "Incepeti proba",
     "Proceed with the test": "Continuati cu exercitiu",
     "Validated": "Corectat",
-    "Not validated": "Necorectat"
+    "Not validated": "Necorectat",
+    "Don't know": "Nu stiu"
 }

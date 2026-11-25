@@ -4271,5 +4271,6 @@
     "Start test": "Simulan ang pagsusulit",
     "Proceed with the test": "Ituloy ang pagsusulit",
     "Validated": "Na-validate",
-    "Not validated": "Hindi na-validate"
+    "Not validated": "Hindi na-validate",
+    "Don't know": "Hindi alam"
 }

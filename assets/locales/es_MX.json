@@ -4271,5 +4271,6 @@
     "Start test": "Iniciar prueba",
     "Proceed with the test": "Proceder con la prueba",
     "Validated": "Validado",
-    "Not validated": "No validado"
+    "Not validated": "No validado",
+    "Don't know": "No sé"
 }

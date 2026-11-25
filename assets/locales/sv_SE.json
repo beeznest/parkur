@@ -4271,5 +4271,6 @@
     "Start test": "Starta test",
     "Proceed with the test": "Fortsätt med testet",
     "Validated": "Validerad",
-    "Not validated": "Inte validerad"
+    "Not validated": "Inte validerad",
+    "Don't know": "Vet ej"
 }

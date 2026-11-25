@@ -4271,5 +4271,6 @@
     "Start test": "Pradėti testą",
     "Proceed with the test": "Tęsti testą",
     "Validated": "Patvirtinta",
-    "Not validated": "Nepatvirtinta"
+    "Not validated": "Nepatvirtinta",
+    "Don't know": "Nežinau"
 }

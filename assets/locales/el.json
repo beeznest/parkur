@@ -4271,5 +4271,6 @@
     "Start test": "Εκκίνηση test",
     "Proceed with the test": "Συνέχεια με το test",
     "Validated": "Επικυρωμένη",
-    "Not validated": "Χωρίς Επικύρωση"
+    "Not validated": "Χωρίς Επικύρωση",
+    "Don't know": "Δεν ξέρω"
 }

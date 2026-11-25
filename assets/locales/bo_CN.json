@@ -3217,5 +3217,6 @@
     "Start test": "ཚོད་ལྟ་འགོ་རྩོམ",
     "Proceed with the test": "ལས་རྩོལ་ལ་འགྲོ་བ",
     "Validated": "བརྟན་འགྱུར་བྱས",
-    "Not validated": "བརྟན་འགྱུར་མ་བྱས"
+    "Not validated": "བརྟན་འགྱུར་མ་བྱས",
+    "Don't know": "མི་ཤེས་པ"
 }

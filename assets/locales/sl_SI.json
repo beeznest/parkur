@@ -4271,5 +4271,6 @@
     "Start test": "Prični test",
     "Proceed with the test": "Nadaljuj s testom",
     "Validated": "Pregledan",
-    "Not validated": "Ni pregledan"
+    "Not validated": "Ni pregledan",
+    "Don't know": "Ne vem"
 }

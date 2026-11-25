@@ -4273,5 +4273,6 @@
     "Start test": "Démarrer le test",
     "Proceed with the test": "Continuer l'exercice",
     "Validated": "Annoté",
-    "Not validated": "Non annoté"
+    "Not validated": "Non annoté",
+    "Don't know": "Ne sais pas"
 }

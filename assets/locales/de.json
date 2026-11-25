@@ -4271,5 +4271,6 @@
     "Start test": "Test starten",
     "Proceed with the test": "Mit dem Test weitermachen",
     "Validated": "Bestätigt",
-    "Not validated": "Nicht bestätigt"
+    "Not validated": "Nicht bestätigt",
+    "Don't know": "Weiss nicht"
 }

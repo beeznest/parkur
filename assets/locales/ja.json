@@ -4271,5 +4271,6 @@
     "Start test": "テストを開始",
     "Proceed with the test": "テストを続行",
     "Validated": "確認済み",
-    "Not validated": "未確認"
+    "Not validated": "未確認",
+    "Don't know": "不明"
 }

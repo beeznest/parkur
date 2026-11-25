@@ -4271,5 +4271,6 @@
     "Start test": "Hasi azterketa",
     "Proceed with the test": "Ekin azterketari",
     "Validated": "Zuzendua",
-    "Not validated": "Zuzendu gabe"
+    "Not validated": "Zuzendu gabe",
+    "Don't know": "Ez dakit"
 }

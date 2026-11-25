@@ -4271,5 +4271,6 @@
     "Start test": "Započni test",
     "Proceed with the test": "Nastavi s testom",
     "Validated": "Validirano",
-    "Not validated": "Nije validirano"
+    "Not validated": "Nije validirano",
+    "Don't know": "Ne znam"
 }

@@ -4271,5 +4271,6 @@
     "Start test": "Започни тест",
     "Proceed with the test": "Продолжете со тестот",
     "Validated": "Потврдено",
-    "Not validated": "Непотврдено"
+    "Not validated": "Непотврдено",
+    "Don't know": "Не знам"
 }

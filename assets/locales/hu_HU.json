@@ -4271,5 +4271,6 @@
     "Start test": "Teszt indítása",
     "Proceed with the test": "Teszt folytatása",
     "Validated": "Érvényesítve",
-    "Not validated": "Nem érvényesítve"
+    "Not validated": "Nem érvényesítve",
+    "Don't know": "Nem tudom"
 }

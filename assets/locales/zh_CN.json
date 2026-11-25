@@ -4271,5 +4271,6 @@
     "Start test": "开始测试",
     "Proceed with the test": "继续测试",
     "Validated": "已验证",
-    "Not validated": "未验证"
+    "Not validated": "未验证",
+    "Don't know": "不知道"
 }

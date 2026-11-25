@@ -4271,5 +4271,6 @@
     "Start test": "Inzia il test",
     "Proceed with the test": "Procedi con il test",
     "Validated": "Convalidato",
-    "Not validated": "Non convalidato"
+    "Not validated": "Non convalidato",
+    "Don't know": "Non so"
 }

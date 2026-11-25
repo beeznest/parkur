@@ -4271,5 +4271,6 @@
     "Start test": "開始測驗",
     "Proceed with the test": "進行測驗",
     "Validated": "已驗證",
-    "Not validated": "未驗證"
+    "Not validated": "未驗證",
+    "Don't know": "不知道"
 }

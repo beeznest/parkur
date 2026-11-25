@@ -4271,5 +4271,6 @@
     "Start test": "Qala uvavanyo",
     "Proceed with the test": "Qhubeka novavanyo",
     "Validated": "Kugxininiswe",
-    "Not validated": "Akagxininiswanga"
+    "Not validated": "Akagxininiswanga",
+    "Don't know": "Andazi"
 }

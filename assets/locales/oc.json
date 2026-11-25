@@ -4271,5 +4271,6 @@
     "Start test": "Començar lo teste",
     "Proceed with the test": "Contunhar lo teste",
     "Validated": "Validat",
-    "Not validated": "Pas validat"
+    "Not validated": "Pas validat",
+    "Don't know": "Desconegut"
 }
