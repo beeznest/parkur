@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Endelea na jaribio",
     "Validated": "Imethibitishwa",
     "Not validated": "Haijathibitishwa",
-    "Don't know": "Sijui"
+    "Don't know": "Sijui",
+    "Expected choice": "Chaguo linalotarajiwa",
+    "N°": "Na.",
+    "Multiple choice": "Chaguo nyingi",
+    "Fill blanks or form": "Jaza nafasi au fomu",
+    "Image zones": "Zona za picha",
+    "Match by dragging": "Linganisha kwa kuvuta",
+    "Multiple answer true/false/don't know": "Jibu nyingi za kweli/ubaya/sijui",
+    "Combination true/false/don't-know": "Mchanganyiko wa kweli/ubaya/sijui"
 }

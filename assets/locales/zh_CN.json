@@ -4272,5 +4272,13 @@
     "Proceed with the test": "继续测试",
     "Validated": "已验证",
     "Not validated": "未验证",
-    "Don't know": "不知道"
+    "Don't know": "不知道",
+    "Expected choice": "正确答案",
+    "N°": "序号",
+    "Multiple choice": "单选题",
+    "Fill blanks or form": "填空题",
+    "Image zones": "热点",
+    "Match by dragging": "拖拽匹配",
+    "Multiple answer true/false/don't know": "多选答案真/假/不知道",
+    "Combination true/false/don't-know": "组合真/假/不知道"
 }

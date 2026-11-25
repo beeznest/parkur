@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Teste devam et",
     "Validated": "Onaylandı",
     "Not validated": "Onaylanmadı",
-    "Don't know": "Bilmiyorum"
+    "Don't know": "Bilmiyorum",
+    "Expected choice": "Beklenen seçim",
+    "N°": "N°",
+    "Multiple choice": "Çoktan seçmeli",
+    "Fill blanks or form": "Boşluk doldurma",
+    "Image zones": "Resim bölgeleri",
+    "Match by dragging": "Sürükleyerek eşleştir",
+    "Multiple answer true/false/don't know": "Çoklu cevap doğru/yanlış/bilmiyorum",
+    "Combination true/false/don't-know": "Doğru/yanlış/bilmiyorum kombinasyonu"
 }

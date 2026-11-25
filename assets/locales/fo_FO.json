@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Halt áfram við royndini",
     "Validated": "Goðkoytt",
     "Not validated": "Ikki váttað",
-    "Don't know": "Vit ikki"
+    "Don't know": "Vit ikki",
+    "Expected choice": "Rætt svar",
+    "N°": "Nr.",
+    "Multiple choice": "Fjölval",
+    "Fill blanks or form": "Uppfyll tómstøður ella eyðskrift",
+    "Image zones": "Myndasvøði",
+    "Match by dragging": "Par vit drepi",
+    "Multiple answer true/false/don't know": "Fleiri svør satt/ósatt/vit ikki",
+    "Combination true/false/don't-know": "Samanseting satt/ósatt/vit-ikki"
 }

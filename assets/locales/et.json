@@ -4258,5 +4258,13 @@
     "Delete message": "Delete message",
     "Message Sent": "Message Sent",
     "Are you sure you want to delete the selected message?": "Are you sure you want to delete the selected message?",
-    "Don't know": "Ei tea"
+    "Don't know": "Ei tea",
+    "Expected choice": "Oodatud valik",
+    "N\u00b0": "Nr",
+    "Multiple choice": "Valikvastustega",
+    "Fill blanks or form": "T\u00e4ida t\u00fchikud v\u00f5i vorm",
+    "Image zones": "Pildialad",
+    "Match by dragging": "Sobita lohistades",
+    "Multiple answer true/false/don't know": "Mitu vastust t\u00f5ene/v\u00e4\u00e4r/ei tea",
+    "Combination true/false/don't-know": "Kombinatsioon t\u00f5ene/v\u00e4\u00e4r/ei tea"
 }

@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Nastavi sa testom",
     "Validated": "Validirano",
     "Not validated": "Nije validirano",
-    "Don't know": "Ne znam"
+    "Don't know": "Ne znam",
+    "Expected choice": "Očekivani izbor",
+    "N°": "Br.",
+    "Multiple choice": "Višestruki izbor",
+    "Fill blanks or form": "Popuni praznine",
+    "Image zones": "Aktivna mesta (hotspots)",
+    "Match by dragging": "Podudaranje povlačenjem",
+    "Multiple answer true/false/don't know": "Višestruki odgovor tačno/netačno/ne znam",
+    "Combination true/false/don't-know": "Kombinacija tačno/netačno/ne-znam"
 }

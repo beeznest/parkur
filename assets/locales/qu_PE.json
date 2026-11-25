@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Proceder con la prueba",
     "Validated": "Kanchisqan",
     "Not validated": "Mana kanchisqan",
-    "Don't know": "Manam yachakunichu"
+    "Don't know": "Manam yachakunichu",
+    "Expected choice": "Allin ajllasqa",
+    "N°": "Nº",
+    "Multiple choice": "Opción múltiple",
+    "Fill blanks or form": "Hunt'achiy yuraqkunata",
+    "Image zones": "Zonas interactivas",
+    "Match by dragging": "Huknachway hina maskhay",
+    "Multiple answer true/false/don't know": "Qhawarina willakuy chiqaq/chiqapuni/manam yachakunichu",
+    "Combination true/false/don't-know": "Chiqaq/chiqapuni/manam yachakunichu rurakuy"
 }

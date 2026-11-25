@@ -3218,5 +3218,12 @@
     "Proceed with the test": "ལས་རྩོལ་ལ་འགྲོ་བ",
     "Validated": "བརྟན་འགྱུར་བྱས",
     "Not validated": "བརྟན་འགྱུར་མ་བྱས",
-    "Don't know": "མི་ཤེས་པ"
+    "Don't know": "མི་ཤེས་པ",
+    "Expected choice": "སྐྱོང་བའི་མཆོག་ཚོད་",
+    "N°": "ཨང་།",
+    "Multiple choice": "མང་པོའི་སྙན་སྒྲོགས་སྦྱོར།",
+    "Fill blanks or form": "སྟོང་ཆ་ཡང་ན་རེའུ་མིག་ཁ་སྐོང་།",
+    "Image zones": "གཞན་མཚོའི་ས་ཆ",
+    "Multiple answer true/false/don't know": "ལན་མང་པོ་བདེན་པ་མེད་པ་མི་ཤེས་པ",
+    "Combination true/false/don't-know": "བདེན་པ་མེད་པ་མི་ཤེས་པ་སྦྱར་བ"
 }

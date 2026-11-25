@@ -4272,5 +4272,13 @@
     "Proceed with the test": "進行測驗",
     "Validated": "已驗證",
     "Not validated": "未驗證",
-    "Don't know": "不知道"
+    "Don't know": "不知道",
+    "Expected choice": "正確答案",
+    "N°": "編號",
+    "Multiple choice": "單選",
+    "Fill blanks or form": "填空題",
+    "Image zones": "熱點",
+    "Match by dragging": "拖曳配對",
+    "Multiple answer true/false/don't know": "多選答案真/假/不知道",
+    "Combination true/false/don't-know": "組合真/假/不知道"
 }

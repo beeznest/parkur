@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Continuati cu exercitiu",
     "Validated": "Corectat",
     "Not validated": "Necorectat",
-    "Don't know": "Nu stiu"
+    "Don't know": "Nu stiu",
+    "Expected choice": "Alegerea asteptata",
+    "N°": "Nr",
+    "Multiple choice": "Alegere multiplă",
+    "Fill blanks or form": "Completeaza campurile",
+    "Image zones": "Puncte de interes",
+    "Match by dragging": "Potrivire prin trasnare",
+    "Multiple answer true/false/don't know": "Raspunsuri multiple a/f/nu-stiu",
+    "Combination true/false/don't-know": "Combinatie a/f/nu-stiu"
 }

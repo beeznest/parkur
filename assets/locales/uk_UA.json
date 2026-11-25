@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Продовжити тест",
     "Validated": "Підтверджено",
     "Not validated": "Не підтверджено",
-    "Don't know": "Не знаю"
+    "Don't know": "Не знаю",
+    "Expected choice": "Очикуємий вибір",
+    "N°": "№",
+    "Multiple choice": "Один вибір",
+    "Fill blanks or form": "Заповнити пропуски",
+    "Image zones": "Зони зображення",
+    "Match by dragging": "Зіставлення перетягуванням",
+    "Multiple answer true/false/don't know": "Кілька відповідей істинно/хибно/не знаю",
+    "Combination true/false/don't-know": "Комбінація істинно/хибно/не знаю"
 }

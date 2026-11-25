@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Turpināt pārbaudi",
     "Validated": "Apstiprināts",
     "Not validated": "Nav apstiprināts",
-    "Don't know": "Es Nezinu"
+    "Don't know": "Es Nezinu",
+    "Expected choice": "Pareizā atbilde",
+    "N°": "Nr.",
+    "Multiple choice": "Vairākas izvēles",
+    "Fill blanks or form": "Aizpildīt tukšos lauciņus (precīza definīcija)",
+    "Image zones": "Attēla zonas",
+    "Match by dragging": "Sakritība ar vilkšanu",
+    "Multiple answer true/false/don't know": "Vairākas atbildes  pareizi / nepareizi / nezinu",
+    "Combination true/false/don't-know": "Kombinācija  pareizi / nepareizi / nezinu"
 }

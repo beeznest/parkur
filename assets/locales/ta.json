@@ -4272,5 +4272,13 @@
     "Proceed with the test": "சோதனையுடன் முன்னேறவும்",
     "Validated": "சரிபார்க்கப்பட்டது",
     "Not validated": "சரிபார்க்கப்படவில்லை",
-    "Don't know": "தெரியாத"
+    "Don't know": "தெரியாத",
+    "Expected choice": "எதிர்பார்க்கப்படும் தேர்வு",
+    "N°": "இ.எண்",
+    "Multiple choice": "பல தேர்வு",
+    "Fill blanks or form": "வெற்றிடங்களை நிரப்பவும் அல்லது படிவம்",
+    "Image zones": "படப் பகுதிகள்",
+    "Match by dragging": "இழுக்கி பொருத்துங்கள்",
+    "Multiple answer true/false/don't know": "பல பதில் உண்மை/பொய்/தெரியாத",
+    "Combination true/false/don't-know": "சேர்க்கை உண்மை/பொய்/தெரியாத"
 }

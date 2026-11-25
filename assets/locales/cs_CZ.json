@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Pokračovat v testu",
     "Validated": "Ověřeno",
     "Not validated": "Neověřeno",
-    "Don't know": "Nevím"
+    "Don't know": "Nevím",
+    "Expected choice": "Očekávaná volba",
+    "N°": "Číslo",
+    "Multiple choice": "Více možností",
+    "Fill blanks or form": "Vyplnění prázdných míst",
+    "Image zones": "Zóny obrázků",
+    "Match by dragging": "Shoda tažením",
+    "Multiple answer true/false/don't know": "Vícenásobná odpověď pravda/nepravda/neví",
+    "Combination true/false/don't-know": "Kombinace pravda/nepravda/neví"
 }

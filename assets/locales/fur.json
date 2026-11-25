@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Continua col test",
     "Validated": "Validât",
     "Not validated": "No validât",
-    "Don't know": "No se sôn"
+    "Don't know": "No se sôn",
+    "Expected choice": "Scealte spetade",
+    "N°": "N°",
+    "Multiple choice": "Scelte multiple",
+    "Fill blanks or form": "Jemplî vuides o formulari",
+    "Image zones": "Zone imatine",
+    "Match by dragging": "Meterlis in pares",
+    "Multiple answer true/false/don't know": "Rispostis multiple vere/falso/no se sôn",
+    "Combination true/false/don't-know": "Combinazion vere/falso/no-se-sôn"
 }

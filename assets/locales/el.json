@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Συνέχεια με το test",
     "Validated": "Επικυρωμένη",
     "Not validated": "Χωρίς Επικύρωση",
-    "Don't know": "Δεν ξέρω"
+    "Don't know": "Δεν ξέρω",
+    "Expected choice": "Αναμενόμενη Απάντηση",
+    "N°": "Αριθμ.",
+    "Multiple choice": "Πολλαπλές επιλογές",
+    "Fill blanks or form": "Συμπληρώστε τα κενά στη φόρμα",
+    "Image zones": "Ζώνες εικόνας",
+    "Match by dragging": "Ταιριάξτε σύροντας",
+    "Multiple answer true/false/don't know": "Πολλαπλές απαντήσεις Σωστό/ Λάθος/ Δεν ξέρω",
+    "Combination true/false/don't-know": "Συνδυασμός Σωστό/ Λάθος/ Δεν ξέρω"
 }

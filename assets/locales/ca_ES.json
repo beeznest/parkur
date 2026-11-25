@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Continua amb l'exercici",
     "Validated": "Corregit",
     "Not validated": "Sense corregir",
-    "Don't know": "No sé"
+    "Don't know": "No sé",
+    "Expected choice": "Elecció esperada",
+    "N°": "Nº",
+    "Multiple choice": "Resposta única",
+    "Fill blanks or form": "Completar els espais",
+    "Image zones": "Zones interactives",
+    "Match by dragging": "Coincidència arrossegable",
+    "Multiple answer true/false/don't know": "Respostes múltiples vertader/fals/no-sé",
+    "Combination true/false/don't-know": "Combinació vertader/fals/no-sé"
 }

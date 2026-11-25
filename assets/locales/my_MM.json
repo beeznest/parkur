@@ -4269,5 +4269,13 @@
     "Proceed with the test": "စမ်းသပ်မှုကို ဆက်လက်လုပ်ဆောင်ပါ",
     "Validated": "အတည်ပြုပြီးဖြစ်သည်",
     "Not validated": "အတည်မပြုရသေးပါ",
-    "Don't know": "မသိပါ"
+    "Don't know": "မသိပါ",
+    "Expected choice": "မျှော်လင့်ထားသော ရွေးချယ်မှု",
+    "N°": "နံပါတ်",
+    "Multiple choice": "ရွေးချယ်စရာမျိုးစုံ",
+    "Fill blanks or form": "ကွက်လပ်ဖြည့်ပါ သို့မဟုတ် ဖောင်ဖြည့်ပါ",
+    "Image zones": "ပုံဇုန်များ",
+    "Match by dragging": "ဆွဲယူခြင်းဖြင့် ကိုက်ညီမှုပြုပါ",
+    "Multiple answer true/false/don't know": "မျိုးစုံအဖြေ မှန်/မမှန်/မသိပါ",
+    "Combination true/false/don't-know": "ပေါင်းစပ်မှန်/မမှန်/မသိပါ"
 }

@@ -4272,5 +4272,13 @@
     "Proceed with the test": "ادامه آزمون",
     "Validated": "تأیید شده",
     "Not validated": "تأیید نشده",
-    "Don't know": "نمی‌دانم"
+    "Don't know": "نمی‌دانم",
+    "Expected choice": "انتخاب مورد انتظار",
+    "N°": "شماره",
+    "Multiple choice": "چندگزینه‌ای",
+    "Fill blanks or form": "پر کردن جاهای خالی یا فرم",
+    "Image zones": "مناطق تصویری",
+    "Match by dragging": "تطبیق با کشیدن",
+    "Multiple answer true/false/don't know": "پاسخ‌های چندگانه درست/نادرست/نمی‌دانم",
+    "Combination true/false/don't-know": "ترکیب درست/نادرست/نمی‌دانم"
 }

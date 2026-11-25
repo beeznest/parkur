@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Tęsti testą",
     "Validated": "Patvirtinta",
     "Not validated": "Nepatvirtinta",
-    "Don't know": "Nežinau"
+    "Don't know": "Nežinau",
+    "Expected choice": "Laukiamas pasirinkimas",
+    "N°": "N",
+    "Multiple choice": "Keli pasirinkimai",
+    "Fill blanks or form": "Tuščių laukelių užpildymas",
+    "Image zones": "Paveikslėlių zonos",
+    "Match by dragging": "Sudėti vilkdami",
+    "Multiple answer true/false/don't know": "Keli atsakymai teisingas/ klaidingas/ nežinau",
+    "Combination true/false/don't-know": "Derinys teisingas/klaidingas/nežinau"
 }

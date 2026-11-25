@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Continuar el ejercicio",
     "Validated": "Corregido",
     "Not validated": "Sin corregir",
-    "Don't know": "No sé"
+    "Don't know": "No sé",
+    "Expected choice": "Selección correcta",
+    "N°": "Nº",
+    "Multiple choice": "Respuesta única",
+    "Fill blanks or form": "Rellenar blancos",
+    "Image zones": "Zonas interactivas",
+    "Match by dragging": "Coincidencia arrastrable",
+    "Multiple answer true/false/don't know": "Respuestas múltiples v/f/no-se",
+    "Combination true/false/don't-know": "Combinación v/f/no-se"
 }

@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Vazhdo me testin",
     "Validated": "E vërtetuar",
     "Not validated": "E pavërtetuar",
-    "Don't know": "Nuk e di"
+    "Don't know": "Nuk e di",
+    "Expected choice": "Zgjedhja e pritshme",
+    "N°": "Nr",
+    "Multiple choice": "Zgjedhje të shumëfishta",
+    "Fill blanks or form": "Mbush boshllëqet ose formularin",
+    "Image zones": "Zonat e imazhit",
+    "Match by dragging": "Përputh duke tërhequr",
+    "Multiple answer true/false/don't know": "Përgjigje të shumëfishta të vërteta/gjallë/false/nuk e di",
+    "Combination true/false/don't-know": "Kombinim të vërteta/gjallë/false/nuk e di"
 }

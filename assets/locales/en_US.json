@@ -4274,5 +4274,13 @@
     "Proceed with the test": "Proceed with the test",
     "Validated": "Validated",
     "Not validated": "Not validated",
-    "Don't know": "Don't know"
+    "Don't know": "Don't know",
+    "Expected choice": "Expected choice",
+    "N°": "N°",
+    "Multiple choice": "Multiple choice",
+    "Fill blanks or form": "Fill blanks or form",
+    "Image zones": "Image zones",
+    "Match by dragging": "Match by dragging",
+    "Multiple answer true/false/don't know": "Multiple answer true/false/don't know",
+    "Combination true/false/don't-know": "Combination true/false/don't-know"
 }

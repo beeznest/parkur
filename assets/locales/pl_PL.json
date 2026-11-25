@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Przystąp do testu",
     "Validated": "Zatwierdzone",
     "Not validated": "Nie zatwierdzone",
-    "Don't know": "Nie wiem"
+    "Don't know": "Nie wiem",
+    "Expected choice": "Spodziewany wybór",
+    "N°": "Nr",
+    "Multiple choice": "Wielokrotny wybór",
+    "Fill blanks or form": "Wypełnij pole",
+    "Image zones": "Strefy obrazka",
+    "Match by dragging": "Dopasuj przez przeciąganie",
+    "Multiple answer true/false/don't know": "Odpowiedź wielokrotnego wyboru prawda/fałsz/nie wiem",
+    "Combination true/false/don't-know": "Kombinacja prawda/fałsz/nie wiem"
 }

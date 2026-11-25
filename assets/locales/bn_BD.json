@@ -4272,5 +4272,13 @@
     "Proceed with the test": "পরীক্ষা চালিয়ে যান",
     "Validated": "সত্যায়িত",
     "Not validated": "সত্যায়িত নয়",
-    "Don't know": "জানি না"
+    "Don't know": "জানি না",
+    "Expected choice": "প্রত্যাশিত পছন্দ",
+    "N°": "ক্রমিক নং",
+    "Multiple choice": "একাধিক পছন্দ",
+    "Fill blanks or form": "শূন্যস্থান পূরণ বা ফর্ম",
+    "Image zones": "চিত্র অঞ্চল",
+    "Match by dragging": "ড্র্যাগ করে মিলান",
+    "Multiple answer true/false/don't know": "বহু উত্তর সত্য/মিথ্যা/জানি না",
+    "Combination true/false/don't-know": "সত্য/মিথ্যা/জানি না-র সমন্বয়"
 }

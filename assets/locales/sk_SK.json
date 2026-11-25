@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Pokračujte v teste",
     "Validated": "Overené",
     "Not validated": "Neoverené",
-    "Don't know": "Neviem"
+    "Don't know": "Neviem",
+    "Expected choice": "Očakávaná voľba",
+    "N°": "Číslo",
+    "Multiple choice": "Jediná správna odpoveď",
+    "Fill blanks or form": "Vyplnenie prázdnych miest",
+    "Image zones": "Zóny obrázkov",
+    "Match by dragging": "Prispôsobenie ťahaním",
+    "Multiple answer true/false/don't know": "Viacero odpovedí Pravda/Nepravda/Neviem",
+    "Combination true/false/don't-know": "Kombinácia odpovede Pravda/Nepravda/Neviem"
 }

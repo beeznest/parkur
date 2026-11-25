@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Напредни с теста",
     "Validated": "Одобрено",
     "Not validated": "Неодобрено",
-    "Don't know": "Не знам"
+    "Don't know": "Не знам",
+    "Expected choice": "Очакван избор",
+    "N°": "No",
+    "Multiple choice": "Само един верен отговор",
+    "Fill blanks or form": "Попълват се празните места",
+    "Image zones": "Горещи зони",
+    "Match by dragging": "Съчетаване чрез влачене",
+    "Multiple answer true/false/don't know": "Повече от един верни отговора или \"не знам\"",
+    "Combination true/false/don't-know": "Комбинация истина/лъжа/не знам"
 }

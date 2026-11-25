@@ -4272,5 +4272,13 @@
     "Proceed with the test": "परीक्षा के साथ आगे बढ़ें",
     "Validated": "मान्य किया गया",
     "Not validated": "मान्य नहीं किया गया",
-    "Don't know": "नहीं पता"
+    "Don't know": "नहीं पता",
+    "Expected choice": "अपेक्षित विकल्प",
+    "N°": "अंक.",
+    "Multiple choice": "बहुविकल्पीय",
+    "Fill blanks or form": "रिक्त स्थान भरें या फॉर्म",
+    "Image zones": "चित्र क्षेत्र",
+    "Match by dragging": "ड्रैग करके मिलान करें",
+    "Multiple answer true/false/don't know": "बहु-उत्तर सत्य/असत्य/नहीं पता",
+    "Combination true/false/don't-know": "संयोजन सत्य/असत्य/नहीं-पता"
 }

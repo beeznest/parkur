@@ -4272,5 +4272,13 @@
     "Proceed with the test": "ดำเนินการทดสอบ",
     "Validated": "ผ่าน",
     "Not validated": "ไม่ผ่าน",
-    "Don't know": "ไม่ทราบ"
+    "Don't know": "ไม่ทราบ",
+    "Expected choice": "ตัวเลือกตอบที่ถูกต้อง",
+    "N°": "ลำดับที่",
+    "Multiple choice": "เลือกหลายตัวเลือก",
+    "Fill blanks or form": "เติมคำในช่องว่าง",
+    "Image zones": "โซนภาพ",
+    "Match by dragging": "จับคู่โดยลาก",
+    "Multiple answer true/false/don't know": "คำตอบหลายแบบ จริง/เท็จ/ไม่ทราบ",
+    "Combination true/false/don't-know": "การรวม จริง/เท็จ/ไม่ทราบ"
 }

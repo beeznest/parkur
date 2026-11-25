@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Daŭrigi kun la testo",
     "Validated": "Validita",
     "Not validated": "Ne validita",
-    "Don't know": "Ne scias"
+    "Don't know": "Ne scias",
+    "Expected choice": "Ĝusta respondo",
+    "N°": "N°",
+    "Multiple choice": "Unu el multaj",
+    "Fill blanks or form": "Plenigi",
+    "Image zones": "Atentiloj",
+    "Match by dragging": "Alkrochi laŭ tirado",
+    "Multiple answer true/false/don't know": "Plurresponda ver/fals/ne",
+    "Combination true/false/don't-know": "Kombinaĵo ver/fals/ne-scias"
 }

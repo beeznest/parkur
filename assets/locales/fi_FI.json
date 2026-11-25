@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Jatka testiä",
     "Validated": "Vahvistettu",
     "Not validated": "Ei vahvistettu",
-    "Don't know": "En osaa sanoa"
+    "Don't know": "En osaa sanoa",
+    "Expected choice": "Oikea vastaus",
+    "N°": "Nr.",
+    "Multiple choice": "Yksi oikea vastaus",
+    "Fill blanks or form": "Aukkotehtävä",
+    "Image zones": "Interaktiiviset alueet",
+    "Match by dragging": "Rakenna vetämällä",
+    "Multiple answer true/false/don't know": "Useita vastauksia tosi/valhe/en tiedä",
+    "Combination true/false/don't-know": "Yhdistelmä tosi/valhe/en-tiedä"
 }

@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Continuar com o teste",
     "Validated": "Validado",
     "Not validated": "Não validado",
-    "Don't know": "Não sei"
+    "Don't know": "Não sei",
+    "Expected choice": "Escolha esperada",
+    "N°": "Nº",
+    "Multiple choice": "Escolha múltipla",
+    "Fill blanks or form": "Preencher formulário em branco ou espaços",
+    "Image zones": "Áreas de imagem (hotspot)",
+    "Match by dragging": "Associar arrastando",
+    "Multiple answer true/false/don't know": "Resposta múltipla verdadeira/falsa/não sei",
+    "Combination true/false/don't-know": "Combinação verdadeira/falsa/não sei"
 }

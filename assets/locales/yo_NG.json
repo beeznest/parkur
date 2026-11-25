@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Tẹsiwaju pẹlu idanwo",
     "Validated": "Ti fi ìdíwò múlẹ̀",
     "Not validated": "Ko ti fi ìdíwò múlẹ̀",
-    "Don't know": "Emi ko mọ"
+    "Don't know": "Emi ko mọ",
+    "Expected choice": "Aṣayan ti a nireti",
+    "N°": "Nọ́.",
+    "Multiple choice": "Yàn púpọ̀",
+    "Fill blanks or form": "Kun awọn aaye ofo tabi fọọmu",
+    "Image zones": "Awọn agbegbe aworan",
+    "Match by dragging": "Baramu nipasẹ fifọ",
+    "Multiple answer true/false/don't know": "Idahun pupọ otitọ/ewe/ko mọ",
+    "Combination true/false/don't-know": "Apapo otitọ/ewe/ko-mọ"
 }

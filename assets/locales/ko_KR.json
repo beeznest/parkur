@@ -4272,5 +4272,13 @@
     "Proceed with the test": "시험 진행",
     "Validated": "승인됨",
     "Not validated": "승인되지 않음",
-    "Don't know": "모름"
+    "Don't know": "모름",
+    "Expected choice": "예상 해답",
+    "N°": "No.",
+    "Multiple choice": "복수 선택",
+    "Fill blanks or form": "Fill in blanks",
+    "Image zones": "이미지 영역",
+    "Match by dragging": "드래그하여 매칭",
+    "Multiple answer true/false/don't know": "다중 답변 참/거짓/모름",
+    "Combination true/false/don't-know": "참/거짓/모름 조합"
 }

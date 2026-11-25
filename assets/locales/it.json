@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Procedi con il test",
     "Validated": "Convalidato",
     "Not validated": "Non convalidato",
-    "Don't know": "Non so"
+    "Don't know": "Non so",
+    "Expected choice": "Scelta corretta",
+    "N°": "N°",
+    "Multiple choice": "Scelta multipla",
+    "Fill blanks or form": "Riempimento",
+    "Image zones": "Zone sensibili",
+    "Match by dragging": "Combina trascinando",
+    "Multiple answer true/false/don't know": "Risposta multipla (V/F/Non So)",
+    "Combination true/false/don't-know": "Combinazione V/F/Non So"
 }

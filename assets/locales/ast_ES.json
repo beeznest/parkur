@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Continuar cola pruebes",
     "Validated": "Validáu",
     "Not validated": "En validáu",
-    "Don't know": "Nun sé"
+    "Don't know": "Nun sé",
+    "Expected choice": "Seleición correuta",
+    "N°": "Númberu",
+    "Multiple choice": "Rempuesta única",
+    "Fill blanks or form": "Enllenar los espacios en blancu",
+    "Image zones": "Zones interautives",
+    "Match by dragging": "Asociar arrastrando",
+    "Multiple answer true/false/don't know": "Múltiples respuestes verdáu/falsu/nun sé",
+    "Combination true/false/don't-know": "Combinación verdáu/falsu/nun sé"
 }

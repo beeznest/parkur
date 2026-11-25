@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Nadaljuj s testom",
     "Validated": "Pregledan",
     "Not validated": "Ni pregledan",
-    "Don't know": "Ne vem"
+    "Don't know": "Ne vem",
+    "Expected choice": "Pričakovana izbira",
+    "N°": "Št.",
+    "Multiple choice": "Večkratna izbira",
+    "Fill blanks or form": "Zapolni prazna mesta",
+    "Image zones": "Vroče točke (hotspots)",
+    "Match by dragging": "Ujemanje z razporejanjem",
+    "Multiple answer true/false/don't know": "Večkraten odgovor pravilno/nepravilno/ne-vem",
+    "Combination true/false/don't-know": "Kombinacija pravilno/nepravilno/ne-vem"
 }

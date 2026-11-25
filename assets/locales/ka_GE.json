@@ -4272,5 +4272,13 @@
     "Proceed with the test": "ტესტის გაგრძელება",
     "Validated": "დამოწმებული",
     "Not validated": "არა დამოწმებული",
-    "Don't know": "არ ვიცი"
+    "Don't know": "არ ვიცი",
+    "Expected choice": "მოსალოდნელი არჩევანი",
+    "N°": "№",
+    "Multiple choice": "მრავალჯერადი არჩევანი",
+    "Fill blanks or form": "ცარიელების შევსება ან ფორმა",
+    "Image zones": "სურათის ზონები",
+    "Match by dragging": "შესაბამისობა გადაადგილებით",
+    "Multiple answer true/false/don't know": "მრავალი პასუხი სწორი/მცდარი/არ ვიცი",
+    "Combination true/false/don't-know": "კომბინაცია სწორი/მცდარი/არ ვიცი"
 }

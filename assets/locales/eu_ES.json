@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Ekin azterketari",
     "Validated": "Zuzendua",
     "Not validated": "Zuzendu gabe",
-    "Don't know": "Ez dakit"
+    "Don't know": "Ez dakit",
+    "Expected choice": "Aukera zuzena",
+    "N°": "Zk.",
+    "Multiple choice": "Hainbat aukera",
+    "Fill blanks or form": "Bete zuriuneak",
+    "Image zones": "Irudi guneak",
+    "Match by dragging": "Arrastatuz lotu",
+    "Multiple answer true/false/don't know": "Erantzun anitzak egia/gezurra/ez dakit",
+    "Combination true/false/don't-know": "Konbinazioa egia/gezurra/ez dakit"
 }

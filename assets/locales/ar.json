@@ -4272,5 +4272,13 @@
     "Proceed with the test": "الاستمرار في الاختبار",
     "Validated": "تم التحقق منه",
     "Not validated": "لم يتم التحقق منه",
-    "Don't know": "لا اعرف"
+    "Don't know": "لا اعرف",
+    "Expected choice": "الأجوبة المتوقعة",
+    "N°": "رقم",
+    "Multiple choice": "اختيار من متعدد",
+    "Fill blanks or form": "ملأ الفراغات",
+    "Image zones": "مناطق الصورة",
+    "Match by dragging": "قم بالمطابقة من خلال السحب",
+    "Multiple answer true/false/don't know": "اجابات متعددة صح/خطأ/لا اعرف",
+    "Combination true/false/don't-know": "توليفة صح/خطأ/لا اعرف"
 }

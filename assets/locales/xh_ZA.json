@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Qhubeka novavanyo",
     "Validated": "Kugxininiswe",
     "Not validated": "Akagxininiswanga",
-    "Don't know": "Andazi"
+    "Don't know": "Andazi",
+    "Expected choice": "Ukhetho olulindelekileyo",
+    "N°": "N°",
+    "Multiple choice": "Ukhetho oluninzi",
+    "Fill blanks or form": "Gcwalisa iindawo ezingenanto okanye ifomu",
+    "Image zones": "Iindawo zomfanekiso",
+    "Match by dragging": "Linganisa ngokurhuqa",
+    "Multiple answer true/false/don't know": "Impendulo ezininzi /iyiyo / akukho / akandiqondi",
+    "Combination true/false/don't-know": "Indibaniselwano /iyiyo /akukho /akandiqondi"
 }

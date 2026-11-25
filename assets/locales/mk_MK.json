@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Продолжете со тестот",
     "Validated": "Потврдено",
     "Not validated": "Непотврдено",
-    "Don't know": "Не знам"
+    "Don't know": "Не знам",
+    "Expected choice": "Очекуван избор",
+    "N°": "Бр.",
+    "Multiple choice": "Многу избор",
+    "Fill blanks or form": "Пополни во празното",
+    "Image zones": "Зона на жаришта",
+    "Match by dragging": "Погодување со влечење",
+    "Multiple answer true/false/don't know": "Многу одговори вистинита/лажна/незнам",
+    "Combination true/false/don't-know": "Комбинација вистинита/лажна/незнам"
 }

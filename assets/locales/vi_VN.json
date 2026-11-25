@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Tiến hành bài kiểm tra",
     "Validated": "Đã xác nhận",
     "Not validated": "Chưa xác nhận",
-    "Don't know": "Không biết"
+    "Don't know": "Không biết",
+    "Expected choice": "Cần chọn",
+    "N°": "Số",
+    "Multiple choice": "Chọn một",
+    "Fill blanks or form": "Điền vào chỗ trống",
+    "Image zones": "Vùng hình ảnh",
+    "Match by dragging": "Ghép đôi bằng cách kéo thả",
+    "Multiple answer true/false/don't know": "Nhiều câu trả lời đúng/sai/không biết",
+    "Combination true/false/don't-know": "Kết hợp đúng/sai/không biết"
 }

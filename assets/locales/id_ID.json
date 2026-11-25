@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Lanjutkan dengan tes",
     "Validated": "Tervalidasi",
     "Not validated": "Belum divalidasi",
-    "Don't know": "Tidak tahu"
+    "Don't know": "Tidak tahu",
+    "Expected choice": "Pilihan yang diharapkan",
+    "N°": "N°",
+    "Multiple choice": "Pilihan ganda",
+    "Fill blanks or form": "Mengisintitik-titik",
+    "Image zones": "Hotspot",
+    "Match by dragging": "Cocokkan dengan menyeret",
+    "Multiple answer true/false/don't know": "Jawaban ganda benar/salah/tidak tahu",
+    "Combination true/false/don't-know": "Kombinasi benar/salah/tidak-tahu"
 }

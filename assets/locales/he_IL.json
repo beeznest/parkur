@@ -4272,5 +4272,13 @@
     "Proceed with the test": "המשך בבדיקה",
     "Validated": "אומת",
     "Not validated": "לא מאומת",
-    "Don't know": "לא יודע"
+    "Don't know": "לא יודע",
+    "Expected choice": "בחירה צפויה",
+    "N°": "מס'",
+    "Multiple choice": "בחירה מרובה",
+    "Fill blanks or form": "מלא ריקים או טופס",
+    "Image zones": "אזורי תמונה",
+    "Match by dragging": "התאמה באמצעות גרירה",
+    "Multiple answer true/false/don't know": "מספר תשובות נכון/לא נכון/לא יודע",
+    "Combination true/false/don't-know": "שילוב נכון/לא נכון/לא יודע"
 }

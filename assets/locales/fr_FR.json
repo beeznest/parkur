@@ -4274,5 +4274,13 @@
     "Proceed with the test": "Continuer l'exercice",
     "Validated": "Annoté",
     "Not validated": "Non annoté",
-    "Don't know": "Ne sais pas"
+    "Don't know": "Ne sais pas",
+    "Expected choice": "Choix attendu",
+    "N°": "N°",
+    "Multiple choice": "Question à réponse unique (QRU)",
+    "Fill blanks or form": "Remplir les blancs",
+    "Image zones": "Zones sur l'image",
+    "Match by dragging": "Correspondances glisser-déplacer",
+    "Multiple answer true/false/don't know": "Rép. multiples vrai/faux/ne-sais-pas",
+    "Combination true/false/don't-know": "C. exacte vrai/faux/ne-sais-pas"
 }

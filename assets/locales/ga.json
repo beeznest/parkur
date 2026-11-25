@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Lean ar aghaidh leis an tástáil",
     "Validated": "Bailíochtaithe",
     "Not validated": "Gan bailíochtú",
-    "Don't know": "Níl a fhios"
+    "Don't know": "Níl a fhios",
+    "Expected choice": "Roghnaíocht ionchais",
+    "N°": "Uimh.",
+    "Multiple choice": "Ilroghnaigh",
+    "Fill blanks or form": "Líon bearnaí nó foirm",
+    "Image zones": "Criosanna íomhá",
+    "Match by dragging": "Meaitseáil trí tharraingt",
+    "Multiple answer true/false/don't know": "Ilfhreagra fíor/bréagach/níl a fhios",
+    "Combination true/false/don't-know": "Comhcheangal fíor/bréagach/níl-a-fhios"
 }

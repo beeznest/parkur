@@ -4272,5 +4272,13 @@
     "Proceed with the test": "د ازموینې سره پیل کول",
     "Validated": "تصدیق شوی",
     "Not validated": "تصدیق شوی نه دی",
-    "Don't know": "پوه نه کېږم"
+    "Don't know": "پوه نه کېږم",
+    "Expected choice": "تمه شوې غوره والی",
+    "N°": "شم.",
+    "Multiple choice": "څو انتخابي",
+    "Fill blanks or form": "تشې ځایونه یا فورمه ډکه کړئ",
+    "Image zones": "انځور ساحې",
+    "Match by dragging": "د ډرګ کولو له لارې ورته کړئ",
+    "Multiple answer true/false/don't know": "څو ځواب سمه/ناسمه/پوه نه کېږم",
+    "Combination true/false/don't-know": "د ترکیب سمه/ناسمه/پوه نه کېږم"
 }

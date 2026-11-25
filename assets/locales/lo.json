@@ -4269,5 +4269,13 @@
     "Proceed with the test": "ດຳເນີນການທົດສອບ",
     "Validated": "ກວດສອບແລ້ວ",
     "Not validated": "ຍັງບໍ່ໄດ້ກວດສອບ",
-    "Don't know": "ບໍ່ຮູ້"
+    "Don't know": "ບໍ່ຮູ້",
+    "Expected choice": "ຕົວເລືອກທີ່ຄາດຫວັງ",
+    "N°": "ເລກທີ",
+    "Multiple choice": "ຫຼາຍຕົວເລືອກ",
+    "Fill blanks or form": "ຕື່ມໃສ່ບ່ອນຫວ່າງ ຫຼື ແບບຟອມ",
+    "Image zones": "ພື້ນທີ່ຮູບພາບ",
+    "Match by dragging": "ຈັບຄູ່ໂດຍການລາກ",
+    "Multiple answer true/false/don't know": "ຫຼາຍຄຳຕອບ ຖືກ/ຜິດ/ບໍ່ຮູ້",
+    "Combination true/false/don't-know": "ການປະສົມ ຖືກ/ຜິດ/ບໍ່ຮູ້"
 }

@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Fortsæt med testen",
     "Validated": "Valideret",
     "Not validated": "Ikke valideret",
-    "Don't know": "Vid ikke"
+    "Don't know": "Vid ikke",
+    "Expected choice": "Rigtige svar",
+    "N°": "Nr",
+    "Multiple choice": "Flervalgsspørgsmål",
+    "Fill blanks or form": "Udfyld rubrikker",
+    "Image zones": "Billedeområder",
+    "Match by dragging": "Match ved trækning",
+    "Multiple answer true/false/don't know": "Flere svar sandt/falsk/vid ikke",
+    "Combination true/false/don't-know": "Kombination sandt/falsk/vid ikke"
 }

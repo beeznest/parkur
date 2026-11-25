@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Proceder con la prueba",
     "Validated": "Validado",
     "Not validated": "No validado",
-    "Don't know": "No sé"
+    "Don't know": "No sé",
+    "Expected choice": "Elección esperada",
+    "N°": "N°",
+    "Multiple choice": "Opción múltiple",
+    "Fill blanks or form": "Completar en los espacios",
+    "Image zones": "Hotspots",
+    "Match by dragging": "Emparejar arrastrando",
+    "Multiple answer true/false/don't know": "Múltiples respuestas verdadero/falso/no sé",
+    "Combination true/false/don't-know": "Combinación verdadero/falso/no-sé"
 }

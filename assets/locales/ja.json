@@ -4272,5 +4272,13 @@
     "Proceed with the test": "テストを続行",
     "Validated": "確認済み",
     "Not validated": "未確認",
-    "Don't know": "不明"
+    "Don't know": "不明",
+    "Expected choice": "期待される回答",
+    "N°": "No.",
+    "Multiple choice": "選択",
+    "Fill blanks or form": "穴埋め",
+    "Image zones": "画像ゾーン",
+    "Match by dragging": "ドラッグして一致させる",
+    "Multiple answer true/false/don't know": "選択 (正しい/誤り/分かりません)",
+    "Combination true/false/don't-know": "複数選択 (正しい/誤り/分かりません)"
 }

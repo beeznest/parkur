@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Teszt folytatása",
     "Validated": "Érvényesítve",
     "Not validated": "Nem érvényesítve",
-    "Don't know": "Nem tudom"
+    "Don't know": "Nem tudom",
+    "Expected choice": "Helyes válasz",
+    "N°": "Nr",
+    "Multiple choice": "Többszörös választás",
+    "Fill blanks or form": "Üres mezők kitöltése",
+    "Image zones": "Kép zónák",
+    "Match by dragging": "Húzással párosítás",
+    "Multiple answer true/false/don't know": "Többszörös válasz igaz/hamis/nem tudom",
+    "Combination true/false/don't-know": "Kombináció igaz/hamis/nem-tudom"
 }

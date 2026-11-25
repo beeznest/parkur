@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Շարունակել թեստով",
     "Validated": "Հաստատված",
     "Not validated": "Չհաստատված",
-    "Don't know": "Չգիտեմ"
+    "Don't know": "Չգիտեմ",
+    "Expected choice": "Սպասվող ընտրություն",
+    "N°": "ՆՌ",
+    "Multiple choice": "Բազմակի ընտրություն",
+    "Fill blanks or form": "Լրացնել դատարկ տեղերը կամ ձևը",
+    "Image zones": "Նկարի գոտիներ",
+    "Match by dragging": "Համապատասխանեցնել քաշելով",
+    "Multiple answer true/false/don't know": "Բազմապատասխան ճիշտ/սխալ/չգիտեմ",
+    "Combination true/false/don't-know": "Կոմբինացիա ճիշտ/սխալ/չգիտեմ"
 }

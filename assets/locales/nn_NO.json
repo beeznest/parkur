@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Fortsett med testen",
     "Validated": "Godkjent",
     "Not validated": "Ikkje godkjent",
-    "Don't know": "Vet ikkje"
+    "Don't know": "Vet ikkje",
+    "Expected choice": "Forventet valg",
+    "N°": "Nr",
+    "Multiple choice": "Flervalg",
+    "Fill blanks or form": "Fyll ut tomrom eller skjema",
+    "Image zones": "Bileteområder",
+    "Match by dragging": "Matte ved å dra",
+    "Multiple answer true/false/don't know": "Fleirsvar sant/falsk/vet ikkje",
+    "Combination true/false/don't-know": "Kombinasjon sant/falsk/vet-ikkje"
 }

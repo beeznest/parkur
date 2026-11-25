@@ -4272,5 +4272,13 @@
     "Proceed with the test": "Fortsätt med testet",
     "Validated": "Validerad",
     "Not validated": "Inte validerad",
-    "Don't know": "Vet ej"
+    "Don't know": "Vet ej",
+    "Expected choice": "Förväntat val",
+    "N°": "Nr",
+    "Multiple choice": "Flerval",
+    "Fill blanks or form": "Fyll i blanka",
+    "Image zones": "Bildområde",
+    "Match by dragging": "Matcha genom att dra",
+    "Multiple answer true/false/don't know": "Flera svar sant/falskt/vet ej",
+    "Combination true/false/don't-know": "Kombination sant/falskt/vet-ej"
 }
