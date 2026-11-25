@@ -107,6 +107,7 @@ export const chamiloIconToClass = {
   "multiple-marked": "mdi mdi-checkbox-multiple-marked-outline",
   "overscan": "",
   "package": "",
+  "pause": "mdi mdi-pause",
   "pencil-off": "",
   "play-box-outline": "mdi mdi-play-box-outline",
   "plugin": "mdi mdi-puzzle",

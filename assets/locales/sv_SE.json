@@ -4280,5 +4280,10 @@
     "Image zones": "Bildområde",
     "Match by dragging": "Matcha genom att dra",
     "Multiple answer true/false/don't know": "Flera svar sant/falskt/vet ej",
-    "Combination true/false/don't-know": "Kombination sant/falskt/vet-ej"
+    "Combination true/false/don't-know": "Kombination sant/falskt/vet-ej",
+    "Pause recording": "Pausa inspelning",
+    "Resume recording": "Återuppta inspelning",
+    "Recording help": "Hjälp för inspelning",
+    "Add text": "Lägg till text",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Under inspelning kan du pausa när du vill. Om du inte är nöjd, registrera igen. Detta kommer att skriva över den tidigare versionen. Nöjd? För att skicka inspelningen till din lärare, klicka på ”Stoppa inspelning” och välj sedan ”Avsluta övning”. Läraren kommer att kunna lyssna på din inspelning och ge dig feedback! Alla dina skickade inspelningar kan ses på övningens startsida."
 }

@@ -4280,5 +4280,10 @@
     "Image zones": "Зоны изображения (\"горячих\" точек)",
     "Match by dragging": "Соответствие перетаскиванием",
     "Multiple answer true/false/don't know": "Множественный ответ верно/неверно/не знаю",
-    "Combination true/false/don't-know": "Комбинация верно/неверно/не знаю"
+    "Combination true/false/don't-know": "Комбинация верно/неверно/не знаю",
+    "Pause recording": "Приостановить запись",
+    "Resume recording": "Возобновить запись",
+    "Recording help": "Справка по записи",
+    "Add text": "Добавить текст",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Во время записи вы можете ставить на паузу в любой момент. Если результат вас не устроил, запишите заново. Это перезапишет предыдущую версию. Довольны? Чтобы отправить запись преподавателю, нажмите «Остановить запись», затем выберите «Завершить упражнение». Преподаватель сможет прослушать вашу запись и дать обратную связь! Все отправленные записи можно просмотреть на главной странице упражнения."
 }

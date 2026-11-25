@@ -4280,5 +4280,10 @@
     "Image zones": "Interaktiiviset alueet",
     "Match by dragging": "Rakenna vetämällä",
     "Multiple answer true/false/don't know": "Useita vastauksia tosi/valhe/en tiedä",
-    "Combination true/false/don't-know": "Yhdistelmä tosi/valhe/en-tiedä"
+    "Combination true/false/don't-know": "Yhdistelmä tosi/valhe/en-tiedä",
+    "Pause recording": "Keskeytä äänitys",
+    "Resume recording": "Jatka äänitystä",
+    "Recording help": "Tallennuksen ohje",
+    "Add text": "Lisää teksti",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Tallennuksen aikana voit taukoa milloin tahansa. Jos et ole tyytyväinen, tallenna uudelleen. Tämä korvaa edellisen version. Tyytyväinen? Lähettääksesi tallennuksen opettajallesi napsauta \"Lopeta tallennus\" ja valitse \"Lopeta harjoitus\". Opettaja voi kuunnella tallennuksesi ja antaa palautetta! Kaikki lähettämäsi tallennukset näkyvät harjoituksen etusivulla."
 }

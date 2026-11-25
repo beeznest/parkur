@@ -4280,5 +4280,10 @@
     "Image zones": "انځور ساحې",
     "Match by dragging": "د ډرګ کولو له لارې ورته کړئ",
     "Multiple answer true/false/don't know": "څو ځواب سمه/ناسمه/پوه نه کېږم",
-    "Combination true/false/don't-know": "د ترکیب سمه/ناسمه/پوه نه کېږم"
+    "Combination true/false/don't-know": "د ترکیب سمه/ناسمه/پوه نه کېږم",
+    "Pause recording": "ریکارډینګ وقفه ورکړئ",
+    "Resume recording": "ریکارډینګ بیا پیل کړئ",
+    "Recording help": "د ثبتولو مرسته",
+    "Add text": "متن اضافه کړئ",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "د ثبتولو پر مهال، تاسو کولای شئ هر وخت وقفه ورکړئ. که راضي نه یاست، بیا نوم‌ليک وکړئ. دا به پخوانۍ نسخې له سره لیکي. راضي یاست؟ د ثبتولو د ښوونکي ته د لېږلو لپاره، په “د ثبتولو بندول” کلیک وکړئ او بیا “تمرین پای ته رسول” غوره کړئ. ښوونکي به ستاسو ثبتولو اورېدلی شي او ستاسو لپاره نظر درلودلی شي! ټول ستاسو لېږل شوي ثبتونه په تمرین کور پاڼې کې لیدل کېدلی شي."
 }

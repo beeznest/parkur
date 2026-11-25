@@ -4280,5 +4280,10 @@
     "Image zones": "Зона на жаришта",
     "Match by dragging": "Погодување со влечење",
     "Multiple answer true/false/don't know": "Многу одговори вистинита/лажна/незнам",
-    "Combination true/false/don't-know": "Комбинација вистинита/лажна/незнам"
+    "Combination true/false/don't-know": "Комбинација вистинита/лажна/незнам",
+    "Pause recording": "Паузирај снимање",
+    "Resume recording": "Продолжи снимање",
+    "Recording help": "Помош за снимање",
+    "Add text": "Додај текст",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "За време на снимањето, можете да паузирате кога сакате. Ако не сте задоволни, снимајте повторно. Ова ќе ја препише претходната верзија. Задоволни сте? За да го испратите снимањето до вашиот учител, кликнете на „Стоп снимање“, потоа изберете „Заврши вежба“. Учителот ќе може да го слушне вашиот запис и да ви даде повратна информација! Сите испратени записи можете да ги видите на главната страница на вежбата."
 }

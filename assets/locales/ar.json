@@ -4280,5 +4280,10 @@
     "Image zones": "مناطق الصورة",
     "Match by dragging": "قم بالمطابقة من خلال السحب",
     "Multiple answer true/false/don't know": "اجابات متعددة صح/خطأ/لا اعرف",
-    "Combination true/false/don't-know": "توليفة صح/خطأ/لا اعرف"
+    "Combination true/false/don't-know": "توليفة صح/خطأ/لا اعرف",
+    "Pause recording": "ايقاف مؤقت للتسجيل",
+    "Resume recording": "استئناف التسجيل",
+    "Recording help": "مساعدة التسجيل",
+    "Add text": "اضافة نص",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "أثناء التسجيل، يمكنك الإيقاف المؤقت في أي وقت. إذا لم تكن راضيًا، سجل مرة أخرى. سيتم استبدال النسخة السابقة. راضٍ؟ لإرسال التسجيل إلى مدرسك، انقر على «إيقاف التسجيل» ثم اختر «إنهاء التمرين». سيتمكن المدرس من الاستماع إلى تسجيلك وإعطائك تعليقات! يمكنك رؤية جميع التسجيلات المرسلة على صفحة التمرين الرئيسية."
 }

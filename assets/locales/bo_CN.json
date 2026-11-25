@@ -3225,5 +3225,10 @@
     "Fill blanks or form": "སྟོང་ཆ་ཡང་ན་རེའུ་མིག་ཁ་སྐོང་།",
     "Image zones": "གཞན་མཚོའི་ས་ཆ",
     "Multiple answer true/false/don't know": "ལན་མང་པོ་བདེན་པ་མེད་པ་མི་ཤེས་པ",
-    "Combination true/false/don't-know": "བདེན་པ་མེད་པ་མི་ཤེས་པ་སྦྱར་བ"
+    "Combination true/false/don't-know": "བདེན་པ་མེད་པ་མི་ཤེས་པ་སྦྱར་བ",
+    "Pause recording": "བསྡད་རྒྱུན་གཉིས་རྒྱུག",
+    "Resume recording": "བསྡད་རྒྱུན་གཉིས་རྒྱུག་སློབ་རམ་པར་བྱའོ",
+    "Recording help": "ཟིན་བྲིས་རོགས་རམ།",
+    "Add text": "ཡི་གེ་ཁ་སྣོན",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "ཟིན་བྲིས་བྱེད་སྐབས་གང་འདོད་དུ་སྐབས་འཇོག་བྱེད་ཆོག མ་འགྲིག་ན་ཡང་བསྐྱར་ཟིན་བྲིས་བྱེད་ཆོག དེ་ཡིས་ཐེངས་སྔོན་མའི་པར་གཞི་ཚབ་བྱེད་ངེས། འགྲིག་སོང་ངམ? ཟིན་བྲིས་སློབ་དཔོན་ལ་གཏོང་བར་འདོད་ན་“ཟིན་བྲིས་མཚམས་འཇོག”ལ་འཇོག་ནས་“ལས་འགུལ་མཇུག་སྒྲིལ།”ཞེས་འདེམས་རོགས། སློབ་དཔོན་གྱིས་ཁྱེད་ཀྱི་ཟིན་བྲིས་ཉན་ཐུབ་ཅིང་ལྟ་ཞིབ་བྱེད་ཐུབ! ཁྱེད་ཀྱིས་གཏོང་བའི་ཟིན་བྲིས་ཚང་མ་ལས་འགུལ་གྱི་ཁ་བྱང་ཤོག་ངོས་སུ་ལྟ་ཐུབ།"
 }

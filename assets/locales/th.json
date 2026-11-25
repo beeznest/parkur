@@ -4280,5 +4280,10 @@
     "Image zones": "โซนภาพ",
     "Match by dragging": "จับคู่โดยลาก",
     "Multiple answer true/false/don't know": "คำตอบหลายแบบ จริง/เท็จ/ไม่ทราบ",
-    "Combination true/false/don't-know": "การรวม จริง/เท็จ/ไม่ทราบ"
+    "Combination true/false/don't-know": "การรวม จริง/เท็จ/ไม่ทราบ",
+    "Pause recording": "หยุดการบันทึกชั่วคราว",
+    "Resume recording": "ดำเนินการบันทึกต่อ",
+    "Recording help": "ช่วยเหลือการบันทึก",
+    "Add text": "เพิ่มข้อความ",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "ขณะบันทึก คุณสามารถหยุดชั่วคราวได้ทุกเมื่อ หากไม่พอใจ ให้บันทึกใหม่ สิ่งนี้จะเขียนทับเวอร์ชันก่อนหน้า พอใจหรือไม่? เพื่อส่งการบันทึกไปยังครู คลิก \"หยุดการบันทึก\" แล้วเลือก \"สิ้นสุดแบบฝึกหัด\" ครูจะสามารถฟังการบันทึกของคุณและให้ข้อเสนอแนะได้! การบันทึกทั้งหมดที่ส่งไปสามารถดูได้ที่หน้าหลักแบบฝึกหัด"
 }

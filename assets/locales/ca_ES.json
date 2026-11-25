@@ -4280,5 +4280,10 @@
     "Image zones": "Zones interactives",
     "Match by dragging": "Coincidència arrossegable",
     "Multiple answer true/false/don't know": "Respostes múltiples vertader/fals/no-sé",
-    "Combination true/false/don't-know": "Combinació vertader/fals/no-sé"
+    "Combination true/false/don't-know": "Combinació vertader/fals/no-sé",
+    "Pause recording": "Pausar gravació",
+    "Resume recording": "Reprendre gravació",
+    "Recording help": "Ajuda de gravació",
+    "Add text": "Afegeix text",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Mentre graves, pots pausar quan vulguis. Si no estàs satisfet, grava de nou. Això sobreescriurà la versió anterior. Satisfet? Per enviar la gravació al teu professor, clica «Atura la gravació» i selecciona «Finalitza exercici». El professor podrà escoltar la teva gravació i donar-te feedback! Totes les teves gravacions enviades es poden veure a la pàgina principal de l'exercici."
 }

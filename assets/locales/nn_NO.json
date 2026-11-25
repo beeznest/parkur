@@ -4280,5 +4280,10 @@
     "Image zones": "Bileteområder",
     "Match by dragging": "Matte ved å dra",
     "Multiple answer true/false/don't know": "Fleirsvar sant/falsk/vet ikkje",
-    "Combination true/false/don't-know": "Kombinasjon sant/falsk/vet-ikkje"
+    "Combination true/false/don't-know": "Kombinasjon sant/falsk/vet-ikkje",
+    "Pause recording": "Pause opptak",
+    "Resume recording": "Fortsett opptak",
+    "Recording help": "Opptaks-hjelp",
+    "Add text": "Legg til tekst",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Medan du opptar, kan du sette på pause når du vil. Om du ikkje er nøgd, registrer på ny. Dette vil overskrive den tidlegare versjonen. Nøgd? For å sende opptaket til læraren din, trykk på «Stopp opptak» og vel «Avslutt oppgåve». Læraren vil kunne lytte til opptaket ditt og gje deg tilbakemelding! Alle opptaka dine som er sendt, kan sjåast på hovudsida for oppgåva."
 }

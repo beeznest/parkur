@@ -4280,5 +4280,10 @@
     "Image zones": "Slikovne zone",
     "Match by dragging": "Podudaranje povlačenjem",
     "Multiple answer true/false/don't know": "Višestruki odgovor istinito/lažno/ne znam",
-    "Combination true/false/don't-know": "Kombinacija istinito/lažno/ne-znam"
+    "Combination true/false/don't-know": "Kombinacija istinito/lažno/ne-znam",
+    "Pause recording": "Pauziraj snimanje",
+    "Resume recording": "Nastavi snimanje",
+    "Recording help": "Pomoć za snimanje",
+    "Add text": "Dodaj tekst",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Tijekom snimanja možete pauzirati kad god želite. Ako niste zadovoljni, snimite ponovo. Ovo će prebrisati prethodnu verziju. Zadovoljni? Da biste poslali snimak svom nastavniku, kliknite na „Zaustavi snimanje“ zatim odaberite „Završi vježbu“. Nastavnik će moći saslušati vaš snimak i dati vam povratne informacije! Svi vaši poslan i snimci mogu se pregledati na stranici domaće stranice vježbe."
 }

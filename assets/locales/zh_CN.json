@@ -4280,5 +4280,10 @@
     "Image zones": "热点",
     "Match by dragging": "拖拽匹配",
     "Multiple answer true/false/don't know": "多选答案真/假/不知道",
-    "Combination true/false/don't-know": "组合真/假/不知道"
+    "Combination true/false/don't-know": "组合真/假/不知道",
+    "Pause recording": "暂停录制",
+    "Resume recording": "恢复录制",
+    "Recording help": "录音帮助",
+    "Add text": "添加文本",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "录音时，您可以随时暂停。如果不满意，请重新录制。这将覆盖先前版本。满意吗？要将录音发送给老师，请点击“停止录音”，然后选择“结束练习”。老师将能够听取您的录音并提供反馈！您传输的所有录音可以在练习首页查看。"
 }

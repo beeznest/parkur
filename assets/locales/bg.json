@@ -4280,5 +4280,10 @@
     "Image zones": "Горещи зони",
     "Match by dragging": "Съчетаване чрез влачене",
     "Multiple answer true/false/don't know": "Повече от един верни отговора или \"не знам\"",
-    "Combination true/false/don't-know": "Комбинация истина/лъжа/не знам"
+    "Combination true/false/don't-know": "Комбинация истина/лъжа/не знам",
+    "Pause recording": "Пауза на записа",
+    "Resume recording": "Продължи записа",
+    "Recording help": "Помощ за запис",
+    "Add text": "Добави текст",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "По време на записване можете да поставите на пауза по всяко време. Ако не сте доволни, запишете отново. Това ще презапише предишната версия. Доволни ли сте? За да изпратите записа към преподавателя, кликнете върху „Спирай запис“ и след това изберете „Край на упражнението“. Преподавателят ще може да прослуша записа ви и да ви даде обратна връзка! Всички изпратени записи могат да се видят на началната страница на упражнението."
 }

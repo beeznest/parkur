@@ -4280,5 +4280,10 @@
     "Image zones": "Zonat e imazhit",
     "Match by dragging": "Përputh duke tërhequr",
     "Multiple answer true/false/don't know": "Përgjigje të shumëfishta të vërteta/gjallë/false/nuk e di",
-    "Combination true/false/don't-know": "Kombinim të vërteta/gjallë/false/nuk e di"
+    "Combination true/false/don't-know": "Kombinim të vërteta/gjallë/false/nuk e di",
+    "Pause recording": "Pauzo regjistrimin",
+    "Resume recording": "Rifillo regjistrimin",
+    "Recording help": "Ndihmë për regjistrim",
+    "Add text": "Shto tekst",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Gjatë regjistrimit, mund të ndaloni sa herë të doni. Nëse nuk jeni të kënaqur, regjistrohuni përsëri. Kjo do të mbishkruajë versionin e mëparshëm. Të kënaqur? Për të dërguar regjistrimin te mësuesi juaj, klikoni në “Ndalo regjistrimin” pastaj zgjidhni “Mbaro ushtrimin”. Mësuesi do të mund të dëgjojë regjistrimin tuaj dhe t'ju japë reagime! Të gjitha regjistrimet e dërguara tuaja mund të shihen në faqen kryesore të ushtrimit."
 }

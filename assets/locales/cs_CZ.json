@@ -4280,5 +4280,10 @@
     "Image zones": "Zóny obrázků",
     "Match by dragging": "Shoda tažením",
     "Multiple answer true/false/don't know": "Vícenásobná odpověď pravda/nepravda/neví",
-    "Combination true/false/don't-know": "Kombinace pravda/nepravda/neví"
+    "Combination true/false/don't-know": "Kombinace pravda/nepravda/neví",
+    "Pause recording": "Pozastavit nahrávání",
+    "Resume recording": "Obnovit nahrávání",
+    "Recording help": "Nápověda k nahrávání",
+    "Add text": "Přidat text",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Při nahrávání můžete kdykoli pozastavit. Pokud nejste spokojeni, nahrajte znovu. Toto přepíše předchozí verzi. Spokojeni? Pro odeslání nahrávky učiteli klikněte na „Zastavit nahrávání“ a poté vyberte „Ukončit cvičení“. Učitel si vaši nahrávku poslechnou a poskytne zpětnou vazbu! Všechny odeslané nahrávky lze zobrazit na domovské stránce cvičení."
 }

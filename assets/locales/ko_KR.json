@@ -4280,5 +4280,10 @@
     "Image zones": "이미지 영역",
     "Match by dragging": "드래그하여 매칭",
     "Multiple answer true/false/don't know": "다중 답변 참/거짓/모름",
-    "Combination true/false/don't-know": "참/거짓/모름 조합"
+    "Combination true/false/don't-know": "참/거짓/모름 조합",
+    "Pause recording": "녹음 일시정지",
+    "Resume recording": "녹음 재개",
+    "Recording help": "녹음 도움말",
+    "Add text": "텍스트 추가",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "녹음 중 원하는 때에 일시정지할 수 있습니다. 만족스럽지 않으면 다시 녹음하세요. 이전 버전이 덮어쓰여집니다. 만족하시면? \"녹음 중지\"를 클릭한 후 \"연습 종료\"를 선택하여 선생님께 녹음을 보내세요. 선생님께서 녹음을 듣고 피드백을 주실 수 있습니다! 전송된 모든 녹음은 연습 홈페이지에서 확인할 수 있습니다."
 }

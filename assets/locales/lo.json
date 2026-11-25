@@ -4277,5 +4277,10 @@
     "Image zones": "ພື້ນທີ່ຮູບພາບ",
     "Match by dragging": "ຈັບຄູ່ໂດຍການລາກ",
     "Multiple answer true/false/don't know": "ຫຼາຍຄຳຕອບ ຖືກ/ຜິດ/ບໍ່ຮູ້",
-    "Combination true/false/don't-know": "ການປະສົມ ຖືກ/ຜິດ/ບໍ່ຮູ້"
+    "Combination true/false/don't-know": "ການປະສົມ ຖືກ/ຜິດ/ບໍ່ຮູ້",
+    "Pause recording": "ຢຸດການບັນທຶກຊົ່ວຄາວ",
+    "Resume recording": "ສືບຕໍ່ການບັນທຶກ",
+    "Recording help": "ການຊ່ວຍເຫຼືອການບັນທຶກສຽງ",
+    "Add text": "ເພີ່ມຂໍ້ຄວາມ",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "ໃນຂະນະທີ່ບັນທຶກ, ທ່ານສາມາດຢຸດຊົ່ວຄາວໄດ້ທຸກເວລາ. ຖ້າທ່ານບໍ່ພໍໃຈ, ໃຫ້ບັນທຶກໃໝ່. ການບັນທຶກໃໝ່ຈະຂຽນທັບສະບັບກ່ອນໜ້າ. ພໍໃຈແລ້ວບໍ? ເພື່ອສົ່ງການບັນທຶກໄປໃຫ້ຄູສອນ, ໃຫ້ຄລິກທີ່ “ຢຸດການບັນທຶກ” ແລ້ວເລືອກ “ສິ້ນສຸດບົດເຝິກຫັດ”. ຄູສອນຈະສາມາດຟັງການບັນທຶກຂອງທ່ານ ແລະ ໃຫ້ຄຳຄິດເຫັນໄດ້! ການບັນທຶກທັງໝົດທີ່ທ່ານສົ່ງໄປສາມາດເບິ່ງໄດ້ທີ່ໜ້າຫຼັກຂອງບົດເຝິກຫັດ."
 }

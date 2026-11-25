@@ -4280,5 +4280,10 @@
     "Image zones": "画像ゾーン",
     "Match by dragging": "ドラッグして一致させる",
     "Multiple answer true/false/don't know": "選択 (正しい/誤り/分かりません)",
-    "Combination true/false/don't-know": "複数選択 (正しい/誤り/分かりません)"
+    "Combination true/false/don't-know": "複数選択 (正しい/誤り/分かりません)",
+    "Pause recording": "録音一時停止",
+    "Resume recording": "録音再開",
+    "Recording help": "録音ヘルプ",
+    "Add text": "テキストを追加",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "録音中はいつでも一時停止できます。満足できない場合は再度録音してください。前のバージョンを上書きします。満足したら、「録音を停止」をクリックし、「演習を終了」を選択して教師に録音を送信してください。教師は録音を聴いてフィードバックを提供できます。送信したすべての録音は演習ホームページで確認できます。"
 }

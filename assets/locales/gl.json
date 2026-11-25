@@ -4280,5 +4280,10 @@
     "Image zones": "Hotspots",
     "Match by dragging": "Coincidencia arrastrable",
     "Multiple answer true/false/don't know": "Respostas múltiples v/f/non-sei",
-    "Combination true/false/don't-know": "Combinación v/f/non-sei"
+    "Combination true/false/don't-know": "Combinación v/f/non-sei",
+    "Pause recording": "Pausar gravación",
+    "Resume recording": "Continuar gravación",
+    "Recording help": "Axuda de gravación",
+    "Add text": "Engadir texto",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Mentres gravas, podes pausar cando queiras. Se non estás satisfeito, rexístrate de novo. Isto sobrescribirá a versión anterior. Satisfaito? Para enviar a gravación ao teu profesor, preme en «Parar gravación» e selecciona «Rematar exercicio». O profesor poderá escoitar a túa gravación e darte feedback! Todas as túas gravacións enviadas poden verse na páxina principal do exercicio."
 }

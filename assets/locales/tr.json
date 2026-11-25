@@ -4280,5 +4280,10 @@
     "Image zones": "Resim bölgeleri",
     "Match by dragging": "Sürükleyerek eşleştir",
     "Multiple answer true/false/don't know": "Çoklu cevap doğru/yanlış/bilmiyorum",
-    "Combination true/false/don't-know": "Doğru/yanlış/bilmiyorum kombinasyonu"
+    "Combination true/false/don't-know": "Doğru/yanlış/bilmiyorum kombinasyonu",
+    "Pause recording": "Kaydı duraklat",
+    "Resume recording": "Kaydı devam ettir",
+    "Recording help": "Kayıt yardım",
+    "Add text": "Metin ekle",
+    "While recording, you can pause whenever you want. If you are not satisfied, register again. This will overwrite the previous version. Satisfied ? To send the recording to your teacher, click on “Stop recording” then select “End exercise”. The teacher will be able to listen to your recording and give you feedback! All your transmitted recordings can be viewed on the exercise home page.": "Kayıt sırasında istediğiniz zaman duraklatabilirsiniz. Memnun değilseniz, tekrar kaydedin. Bu, önceki sürümü üzerine yazar. Memnun musunuz? Kaydı öğretmeninize göndermek için “Kayıt durdur”a tıklayın ardından “Egzersizi bitir”i seçin. Öğretmen kaydınızı dinleyebilir ve size geri bildirim verebilir! Gönderilen tüm kayıtlarınız egzersiz ana sayfasında görüntülenebilir."
 }
